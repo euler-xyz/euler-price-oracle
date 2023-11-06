@@ -5,7 +5,9 @@ import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {PoolAddress} from "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
 
-contract ImmutableUniswapV3Adapter {
+import {IAdapter} from "src/interfaces/IAdapter.sol";
+
+contract ImmutableUniswapV3Adapter is IAdapter {
     IUniswapV3Factory public immutable uniswapV3Factory;
     uint32 public immutable twapWindow;
 
@@ -18,23 +20,24 @@ contract ImmutableUniswapV3Adapter {
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         if (inAmount > type(uint128).max) revert InAmountTooLarge();
-        uint24[4] memory fees = [uint24(10), 500, 3000, 10000];
 
-        int24 chosenTick;
+        uint24[4] memory fees = [uint24(10), 500, 3000, 10000];
+        int24 quoteTick;
         uint128 bestLiquidity;
         for (uint256 i = 0; i < 4;) {
-            uint24 fee = fees[i];
-            address pool = _computePoolAddress(base, quote, fee);
-            (int24 arithmeticMeanTick, uint128 harmonicMeanLiquidity) = OracleLibrary.consult(pool, twapWindow);
-            if (harmonicMeanLiquidity > bestLiquidity) chosenTick = arithmeticMeanTick;
+            (int24 meanTick, uint128 meanLiquidity) = _consultOracle(base, quote, fees[i]);
+            if (meanLiquidity > bestLiquidity) quoteTick = meanTick;
 
             unchecked {
                 ++i;
             }
         }
+        return OracleLibrary.getQuoteAtTick(quoteTick, uint128(inAmount), base, quote);
+    }
 
-        uint256 amountOut = OracleLibrary.getQuoteAtTick(chosenTick, uint128(inAmount), base, quote);
-        return amountOut;
+    function _consultOracle(address base, address quote, uint24 fee) private view returns (int24, uint128) {
+        address pool = _computePoolAddress(base, quote, fee);
+        return OracleLibrary.consult(pool, twapWindow);
     }
 
     function _computePoolAddress(address base, address quote, uint24 fee) private view returns (address) {

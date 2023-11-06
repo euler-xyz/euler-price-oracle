@@ -3,7 +3,9 @@ pragma solidity 0.8.21;
 
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 
-contract ImmutableChainlinkAdapter {
+import {IAdapter} from "src/interfaces/IAdapter.sol";
+
+contract ImmutableChainlinkAdapter is IAdapter {
     uint256 public constant MAX_ROUND_DURATION = 1 hours;
     uint256 public constant MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
