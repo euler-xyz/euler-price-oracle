@@ -1,2 +1,4 @@
 
 @chainlink/=lib/chainlink/contracts/src/v0.8/
+@uniswap-v3-core/=lib/v3-core/contracts/
+@uniswap-v3-periphery/=lib/v3-periphery/contracts/

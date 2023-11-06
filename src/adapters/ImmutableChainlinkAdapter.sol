@@ -8,7 +8,7 @@ contract ImmutableChainlinkAdapter {
     uint256 public constant MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
 
-    error ChainlinkAdapter_CallReverted();
+    error ChainlinkAdapter_CallReverted(bytes reason);
     error ChainlinkAdapter_InvalidAnswer(int256 answer);
     error ChainlinkAdapter_PriceTooStale(uint256 staleness, uint256 maxStaleness);
     error ChainlinkAdapter_RoundTooLong(uint256 duration, uint256 maxDuration);
@@ -41,16 +41,20 @@ contract ImmutableChainlinkAdapter {
             }
 
             return uint256(answer);
-        } catch {
-            revert ChainlinkAdapter_CallReverted();
+        } catch Error(string memory reason) {
+            revert ChainlinkAdapter_CallReverted(bytes(reason));
+        } catch (bytes memory reason) {
+            revert ChainlinkAdapter_CallReverted(reason);
         }
     }
 
     function _getFeedDecimals(address base, address quote) private view returns (uint8) {
         try feedRegistry.decimals(base, quote) returns (uint8 decimals) {
             return decimals;
-        } catch {
-            revert ChainlinkAdapter_CallReverted();
+        } catch Error(string memory reason) {
+            revert ChainlinkAdapter_CallReverted(bytes(reason));
+        } catch (bytes memory reason) {
+            revert ChainlinkAdapter_CallReverted(reason);
         }
     }
 }
