@@ -7,30 +7,33 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
 import {UniswapV3Adapter} from "src/uniswap/UniswapV3Adapter.sol";
 
 contract ImmutableUniswapV3Adapter is UniswapV3Adapter {
-    IUniswapV3Factory public immutable uniswapV3Factory;
-    uint32 public immutable twapWindow;
+    uint24 public constant DEFAULT_TWAP_WINDOW = 30 minutes;
 
-    error InAmountTooLarge();
+    constructor(address _uniswapV3Factory) UniswapV3Adapter(_uniswapV3Factory) {}
 
-    constructor(address _uniswapV3Factory, uint32 _twapWindow) {
-        uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
-        twapWindow = _twapWindow;
-    }
-
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        if (inAmount > type(uint128).max) revert InAmountTooLarge();
+    function updateConfig(address base, address quote) external returns (UniswapV3Config memory) {
+        (address token0, address token1) = _sortTokens(base, quote);
 
         uint24[4] memory fees = [uint24(10), 500, 3000, 10000];
-        int24 quoteTick;
+        uint24 selectedFee;
+        address selectedPool;
         uint128 bestLiquidity;
         for (uint256 i = 0; i < 4;) {
-            (int24 meanTick, uint128 meanLiquidity) = _consultOracle(base, quote, fees[i]);
-            if (meanLiquidity > bestLiquidity) quoteTick = meanTick;
+            uint24 fee = fees[i];
+            address pool = _computePoolAddress(base, quote, fee);
+            (, uint128 meanLiquidity) = OracleLibrary.consult(pool, DEFAULT_TWAP_WINDOW);
+            if (meanLiquidity >= bestLiquidity) {
+                selectedFee = fee;
+                selectedPool = pool;
+                bestLiquidity = meanLiquidity;
+            }
 
             unchecked {
                 ++i;
             }
         }
-        return OracleLibrary.getQuoteAtTick(quoteTick, uint128(inAmount), base, quote);
+
+        uint32 validUntil = uint32(block.timestamp) + DEFAULT_TWAP_WINDOW / 4;
+        return _setConfig(token0, token1, selectedPool, validUntil, selectedFee, DEFAULT_TWAP_WINDOW);
     }
 }

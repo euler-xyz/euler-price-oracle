@@ -5,7 +5,7 @@ import {Ownable} from "@solady/auth/Ownable.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
-import {IAdapter} from "src/uniswap/UniswapV3Adapter.sol";
+import {UniswapV3Adapter} from "src/uniswap/UniswapV3Adapter.sol";
 
 contract GovernedUniswapV3Adapter is Ownable, UniswapV3Adapter {
     error PoolMismatch(address configPool, address factoryPool);
