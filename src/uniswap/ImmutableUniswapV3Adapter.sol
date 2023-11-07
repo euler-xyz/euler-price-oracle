@@ -3,11 +3,10 @@ pragma solidity 0.8.21;
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {PoolAddress} from "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
 
-import {IAdapter} from "src/interfaces/IAdapter.sol";
+import {UniswapV3Adapter} from "src/uniswap/UniswapV3Adapter.sol";
 
-contract ImmutableUniswapV3Adapter is IAdapter {
+contract ImmutableUniswapV3Adapter is UniswapV3Adapter {
     IUniswapV3Factory public immutable uniswapV3Factory;
     uint32 public immutable twapWindow;
 
@@ -33,15 +32,5 @@ contract ImmutableUniswapV3Adapter is IAdapter {
             }
         }
         return OracleLibrary.getQuoteAtTick(quoteTick, uint128(inAmount), base, quote);
-    }
-
-    function _consultOracle(address base, address quote, uint24 fee) private view returns (int24, uint128) {
-        address pool = _computePoolAddress(base, quote, fee);
-        return OracleLibrary.consult(pool, twapWindow);
-    }
-
-    function _computePoolAddress(address base, address quote, uint24 fee) private view returns (address) {
-        PoolAddress.PoolKey memory key = PoolAddress.getPoolKey(base, quote, fee);
-        return PoolAddress.computeAddress(address(uniswapV3Factory), key);
     }
 }
