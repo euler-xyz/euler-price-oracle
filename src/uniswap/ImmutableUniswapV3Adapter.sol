@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-
 import {UniswapV3Adapter} from "src/uniswap/UniswapV3Adapter.sol";
 
 contract ImmutableUniswapV3Adapter is UniswapV3Adapter {
@@ -33,7 +32,7 @@ contract ImmutableUniswapV3Adapter is UniswapV3Adapter {
             }
         }
 
-        uint32 validUntil = uint32(block.timestamp) + DEFAULT_TWAP_WINDOW / 4;
+        uint32 validUntil = uint32(block.timestamp) + DEFAULT_TWAP_WINDOW / 4; // todo: this can be a bit mor eaccurate
         return _setConfig(token0, token1, selectedPool, validUntil, selectedFee, DEFAULT_TWAP_WINDOW);
     }
 }

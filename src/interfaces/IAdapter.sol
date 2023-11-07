@@ -2,5 +2,6 @@
 pragma solidity ^0.8.21;
 
 interface IAdapter {
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 out);
+    function canQuote(uint256 inAmount, address base, address quote) external view returns (bool);
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256);
 }

@@ -38,7 +38,13 @@ abstract contract ChainlinkAdapter {
         weth = _weth;
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+    function canQuote(uint256, address base, address quote) external view virtual returns (bool) {
+        ChainlinkConfig memory config = _getConfig(base, quote);
+        if (config.feed == address(0)) return false;
+        return true;
+    }
+
+    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
         ChainlinkConfig memory config = _getConfig(base, quote);
         return _getQuoteWithConfig(config, inAmount);
     }

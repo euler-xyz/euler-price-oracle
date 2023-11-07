@@ -5,7 +5,6 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {PoolAddress} from "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
-
 import {IAdapter} from "src/interfaces/IAdapter.sol";
 
 abstract contract UniswapV3Adapter is IAdapter {
@@ -31,17 +30,28 @@ abstract contract UniswapV3Adapter is IAdapter {
         uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
     }
 
+    function canQuote(uint256 inAmount, address base, address quote) external view returns (bool) {
+        if (inAmount > type(uint128).max) return false;
+        UniswapV3Config memory config = _getConfig(base, quote);
+        if (config.pool == address(0)) return false;
+        if (config.goodUntil < block.timestamp) return false;
+        return true;
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         if (inAmount > type(uint128).max) revert InAmountTooLarge();
-
-        UniswapV3Config memory config = _getConfig(base, quote);
+        UniswapV3Config memory config = _getOrRevertConfig(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.pool, config.twapWindow);
         return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
     }
 
     function _getConfig(address base, address quote) internal view returns (UniswapV3Config memory) {
-        UniswapV3Config memory config = configs[base][quote];
+        return configs[base][quote];
+    }
+
+    function _getOrRevertConfig(address base, address quote) internal view returns (UniswapV3Config memory) {
+        UniswapV3Config memory config = _getConfig(base, quote);
         if (config.pool == address(0)) revert NoPoolConfigured(base, quote);
         if (config.goodUntil < block.timestamp) revert ConfigExpired(base, quote);
         return config;

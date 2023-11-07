@@ -4,12 +4,10 @@ pragma solidity 0.8.21;
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-
 import {UniswapV3Adapter} from "src/uniswap/UniswapV3Adapter.sol";
 
 contract GovernedUniswapV3Adapter is Ownable, UniswapV3Adapter {
     error PoolMismatch(address configPool, address factoryPool);
-    error NoConfig(address base, address quote);
 
     constructor(address _uniswapV3Factory, address _owner) UniswapV3Adapter(_uniswapV3Factory) {
         _initializeOwner(_owner);
