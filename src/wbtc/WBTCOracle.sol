@@ -27,6 +27,8 @@ contract WbtcOracle is ChainlinkOracle {
         if (!canQuote(inAmount, base, quote)) revert NotSupported(base, quote);
         bool inverse = base == weth;
 
+        if (!inverse) {}
+
         ChainlinkConfig memory wbtcBtcConfig = ChainlinkConfig({
             feed: wbtcBtcFeed,
             maxStaleness: DEFAULT_MAX_STALENESS,
@@ -36,7 +38,6 @@ contract WbtcOracle is ChainlinkOracle {
             feedDecimals: 8,
             inverse: inverse
         });
-        uint256 wbtcBtcQuote = _getQuoteWithConfig(wbtcBtcConfig, inverse ? 1e8 : inAmount, base, quote); // wbtc / btc OR btc / wbtc
 
         ChainlinkConfig memory btcEthConfig = ChainlinkConfig({
             feed: btcEthFeed,
@@ -47,8 +48,17 @@ contract WbtcOracle is ChainlinkOracle {
             feedDecimals: 18,
             inverse: inverse
         });
-        uint256 btcEthQuote = _getQuoteWithConfig(btcEthConfig, inverse ? inAmount : 1e8, base, quote); // btc / eth OR eth / btc
 
-        return wbtcBtcQuote * btcEthQuote / (inverse ? 1e8 : 1e18);
+        // todo: fix precision loss, e.g. 1 sat WBTC is quoted as 0 WETH
+
+        if (!inverse) {
+            uint256 wbtcBtcQuote = _getQuoteWithConfig(wbtcBtcConfig, inAmount, base, quote);
+            uint256 btcEthQuote = _getQuoteWithConfig(btcEthConfig, 1e8, base, quote);
+            return wbtcBtcQuote * btcEthQuote / 1e8;
+        } else {
+            uint256 ethBtcQuote = _getQuoteWithConfig(btcEthConfig, inAmount, base, quote);
+            uint256 btcWbtcQuote = _getQuoteWithConfig(wbtcBtcConfig, 1e8, base, quote);
+            return ethBtcQuote * btcWbtcQuote / 1e18;
+        }
     }
 }
