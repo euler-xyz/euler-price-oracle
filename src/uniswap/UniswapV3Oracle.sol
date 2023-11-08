@@ -5,9 +5,9 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {PoolAddress} from "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
-import {IAdapter} from "src/interfaces/IAdapter.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
-abstract contract UniswapV3Adapter is IAdapter {
+abstract contract UniswapV3Oracle is IOracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
     mapping(address token0 => mapping(address token1 => UniswapV3Config)) public configs;
 

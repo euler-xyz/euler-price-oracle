@@ -2,23 +2,25 @@
 
 pragma solidity ^0.8.0;
 
-import {ChainlinkAdapter} from "src/chainlink/ChainlinkAdapter.sol";
-import {IStEth} from "src/lido/IStEth.sol";
+import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
+import {IWstEth} from "src/lido/IWstEth.sol";
 
-contract WstEthOracle is ChainlinkAdapter {
+contract WstEthOracle is ChainlinkOracle {
     address public immutable stEth;
+    address public immutable wstEth;
     address public immutable stEthFeed;
 
-    constructor(address _weth, address _stEth, address _stEthFeed, address _feedRegistry)
-        ChainlinkAdapter(_feedRegistry, _weth)
+    constructor(address _weth, address _stEth, address _wstEth, address _stEthFeed, address _feedRegistry)
+        ChainlinkOracle(_feedRegistry, _weth)
     {
         stEth = _stEth;
+        wstEth = _wstEth;
         stEthFeed = _stEthFeed;
     }
 
     function canQuote(uint256, address base, address quote) public view override returns (bool) {
-        if (base == stEth && quote == weth) return true;
-        if (base == weth && quote == stEth) return true;
+        if (base == wstEth && quote == weth) return true;
+        if (base == weth && quote == wstEth) return true;
         return false;
     }
 
@@ -28,16 +30,23 @@ contract WstEthOracle is ChainlinkAdapter {
 
         ChainlinkConfig memory config = ChainlinkConfig({
             feed: stEthFeed,
-            maxStaleness: 6 hours,
-            maxDuration: 15 minutes,
+            maxStaleness: DEFAULT_MAX_STALENESS,
+            maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: 18,
             quoteDecimals: 18,
             feedDecimals: 18,
             inverse: inverse
         });
-        uint256 outAmount = _getQuoteWithConfig(config, inAmount); // stEth / Eth
-        uint256 rate = IStEth(stEth).getPooledEthByShares(1 ether);
+        uint256 outAmount = _getQuoteWithConfig(config, inAmount, base, quote);
 
-        return inverse ? outAmount * 1e18 / rate : outAmount * rate / 1e18;
+        if (!inverse) {
+            // outAmount is stEth / Eth
+            uint256 wstEthToStEth = IWstEth(wstEth).stEthPerToken();
+            return outAmount * wstEthToStEth / 1e18;
+        } else {
+            // outAmount is Eth / stEth
+            uint256 stEthToWstEth = IWstEth(wstEth).tokensPerStEth(); // stEth / wstEth
+            return outAmount * stEthToWstEth / 1e18;
+        }
     }
 }

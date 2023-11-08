@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.21;
 
+import "forge-std/console2.sol";
 import {Denominations} from "@chainlink/Denominations.sol";
 import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 
-abstract contract ChainlinkAdapter {
+abstract contract ChainlinkOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
     uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
@@ -46,12 +47,23 @@ abstract contract ChainlinkAdapter {
 
     function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
         ChainlinkConfig memory config = _getConfig(base, quote);
-        return _getQuoteWithConfig(config, inAmount);
+        return _getQuoteWithConfig(config, inAmount, base, quote);
     }
 
-    function _getQuoteWithConfig(ChainlinkConfig memory config, uint256 inAmount) internal view returns (uint256) {
-        (bool success, bytes memory returnData) =
-            config.feed.staticcall(abi.encodeCall(AggregatorV3Interface.latestRoundData, ()));
+    function _getQuoteWithConfig(ChainlinkConfig memory config, uint256 inAmount, address base, address quote)
+        internal
+        view
+        returns (uint256)
+    {
+        bytes memory data;
+        if (config.feed == address(feedRegistry)) {
+            (address asset, address denom,) = _getAssetAndDenom(base, quote);
+            data = abi.encodeCall(FeedRegistryInterface.latestRoundData, (asset, denom));
+        } else {
+            data = abi.encodeCall(AggregatorV3Interface.latestRoundData, ());
+        }
+
+        (bool success, bytes memory returnData) = config.feed.staticcall(data);
         if (!success) revert CallReverted(returnData);
 
         (, int256 answer, uint256 startedAt, uint256 updatedAt,) =
@@ -80,12 +92,6 @@ abstract contract ChainlinkAdapter {
         ChainlinkConfig memory config = configs[base][quote];
         if (config.feed == address(0)) revert NoFeedConfigured(base, quote);
         return config;
-    }
-
-    function _getOrInitConfig(address base, address quote) internal returns (ChainlinkConfig memory) {
-        ChainlinkConfig memory config = configs[base][quote];
-        if (config.feed != address(0)) return config;
-        return _initConfig(base, quote);
     }
 
     function _setConfig(
@@ -122,7 +128,7 @@ abstract contract ChainlinkAdapter {
         uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
 
         ChainlinkConfig memory config = ChainlinkConfig({
-            feed: feed,
+            feed: address(feedRegistry),
             maxStaleness: DEFAULT_MAX_STALENESS,
             maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: baseDecimals,
@@ -134,17 +140,17 @@ abstract contract ChainlinkAdapter {
         configs[base][quote] = config;
 
         ChainlinkConfig memory invConfig = ChainlinkConfig({
-            feed: feed,
+            feed: address(feedRegistry),
             maxStaleness: DEFAULT_MAX_STALENESS,
             maxDuration: DEFAULT_MAX_ROUND_DURATION,
-            baseDecimals: baseDecimals,
-            quoteDecimals: quoteDecimals,
+            baseDecimals: quoteDecimals,
+            quoteDecimals: baseDecimals,
             feedDecimals: feedDecimals,
             inverse: !inverse
         });
 
         configs[quote][base] = invConfig;
-        emit ConfigSet(base, quote, feed);
+        emit ConfigSet(base, quote, address(feedRegistry));
 
         return config;
     }

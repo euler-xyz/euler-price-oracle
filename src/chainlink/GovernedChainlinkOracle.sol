@@ -2,12 +2,12 @@
 pragma solidity 0.8.21;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
-import {ChainlinkAdapter} from "src/chainlink/ChainlinkAdapter.sol";
+import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
 
-contract GovernedChainlinkAdapter is ChainlinkAdapter, Ownable {
+contract GovernedChainlinkOracle is ChainlinkOracle, Ownable {
     error FeedNotEnabled(address feed);
 
-    constructor(address _feedRegistry, address _weth, address _owner) ChainlinkAdapter(_feedRegistry, _weth) {
+    constructor(address _feedRegistry, address _weth, address _owner) ChainlinkOracle(_feedRegistry, _weth) {
         _initializeOwner(_owner);
     }
 

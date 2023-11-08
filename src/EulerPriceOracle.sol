@@ -2,17 +2,17 @@
 pragma solidity 0.8.21;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
-import {IAdapter} from "src/interfaces/IAdapter.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 
 contract EulerPriceOracle is Ownable, IPriceOracle {
     string public constant name = "EulerPriceOracle";
-    IAdapter public immutable fallbackAdapter;
+    IOracle public immutable fallbackOracle;
 
     mapping(address base => mapping(address quote => Strategy)) public strategies;
 
     struct Strategy {
-        address adapter;
+        address oracle;
         bool useFallback;
     }
 
@@ -23,20 +23,20 @@ contract EulerPriceOracle is Ownable, IPriceOracle {
     error NoStrategySet(address base, address quote);
     error NotImplemented();
 
-    constructor(address _fallbackAdapter, address _owner) {
-        fallbackAdapter = IAdapter(_fallbackAdapter);
+    constructor(address _fallbackOracle, address _owner) {
+        fallbackOracle = IOracle(_fallbackOracle);
         _initializeOwner(_owner);
     }
 
     function getQuote(uint256 inAmount, address base, address quote) public view override returns (uint256) {
         Strategy memory strategy = strategies[base][quote];
-        if (strategy.adapter == address(0)) revert NoStrategySet(base, quote);
+        if (strategy.oracle == address(0)) revert NoStrategySet(base, quote);
 
-        (bool success, uint256 outAmount) = _tryGetQuote(inAmount, base, quote, strategy.adapter);
+        (bool success, uint256 outAmount) = _tryGetQuote(inAmount, base, quote, strategy.oracle);
         if (success) return outAmount;
         if (!strategy.useFallback) revert GetQuoteFailed(inAmount, base, quote);
 
-        (success, outAmount) = _tryGetQuote(inAmount, base, quote, address(fallbackAdapter));
+        (success, outAmount) = _tryGetQuote(inAmount, base, quote, address(fallbackOracle));
         if (success) return outAmount;
         revert GetQuoteFailed(inAmount, base, quote);
     }
@@ -59,19 +59,19 @@ contract EulerPriceOracle is Ownable, IPriceOracle {
         revert NotImplemented();
     }
 
-    function setStrategy(address base, address quote, address adapter, bool useFallback) public onlyOwner {
-        Strategy memory strategy = Strategy(adapter, useFallback);
+    function setStrategy(address base, address quote, address oracle, bool useFallback) public onlyOwner {
+        Strategy memory strategy = Strategy(oracle, useFallback);
         strategies[base][quote] = strategy;
         emit StrategySet(base, quote, strategy);
     }
 
-    function _tryGetQuote(uint256 inAmount, address base, address quote, address adapter)
+    function _tryGetQuote(uint256 inAmount, address base, address quote, address oracle)
         private
         view
         returns (bool, uint256)
     {
         (bool success, bytes memory returnData) =
-            adapter.staticcall(abi.encodeCall(IAdapter.getQuote, (inAmount, base, quote)));
+            oracle.staticcall(abi.encodeCall(IOracle.getQuote, (inAmount, base, quote)));
         if (!success) return (false, 0);
 
         uint256 outAmount = abi.decode(returnData, (uint256));

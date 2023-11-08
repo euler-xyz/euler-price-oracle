@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {ChainlinkAdapter} from "src/chainlink/ChainlinkAdapter.sol";
-import {IStEth} from "src/lido/IStEth.sol";
+import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
 
-contract WBTCOracle is ChainlinkAdapter {
+contract WbtcOracle is ChainlinkOracle {
     address public immutable wbtc;
     address public immutable wbtcBtcFeed;
     address public immutable btcEthFeed;
 
     constructor(address _weth, address _wbtc, address _wbtcBtcFeed, address _btcEthFeed, address _feedRegistry)
-        ChainlinkAdapter(_feedRegistry, _weth)
+        ChainlinkOracle(_feedRegistry, _weth)
     {
         wbtc = _wbtc;
         wbtcBtcFeed = _wbtcBtcFeed;
@@ -30,25 +29,25 @@ contract WBTCOracle is ChainlinkAdapter {
 
         ChainlinkConfig memory wbtcBtcConfig = ChainlinkConfig({
             feed: wbtcBtcFeed,
-            maxStaleness: 6 hours,
-            maxDuration: 15 minutes,
+            maxStaleness: DEFAULT_MAX_STALENESS,
+            maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: 8,
             quoteDecimals: 8,
             feedDecimals: 8,
             inverse: inverse
         });
-        uint256 wbtcBtcQuote = _getQuoteWithConfig(wbtcBtcConfig, inverse ? 1e8 : inAmount); // wbtc / btc OR btc / wbtc
+        uint256 wbtcBtcQuote = _getQuoteWithConfig(wbtcBtcConfig, inverse ? 1e8 : inAmount, base, quote); // wbtc / btc OR btc / wbtc
 
         ChainlinkConfig memory btcEthConfig = ChainlinkConfig({
             feed: btcEthFeed,
-            maxStaleness: 6 hours,
-            maxDuration: 15 minutes,
+            maxStaleness: DEFAULT_MAX_STALENESS,
+            maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: 8,
             quoteDecimals: 18,
             feedDecimals: 18,
             inverse: inverse
         });
-        uint256 btcEthQuote = _getQuoteWithConfig(btcEthConfig, inverse ? inAmount : 1e8); // btc / eth OR eth / btc
+        uint256 btcEthQuote = _getQuoteWithConfig(btcEthConfig, inverse ? inAmount : 1e8, base, quote); // btc / eth OR eth / btc
 
         return wbtcBtcQuote * btcEthQuote / (inverse ? 1e8 : 1e18);
     }
