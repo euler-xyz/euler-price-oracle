@@ -22,6 +22,10 @@ contract UniswapV3OracleHarness is UniswapV3Oracle {
         return _setConfig(token0, token1, pool, validUntil, fee, twapWindow);
     }
 
+    function setConfig(address token0, address token1, UniswapV3Config config) external {
+        configs[token0][token1] = config;
+    }
+
     function sortTokens(address tokenA, address tokenB) external pure returns (address, address) {
         return _sortTokens(tokenA, tokenB);
     }

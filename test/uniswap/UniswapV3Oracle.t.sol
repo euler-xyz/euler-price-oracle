@@ -16,6 +16,41 @@ contract UniswapV3OracleTest is Test {
         oracle = new UniswapV3OracleHarness(UNISWAP_V3_FACTORY);
     }
 
+    function test_CanQuote_FalseIf_AmountTooLarge(UniswapV3Config config, uint256 inAmount, address base, address quote)
+        public
+    {
+        inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
+        (address token0, address token1) = oracle.sortTokens(base, quote);
+        oracle.setConfig(token0, token1, config);
+
+        assertFalse(oracle.canQuote(inAmount, base, quote));
+    }
+
+    function test_CanQuote_FalseIf_NoConfig(uint256 inAmount, address base, address quote) public {
+        assertFalse(oracle.canQuote(inAmount, base, quote));
+    }
+
+    function test_CanQuote_FalseIf_Expired(UniswapV3Config config, uint256 inAmount, address base, address quote)
+        public
+    {
+        vm.roll(1e20);
+        vm.assume(config.getValidUntil() < block.timestamp);
+        (address token0, address token1) = oracle.sortTokens(base, quote);
+        oracle.setConfig(token0, token1, config);
+
+        assertFalse(oracle.canQuote(inAmount, base, quote));
+    }
+
+    function test_CanQuote_Integrity(UniswapV3Config config, uint256 inAmount, address base, address quote) public {
+        vm.roll(1e20);
+        vm.assume(config.getValidUntil() >= block.timestamp);
+        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
+        (address token0, address token1) = oracle.sortTokens(base, quote);
+        oracle.setConfig(token0, token1, config);
+
+        assertTrue(oracle.canQuote(inAmount, base, quote));
+    }
+
     function test_GetConfig_InitallyEmpty(address base, address quote) public {
         UniswapV3Config config = oracle.getConfig(base, quote);
         assertTrue(config.isEmpty());
