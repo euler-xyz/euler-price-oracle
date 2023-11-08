@@ -4,6 +4,7 @@ pragma solidity 0.8.21;
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {UniswapV3ConfigLib} from "src/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/uniswap/UniswapV3Oracle.sol";
 
 contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
@@ -26,6 +27,6 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
     function removeConfig(address pool) public onlyOwner {
         address token0 = IUniswapV3Pool(pool).token0();
         address token1 = IUniswapV3Pool(pool).token1();
-        delete configs[token0][token1];
+        configs[token0][token1] = UniswapV3ConfigLib.empty();
     }
 }

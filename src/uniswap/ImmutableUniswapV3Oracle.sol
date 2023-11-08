@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {UniswapV3Config} from "src/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/uniswap/UniswapV3Oracle.sol";
 
 contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
@@ -12,7 +13,7 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
 
     constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}
 
-    function updateConfig(address base, address quote) external returns (UniswapV3Config memory) {
+    function updateConfig(address base, address quote) external returns (UniswapV3Config) {
         (address token0, address token1) = _sortTokens(base, quote);
 
         uint24[4] memory fees = [uint24(100), 500, 3000, 10000];
@@ -39,6 +40,7 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
         if (selectedPool == address(0)) revert NoPoolFound(base, quote);
 
         uint32 validUntil = uint32(block.timestamp) + selectedTwapWindow / 4; // todo: this can be a bit more accurate
+
         return _setConfig(token0, token1, selectedPool, validUntil, selectedFee, uint24(selectedTwapWindow));
     }
 }
