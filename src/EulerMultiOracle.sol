@@ -5,8 +5,8 @@ import {Ownable} from "@solady/auth/Ownable.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 
-contract EulerPriceOracle is Ownable, IPriceOracle {
-    string public constant name = "EulerPriceOracle";
+contract EulerMultiOracle is Ownable, IPriceOracle {
+    string public constant name = "EulerMultiOracle";
     IOracle public immutable fallbackOracle;
 
     mapping(address base => mapping(address quote => Strategy)) public strategies;

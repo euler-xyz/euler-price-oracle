@@ -6,14 +6,12 @@ import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
 import {IWstEth} from "src/lido/IWstEth.sol";
 
 contract WstEthOracle is ChainlinkOracle {
-    address public immutable stEth;
     address public immutable wstEth;
     address public immutable stEthFeed;
 
-    constructor(address _weth, address _stEth, address _wstEth, address _stEthFeed, address _feedRegistry)
+    constructor(address _weth, address _wstEth, address _stEthFeed, address _feedRegistry)
         ChainlinkOracle(_feedRegistry, _weth)
     {
-        stEth = _stEth;
         wstEth = _wstEth;
         stEthFeed = _stEthFeed;
     }

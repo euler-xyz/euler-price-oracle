@@ -17,7 +17,7 @@ contract WstEthOracleForkTest is Test {
         vm.selectFork(ethereumFork);
         vm.roll(ETHEREUM_FORK_BLOCK);
 
-        oracle = new WstEthOracle(WETH, STETH, WSTETH, STETH_ETH_FEED, FEED_REGISTRY);
+        oracle = new WstEthOracle(WETH, WSTETH, STETH_ETH_FEED, FEED_REGISTRY);
     }
 
     function test_GetQuote() public {
