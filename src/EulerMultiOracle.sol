@@ -34,8 +34,8 @@ contract EulerMultiOracle is Ownable, IPriceOracle {
 
         (bool success, uint256 outAmount) = _tryGetQuote(inAmount, base, quote, strategy.oracle);
         if (success) return outAmount;
-        if (!strategy.useFallback) revert GetQuoteFailed(inAmount, base, quote);
 
+        if (!strategy.useFallback) revert GetQuoteFailed(inAmount, base, quote);
         (success, outAmount) = _tryGetQuote(inAmount, base, quote, address(fallbackOracle));
         if (success) return outAmount;
         revert GetQuoteFailed(inAmount, base, quote);
