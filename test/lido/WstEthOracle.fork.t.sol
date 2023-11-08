@@ -2,21 +2,15 @@
 pragma solidity 0.8.21;
 
 import "forge-std/Test.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
-import "test/utils/EthereumAddresses.sol";
+import {FEED_REGISTRY, STETH_ETH_FEED, WETH, WSTETH} from "test/utils/EthereumAddresses.sol";
+import {ForkTest} from "test/utils/ForkTest.sol";
 import {WstEthOracle} from "src/lido/WstEthOracle.sol";
 
-contract WstEthOracleForkTest is Test {
-    uint256 constant ETHEREUM_FORK_BLOCK = 18515555;
-    uint256 ethereumFork;
+contract WstEthOracleForkTest is ForkTest {
     WstEthOracle oracle;
 
     function setUp() public {
-        string memory ETHEREUM_RPC_URL = vm.envString("ETHEREUM_RPC_URL");
-        ethereumFork = vm.createFork(ETHEREUM_RPC_URL);
-        vm.selectFork(ethereumFork);
-        vm.roll(ETHEREUM_FORK_BLOCK);
-
+        _setUpFork();
         oracle = new WstEthOracle(WETH, WSTETH, STETH_ETH_FEED, FEED_REGISTRY);
     }
 
