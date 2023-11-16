@@ -33,4 +33,14 @@ contract ImmutablePythOracleForkTest is ForkTest {
         assertGt(usdcWeth, 1e18 / 10000, "1 USDC > 0.0001 ETH");
         assertLt(usdcWeth, 1e18 / 100, "1 USDC < 0.01 ETH");
     }
+
+    function test_GetQuotes() public {
+        (uint256 wethUsdcBid, uint256 wethUsdcAsk) = oracle.getQuotes(1 ether, WETH, USDC);
+        assertLt(wethUsdcBid, wethUsdcAsk);
+
+        assertGt(wethUsdcAsk, 1e6 * 100, "1 ETH > 100 USDC");
+        assertLt(wethUsdcAsk, 1e6 * 10000, "1 ETH < 10000 USDC");
+        assertGt(wethUsdcBid, 1e6 * 100, "1 ETH > 100 USDC");
+        assertLt(wethUsdcBid, 1e6 * 10000, "1 ETH < 10000 USDC");
+    }
 }

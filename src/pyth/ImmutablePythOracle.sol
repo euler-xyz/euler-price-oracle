@@ -80,6 +80,32 @@ contract ImmutablePythOracle {
         return (inAmount * basePrice * 10 ** quoteDecimals) / (quotePrice * 10 ** baseDecimals);
     }
 
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+        // todo: dedup
+        uint256 baseBid;
+        uint256 baseAsk;
+        uint256 quoteBid;
+        uint256 quoteAsk;
+        {
+            bytes32 baseFeedId = configs[base].feedId;
+            if (baseFeedId == 0) revert ConfigDoesNotExist(base);
+            bytes32 quoteFeedId = configs[quote].feedId;
+            if (quoteFeedId == 0) revert ConfigDoesNotExist(quote);
+
+            PythStructs.Price memory basePriceStruct = pyth.getPriceNoOlderThan(baseFeedId, maxStaleness);
+            PythStructs.Price memory quotePriceStruct = pyth.getPriceNoOlderThan(quoteFeedId, maxStaleness);
+            (baseBid, baseAsk) = _priceStructToWadSpread(basePriceStruct); // base/USD
+            (quoteBid, quoteAsk) = _priceStructToWadSpread(quotePriceStruct); // quote/USD
+        }
+
+        uint8 baseDecimals = configs[base].decimals;
+        uint8 quoteDecimals = configs[quote].decimals;
+
+        uint256 bid = (inAmount * baseBid * 10 ** quoteDecimals) / (quoteBid * 10 ** baseDecimals);
+        uint256 ask = (inAmount * baseAsk * 10 ** quoteDecimals) / (quoteAsk * 10 ** baseDecimals);
+        return (bid, ask);
+    }
+
     function _initConfig(address token, bytes32 feedId) internal {
         uint8 decimals = ERC20(token).decimals();
         configs[token] = PythConfig(feedId, decimals);
@@ -101,6 +127,34 @@ contract ImmutablePythOracle {
             return uint256(uint64(price.price)) * 10 ** uint32(targetDecimals - priceDecimals);
         } else {
             return uint256(uint64(price.price)) / 10 ** uint32(priceDecimals - targetDecimals);
+        }
+    }
+
+    function _priceStructToWadSpread(PythStructs.Price memory price) internal pure returns (uint256, uint256) {
+        // todo: dedup
+        if (price.price <= 0 || int64(price.conf) >= price.price) {
+            revert InvalidPrice(price.price);
+        }
+
+        if (price.expo > 0 || price.expo < -255) {
+            revert InvalidExponent(price.expo);
+        }
+
+        uint8 priceDecimals = uint8(uint32(-1 * price.expo));
+        uint8 targetDecimals = 18;
+
+        if (targetDecimals >= priceDecimals) {
+            uint256 bid =
+                (uint256(uint64(price.price)) - uint256(price.conf)) * 10 ** uint32(targetDecimals - priceDecimals);
+            uint256 ask =
+                (uint256(uint64(price.price)) + uint256(price.conf)) * 10 ** uint32(targetDecimals - priceDecimals);
+            return (bid, ask);
+        } else {
+            uint256 bid =
+                (uint256(uint64(price.price)) - uint256(price.conf)) / 10 ** uint32(priceDecimals - targetDecimals);
+            uint256 ask =
+                (uint256(uint64(price.price)) + uint256(price.conf)) / 10 ** uint32(priceDecimals - targetDecimals);
+            return (bid, ask);
         }
     }
 }
