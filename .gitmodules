@@ -13,3 +13,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
+[submodule "lib/pyth-sdk-solidity"]
+	path = lib/pyth-sdk-solidity
+	url = https://github.com/pyth-network/pyth-sdk-solidity
