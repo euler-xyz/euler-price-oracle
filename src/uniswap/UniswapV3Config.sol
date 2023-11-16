@@ -29,8 +29,7 @@ library UniswapV3ConfigLib {
         uint24 fee,
         uint8 token0Decimals,
         uint8 token1Decimals
-    ) internal pure returns (UniswapV3Config) {
-        UniswapV3Config c;
+    ) internal pure returns (UniswapV3Config c) {
         assembly {
             c := shl(TOKEN1_DECIMALS_OFFSET, token1Decimals)
             c := or(c, shl(TOKEN0_DECIMALS_OFFSET, token0Decimals))
@@ -39,7 +38,6 @@ library UniswapV3ConfigLib {
             c := or(c, shl(VALID_UNTIL_OFFSET, validUntil))
             c := or(c, and(POOL_MASK, pool))
         }
-        return c;
     }
 
     function empty() internal pure returns (UniswapV3Config) {
