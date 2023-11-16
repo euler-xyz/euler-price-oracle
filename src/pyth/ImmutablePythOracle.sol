@@ -3,11 +3,11 @@ pragma solidity 0.8.21;
 
 import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pyth-sdk-solidity/PythStructs.sol";
+import {ERC20} from "@solady/tokens/ERC20.sol";
 
 contract ImmutablePythOracle {
-    uint256 public constant DEFAULT_MAX_STALENESS = 384; // ~ one epoch
-
     IPyth public immutable pyth;
+    uint256 public immutable maxStaleness;
 
     struct PythConfig {
         bytes32 feedId;
@@ -17,13 +17,25 @@ contract ImmutablePythOracle {
     /// @dev all Pyth crypto feeds are USD-denominated
     mapping(address token => PythConfig) public configs;
 
-    error ConfigDoesNotExist(address token);
+    error ArityMismatch(uint256 arityA, uint256 arityB);
     error ConfigAlreadyExists(address token);
-    error InvalidPrice(int64 price);
+    error ConfigDoesNotExist(address token);
     error InvalidExponent(int32 expo);
+    error InvalidPrice(int64 price);
 
-    constructor(address _pyth) {
+    constructor(address _pyth, uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds) {
         pyth = IPyth(_pyth);
+        maxStaleness = _maxStaleness;
+
+        if (tokens.length != feedIds.length) revert ArityMismatch(tokens.length, feedIds.length);
+        uint256 length = tokens.length;
+
+        for (uint256 i = 0; i < length;) {
+            _initConfig(tokens[i], feedIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function canQuote(uint256, address base, address quote) external view returns (bool) {
@@ -33,16 +45,14 @@ contract ImmutablePythOracle {
         if (quoteFeedId == 0) return false;
 
         PythStructs.Price memory basePriceStruct;
-        try pyth.getPriceNoOlderThan(baseFeedId, DEFAULT_MAX_STALENESS) returns (PythStructs.Price memory _priceStruct)
-        {
+        try pyth.getPriceNoOlderThan(baseFeedId, maxStaleness) returns (PythStructs.Price memory _priceStruct) {
             basePriceStruct = _priceStruct;
         } catch {
             return false;
         }
 
         PythStructs.Price memory quotePriceStruct;
-        try pyth.getPriceNoOlderThan(baseFeedId, DEFAULT_MAX_STALENESS) returns (PythStructs.Price memory _priceStruct)
-        {
+        try pyth.getPriceNoOlderThan(baseFeedId, maxStaleness) returns (PythStructs.Price memory _priceStruct) {
             quotePriceStruct = _priceStruct;
         } catch {
             return false;
@@ -58,13 +68,21 @@ contract ImmutablePythOracle {
         bytes32 quoteFeedId = configs[quote].feedId;
         if (quoteFeedId == 0) revert ConfigDoesNotExist(quote);
 
-        PythStructs.Price memory basePriceStruct = pyth.getPriceNoOlderThan(baseFeedId, DEFAULT_MAX_STALENESS);
-        PythStructs.Price memory quotePriceStruct = pyth.getPriceNoOlderThan(quoteFeedId, DEFAULT_MAX_STALENESS);
+        PythStructs.Price memory basePriceStruct = pyth.getPriceNoOlderThan(baseFeedId, maxStaleness);
+        PythStructs.Price memory quotePriceStruct = pyth.getPriceNoOlderThan(quoteFeedId, maxStaleness);
 
         uint256 basePrice = _priceStructToWad(basePriceStruct); // base/USD
         uint256 quotePrice = _priceStructToWad(quotePriceStruct); // quote/USD
 
-        return inAmount * basePrice / quotePrice;
+        uint8 baseDecimals = configs[base].decimals;
+        uint8 quoteDecimals = configs[quote].decimals;
+        // todo: more efficient and precise calc if this scaling is integrated in _priceStructToWad
+        return (inAmount * basePrice * 10 ** quoteDecimals) / (quotePrice * 10 ** baseDecimals);
+    }
+
+    function _initConfig(address token, bytes32 feedId) internal {
+        uint8 decimals = ERC20(token).decimals();
+        configs[token] = PythConfig(feedId, decimals);
     }
 
     function _priceStructToWad(PythStructs.Price memory price) internal pure returns (uint256) {
