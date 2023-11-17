@@ -20,6 +20,7 @@ contract ImmutablePythOracle {
     error ArityMismatch(uint256 arityA, uint256 arityB);
     error ConfigAlreadyExists(address token);
     error ConfigDoesNotExist(address token);
+    error InvalidConfidenceInterval(int64 price, uint64 conf);
     error InvalidExponent(int32 expo);
     error InvalidPrice(int64 price);
 
@@ -63,47 +64,23 @@ contract ImmutablePythOracle {
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        bytes32 baseFeedId = configs[base].feedId;
-        if (baseFeedId == 0) revert ConfigDoesNotExist(base);
-        bytes32 quoteFeedId = configs[quote].feedId;
-        if (quoteFeedId == 0) revert ConfigDoesNotExist(quote);
-
-        PythStructs.Price memory basePriceStruct = pyth.getPriceNoOlderThan(baseFeedId, maxStaleness);
-        PythStructs.Price memory quotePriceStruct = pyth.getPriceNoOlderThan(quoteFeedId, maxStaleness);
-
-        uint256 basePrice = _priceStructToWad(basePriceStruct); // base/USD
-        uint256 quotePrice = _priceStructToWad(quotePriceStruct); // quote/USD
+        PythStructs.Price memory basePriceStruct = _fetchPriceStruct(base);
+        PythStructs.Price memory quotePriceStruct = _fetchPriceStruct(quote);
 
         uint8 baseDecimals = configs[base].decimals;
         uint8 quoteDecimals = configs[quote].decimals;
-        // todo: more efficient and precise calc if this scaling is integrated in _priceStructToWad
-        return (inAmount * basePrice * 10 ** quoteDecimals) / (quotePrice * 10 ** baseDecimals);
+
+        return _calculatePrice(inAmount, basePriceStruct, quotePriceStruct, baseDecimals, quoteDecimals);
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        // todo: dedup
-        uint256 baseBid;
-        uint256 baseAsk;
-        uint256 quoteBid;
-        uint256 quoteAsk;
-        {
-            bytes32 baseFeedId = configs[base].feedId;
-            if (baseFeedId == 0) revert ConfigDoesNotExist(base);
-            bytes32 quoteFeedId = configs[quote].feedId;
-            if (quoteFeedId == 0) revert ConfigDoesNotExist(quote);
-
-            PythStructs.Price memory basePriceStruct = pyth.getPriceNoOlderThan(baseFeedId, maxStaleness);
-            PythStructs.Price memory quotePriceStruct = pyth.getPriceNoOlderThan(quoteFeedId, maxStaleness);
-            (baseBid, baseAsk) = _priceStructToWadSpread(basePriceStruct); // base/USD
-            (quoteBid, quoteAsk) = _priceStructToWadSpread(quotePriceStruct); // quote/USD
-        }
+        PythStructs.Price memory basePriceStruct = _fetchPriceStruct(base);
+        PythStructs.Price memory quotePriceStruct = _fetchPriceStruct(quote);
 
         uint8 baseDecimals = configs[base].decimals;
         uint8 quoteDecimals = configs[quote].decimals;
 
-        uint256 bid = (inAmount * baseBid * 10 ** quoteDecimals) / (quoteBid * 10 ** baseDecimals);
-        uint256 ask = (inAmount * baseAsk * 10 ** quoteDecimals) / (quoteAsk * 10 ** baseDecimals);
-        return (bid, ask);
+        return _calculateSpreadPrice(inAmount, basePriceStruct, quotePriceStruct, baseDecimals, quoteDecimals);
     }
 
     function _initConfig(address token, bytes32 feedId) internal {
@@ -111,50 +88,87 @@ contract ImmutablePythOracle {
         configs[token] = PythConfig(feedId, decimals);
     }
 
-    function _priceStructToWad(PythStructs.Price memory price) internal pure returns (uint256) {
+    function _fetchPriceStruct(address token) internal view returns (PythStructs.Price memory) {
+        bytes32 feedId = configs[token].feedId;
+        if (feedId == 0) revert ConfigDoesNotExist(token);
+        return pyth.getPriceNoOlderThan(feedId, maxStaleness);
+    }
+
+    function _sanityCheckPriceStruct(PythStructs.Price memory price) internal pure {
         if (price.price <= 0) {
             revert InvalidPrice(price.price);
         }
 
-        if (price.expo > 0 || price.expo < -255) {
-            revert InvalidExponent(price.expo);
+        if (price.conf > uint64(type(int64).max) || int64(price.conf) > price.price) {
+            revert InvalidConfidenceInterval(price.price, price.conf);
         }
 
-        uint8 priceDecimals = uint8(uint32(-1 * price.expo));
-        uint8 targetDecimals = 18;
-
-        if (targetDecimals >= priceDecimals) {
-            return uint256(uint64(price.price)) * 10 ** uint32(targetDecimals - priceDecimals);
-        } else {
-            return uint256(uint64(price.price)) / 10 ** uint32(priceDecimals - targetDecimals);
+        if (price.expo > 0 || price.expo < -255) {
+            revert InvalidExponent(price.expo);
         }
     }
 
-    function _priceStructToWadSpread(PythStructs.Price memory price) internal pure returns (uint256, uint256) {
-        // todo: dedup
-        if (price.price <= 0 || int64(price.conf) >= price.price) {
-            revert InvalidPrice(price.price);
-        }
+    function _calculatePrice(
+        uint256 inAmount,
+        PythStructs.Price memory basePrice,
+        PythStructs.Price memory quotePrice,
+        uint8 baseDecimals,
+        uint8 quoteDecimals
+    ) internal pure returns (uint256) {
+        _sanityCheckPriceStruct(basePrice);
+        _sanityCheckPriceStruct(quotePrice);
 
-        if (price.expo > 0 || price.expo < -255) {
-            revert InvalidExponent(price.expo);
-        }
+        int8 netDecimals = int8(basePrice.expo) - int8(quotePrice.expo) + int8(quoteDecimals) - int8(baseDecimals);
 
-        uint8 priceDecimals = uint8(uint32(-1 * price.expo));
-        uint8 targetDecimals = 18;
-
-        if (targetDecimals >= priceDecimals) {
-            uint256 bid =
-                (uint256(uint64(price.price)) - uint256(price.conf)) * 10 ** uint32(targetDecimals - priceDecimals);
-            uint256 ask =
-                (uint256(uint64(price.price)) + uint256(price.conf)) * 10 ** uint32(targetDecimals - priceDecimals);
-            return (bid, ask);
+        if (netDecimals > 0) {
+            return (inAmount * uint256(uint64(basePrice.price)) * 10 ** uint8(netDecimals))
+                / uint256(uint64(quotePrice.price));
         } else {
-            uint256 bid =
-                (uint256(uint64(price.price)) - uint256(price.conf)) / 10 ** uint32(priceDecimals - targetDecimals);
-            uint256 ask =
-                (uint256(uint64(price.price)) + uint256(price.conf)) / 10 ** uint32(priceDecimals - targetDecimals);
+            return (inAmount * uint256(uint64(basePrice.price)))
+                / (uint256(uint64(quotePrice.price)) * 10 ** uint8(-netDecimals));
+        }
+    }
+
+    function _calculateSpreadPrice(
+        uint256 inAmount,
+        PythStructs.Price memory basePrice,
+        PythStructs.Price memory quotePrice,
+        uint8 baseDecimals,
+        uint8 quoteDecimals
+    ) internal pure returns (uint256, uint256) {
+        _sanityCheckPriceStruct(basePrice);
+        _sanityCheckPriceStruct(quotePrice);
+
+        int8 netDecimals = int8(basePrice.expo) - int8(quotePrice.expo) + int8(quoteDecimals) - int8(baseDecimals);
+        (uint256 baseBidPrice, uint256 baseAskPrice) = _getBidAsk(basePrice);
+        (uint256 quoteBidPrice, uint256 quoteAskPrice) = _getBidAsk(quotePrice);
+
+        if (netDecimals > 0) {
+            // fix: stack too deep :(
+            // uint256 bid = (inAmount * baseBidPrice * 10 ** uint8(netDecimals)) / quoteBidPrice;
+            // uint256 ask = (inAmount * baseAskPrice * 10 ** uint8(netDecimals)) / quoteAskPrice;
+            return (
+                (inAmount * baseBidPrice * 10 ** uint8(netDecimals)) / quoteBidPrice,
+                (inAmount * baseAskPrice * 10 ** uint8(netDecimals)) / quoteAskPrice
+            );
+        } else {
+            uint256 bid = (inAmount * baseBidPrice) / (quoteBidPrice * 10 ** uint8(-netDecimals));
+            uint256 ask = (inAmount * baseAskPrice) / (quoteAskPrice * 10 ** uint8(-netDecimals));
             return (bid, ask);
+        }
+    }
+
+    /// @dev MUST call _sanityCheckPriceStruct beforehand, otherwise over/underflows may occur
+    function _getBidAsk(PythStructs.Price memory priceStruct)
+        internal
+        pure
+        returns (uint256 bidPrice, uint256 askPrice)
+    {
+        int64 price = priceStruct.price;
+        uint64 conf = priceStruct.conf;
+        assembly {
+            bidPrice := sub(price, conf)
+            askPrice := add(price, conf)
         }
     }
 }
