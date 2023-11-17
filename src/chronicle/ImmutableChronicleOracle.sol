@@ -36,6 +36,10 @@ contract ImmutableChronicleOracle {
         }
     }
 
+    function canQuote(uint256, address base, address quote) public view returns (bool) {
+        return configs[base][quote].feed != address(0);
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) public view returns (uint256) {
         ChronicleConfig memory config = _getOrRevertConfig(base, quote);
 
