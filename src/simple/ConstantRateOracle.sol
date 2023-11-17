@@ -25,6 +25,10 @@ contract ConstantRateOracle {
         }
     }
 
+    function canQuote(uint256, address base, address quote) external view returns (bool) {
+        return configs[base][quote] != 0;
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         uint256 rate = _getOrRevertConfig(base, quote);
         uint256 price = inAmount * rate / 10 ** PRECISION_DECIMALS;
