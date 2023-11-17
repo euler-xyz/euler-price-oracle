@@ -16,3 +16,6 @@
 [submodule "lib/pyth-sdk-solidity"]
 	path = lib/pyth-sdk-solidity
 	url = https://github.com/pyth-network/pyth-sdk-solidity
+[submodule "lib/chronicle-std"]
+	path = lib/chronicle-std
+	url = https://github.com/chronicleprotocol/chronicle-std
