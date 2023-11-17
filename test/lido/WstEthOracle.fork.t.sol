@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.21;
 
-import {FEED_REGISTRY, STETH_ETH_FEED, WETH, WSTETH} from "test/utils/EthereumAddresses.sol";
+import {FEED_REGISTRY, CHAINLINK_STETH_ETH_FEED, WETH, WSTETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {WstEthOracle} from "src/lido/WstEthOracle.sol";
 
@@ -10,7 +10,7 @@ contract WstEthOracleForkTest is ForkTest {
 
     function setUp() public {
         _setUpFork();
-        oracle = new WstEthOracle(WETH, WSTETH, STETH_ETH_FEED, FEED_REGISTRY);
+        oracle = new WstEthOracle(WETH, WSTETH, CHAINLINK_STETH_ETH_FEED, FEED_REGISTRY);
     }
 
     function test_GetQuote() public {

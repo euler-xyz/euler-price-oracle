@@ -4,3 +4,4 @@
 @uniswap/v3-periphery/=lib/v3-periphery/
 @solady/=lib/solady/src/
 @pyth-sdk-solidity/=lib/pyth-sdk-solidity/
+@chronicle-std/=lib/chronicle-std/src/

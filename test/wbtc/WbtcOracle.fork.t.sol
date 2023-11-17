@@ -2,7 +2,13 @@
 pragma solidity 0.8.21;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {BTC_ETH_FEED, FEED_REGISTRY, WBTC, WBTC_BTC_FEED, WETH} from "test/utils/EthereumAddresses.sol";
+import {
+    CHAINLINK_BTC_ETH_FEED,
+    FEED_REGISTRY,
+    WBTC,
+    CHAINLINK_WBTC_BTC_FEED,
+    WETH
+} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {WbtcOracle} from "src/wbtc/WbtcOracle.sol";
 
@@ -11,7 +17,7 @@ contract WbtcOracleForkTest is ForkTest {
 
     function setUp() public {
         _setUpFork();
-        oracle = new WbtcOracle(WETH, WBTC, WBTC_BTC_FEED, BTC_ETH_FEED, FEED_REGISTRY);
+        oracle = new WbtcOracle(WETH, WBTC, CHAINLINK_WBTC_BTC_FEED, CHAINLINK_BTC_ETH_FEED, FEED_REGISTRY);
     }
 
     function test_GetQuote() public {
