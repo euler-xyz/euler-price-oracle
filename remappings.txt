@@ -5,3 +5,4 @@
 @solady/=lib/solady/src/
 @pyth-sdk-solidity/=lib/pyth-sdk-solidity/
 @chronicle-std/=lib/chronicle-std/src/
+@tellor/=lib/usingtellor/contracts/

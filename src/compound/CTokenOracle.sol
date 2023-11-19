@@ -26,8 +26,6 @@ contract CTokenOracle is ChainlinkOracle {
         if (!canQuote(inAmount, base, quote)) revert NotSupported(base, quote);
         bool inverse = base == weth;
 
-        if (!inverse) {}
-
         ChainlinkConfig memory wbtcBtcConfig = ChainlinkConfig({
             feed: wbtcBtcFeed,
             maxStaleness: DEFAULT_MAX_STALENESS,

@@ -41,4 +41,5 @@ struct OracleDescription {
     RequestModel requestModel;
     UpdateConditions updateConditions;
     ConsumerSettings consumerSettings;
+    bool supportsBidAskSpread;
 }
