@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import "forge-std/Test.sol";
 import {UniswapV3Config, UniswapV3ConfigLib} from "src/uniswap/UniswapV3Config.sol";

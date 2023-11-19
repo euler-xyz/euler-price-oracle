@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 enum Authority {
     PERMISSIONLESS,
@@ -16,7 +16,11 @@ enum Algorithm {
     VWAP
 }
 
-enum PaymentModel {FREE}
+enum PaymentModel {
+    FREE,
+    SUBSCRIPTION,
+    PER_REQUEST
+}
 
 enum RequestModel {
     PUSH,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {UniswapV3Config} from "src/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/uniswap/UniswapV3Oracle.sol";

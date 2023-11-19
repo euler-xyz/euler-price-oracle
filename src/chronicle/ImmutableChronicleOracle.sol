@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {IChronicle} from "@chronicle-std/IChronicle.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";

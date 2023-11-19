@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.21;
+pragma solidity 0.8.22;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
