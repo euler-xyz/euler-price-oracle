@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
+import {OracleDescription} from "src/interfaces/OracleDescription.sol";
 
 contract GovernedChainlinkOracle is ChainlinkOracle, Ownable {
     event ConfigAdded(address indexed base, address indexed quote, address indexed feed);
@@ -32,5 +33,19 @@ contract GovernedChainlinkOracle is ChainlinkOracle, Ownable {
 
         emit ConfigRemoved(base, quote);
         emit ConfigRemoved(quote, base);
+    }
+
+    function description() external view returns (OracleDescription.Description memory) {
+        return OracleDescription.Description({
+            algorithm: OracleDescription.Algorithm.VWAP,
+            authority: OracleDescription.Authority.GOVERNED,
+            paymentModel: OracleDescription.PaymentModel.FREE,
+            requestModel: OracleDescription.RequestModel.PUSH,
+            configuration: OracleDescription.Configuration({
+                maxStaleness: DEFAULT_MAX_STALENESS,
+                governor: owner(),
+                supportsBidAskSpread: false
+            })
+        });
     }
 }
