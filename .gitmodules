@@ -19,3 +19,6 @@
 [submodule "lib/chronicle-std"]
 	path = lib/chronicle-std
 	url = https://github.com/chronicleprotocol/chronicle-std
+[submodule "lib/usingtellor"]
+	path = lib/usingtellor
+	url = https://github.com/tellor-io/usingtellor
