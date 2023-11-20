@@ -19,6 +19,7 @@ contract TryCallOracleTest is Test {
         address base,
         address quote
     ) public {
+        oracle = boundAddr(oracle);
         (bool success, uint256 outAmount) = harness.tryGetQuote(IOracle(oracle), inAmount, base, quote);
 
         assertFalse(success);
@@ -75,6 +76,7 @@ contract TryCallOracleTest is Test {
         address base,
         address quote
     ) public {
+        oracle = boundAddr(oracle);
         (bool success, uint256 bidOut, uint256 askOut) = harness.tryGetQuotes(IOracle(oracle), inAmount, base, quote);
 
         assertFalse(success);
