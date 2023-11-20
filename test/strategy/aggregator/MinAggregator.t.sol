@@ -18,7 +18,7 @@ contract MinAggregatorTest is Test {
 
     function test_Constructor_RevertWhen_OraclesArrayIsEmpty(uint256 quorum) public {
         vm.expectRevert(ImmutableAddressArray.ArrayEmpty.selector);
-        new MinAggregator(new address[](0), 0);
+        new MinAggregator(new address[](0), quorum);
     }
 
     function test_Constructor_RevertWhen_QuorumIsZero(address[] memory _oracles) public {

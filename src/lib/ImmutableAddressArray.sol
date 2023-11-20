@@ -16,7 +16,7 @@ contract ImmutableAddressArray {
 
     error ArrayEmpty();
     error ArrayTooLarge(uint256 length, uint256 maxLength);
-    error IndexOOB(uint256 i, uint256 maxIndex);
+    error IndexOOB(uint256 index, uint256 maxIndex);
 
     constructor(address[] memory arr) {
         uint256 _cardinality = arr.length;
@@ -35,7 +35,7 @@ contract ImmutableAddressArray {
     }
 
     function _get(uint256 i) internal view returns (address) {
-        if (i >= cardinality - 1) revert IndexOOB(i, cardinality - 1);
+        if (i > cardinality - 1) revert IndexOOB(i, cardinality - 1);
         if (i == 0) return e0;
         if (i == 1) return e1;
         if (i == 2) return e2;
