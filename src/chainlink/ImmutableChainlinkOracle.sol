@@ -21,7 +21,8 @@ contract ImmutableChainlinkOracle is ChainlinkOracle {
                 maxStaleness: DEFAULT_MAX_STALENESS,
                 governor: address(0),
                 supportsBidAskSpread: false
-            })
+            }),
+            children: new address[](0)
         });
     }
 }

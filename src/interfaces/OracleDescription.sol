@@ -9,7 +9,12 @@ library OracleDescription {
         EMA,
         ARITHMETIC_MEAN_TWAP,
         GEOMETRIC_MEAN_TWAP,
-        VWAP
+        VWAP,
+        AGGREGATE_MEDIAN,
+        AGGREGATE_MIN,
+        AGGREGATE_MAX,
+        AGGREGATE_WEIGHTED,
+        OTHER
     }
 
     enum Authority {
@@ -20,13 +25,15 @@ library OracleDescription {
     enum PaymentModel {
         FREE,
         SUBSCRIPTION,
-        PER_REQUEST
+        PER_REQUEST,
+        OTHER
     }
 
     enum RequestModel {
         PUSH,
         PULL,
-        SIGNATURE
+        SIGNATURE,
+        OTHER
     }
 
     struct Configuration {
@@ -41,5 +48,6 @@ library OracleDescription {
         PaymentModel paymentModel;
         RequestModel requestModel;
         Configuration configuration;
+        address[] children;
     }
 }

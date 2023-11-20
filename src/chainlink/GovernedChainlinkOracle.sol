@@ -45,7 +45,8 @@ contract GovernedChainlinkOracle is ChainlinkOracle, Ownable {
                 maxStaleness: DEFAULT_MAX_STALENESS,
                 governor: owner(),
                 supportsBidAskSpread: false
-            })
+            }),
+            children: new address[](0)
         });
     }
 }

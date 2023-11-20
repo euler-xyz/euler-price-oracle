@@ -3,9 +3,8 @@ pragma solidity 0.8.22;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 
-contract EulerMultiOracle is Ownable, IPriceOracle {
+contract EulerMultiOracle is Ownable, IOracle {
     string public constant name = "EulerMultiOracle";
     IOracle public immutable fallbackOracle;
 
@@ -49,14 +48,6 @@ contract EulerMultiOracle is Ownable, IPriceOracle {
     {
         uint256 outAmount = getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
-    }
-
-    function getTick(uint256, address, address) external pure returns (uint256) {
-        revert NotImplemented();
-    }
-
-    function getTicks(uint256, address, address) external pure returns (uint256, uint256) {
-        revert NotImplemented();
     }
 
     function setStrategy(address base, address quote, address oracle, bool useFallback) public onlyOwner {
