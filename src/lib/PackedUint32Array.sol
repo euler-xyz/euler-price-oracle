@@ -8,22 +8,26 @@ using PackedUint32ArrayLib for PackedUint32Array global;
 library PackedUint32ArrayLib {
     uint256 internal constant MAX_VALUE = uint256(type(uint32).max);
     uint256 internal constant MAX_INDEX = 7;
-    uint256 internal constant VALUE_BITS = 32;
+    uint256 internal constant MAX_LENGTH = 8;
     uint256 internal constant MASK = 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF;
 
-    error ValueOOB(uint256 value, uint256 maxValue);
-    error IndexOOB(uint256 index, uint256 maxIndex);
+    error IndexOOB(uint256 index);
+    error ValueOOB(uint256 value);
 
     function from(uint256[] memory inArray) internal pure returns (PackedUint32Array) {
-        uint256 length = inArray.length - 1;
-        _checkIndex(length - 1);
+        uint256 length = inArray.length;
+        if (length == 0) return PackedUint32Array.wrap(0);
+        if (length > MAX_LENGTH) revert IndexOOB(MAX_LENGTH);
 
         PackedUint32Array array;
+        for (uint256 index = length - 1; index != type(uint256).max;) {
+            uint256 value = inArray[index];
+            if (value > MAX_VALUE) revert ValueOOB(value);
 
-        for (uint256 i = 0; i < length;) {
-            array = array.set(i, inArray[i]);
+            uint256 offset = index << 5;
+            array = PackedUint32Array.wrap(PackedUint32Array.unwrap(array) | (value << offset));
             unchecked {
-                ++i;
+                --index;
             }
         }
 
@@ -31,24 +35,24 @@ library PackedUint32ArrayLib {
     }
 
     function get(PackedUint32Array array, uint256 index) internal pure returns (uint256) {
-        _checkIndex(index);
+        if (index > MAX_INDEX) revert IndexOOB(index);
 
-        uint256 offset = _getOffset(index);
+        uint256 offset = index << 5;
         return (PackedUint32Array.unwrap(array) & (MASK << offset)) >> offset;
     }
 
     function set(PackedUint32Array array, uint256 index, uint256 value) internal pure returns (PackedUint32Array) {
-        _checkIndex(index);
-        _checkValue(value);
+        if (index > MAX_INDEX) revert IndexOOB(index);
+        if (value > MAX_VALUE) revert ValueOOB(value);
 
-        uint256 offset = _getOffset(index);
+        uint256 offset = index << 5;
         return PackedUint32Array.wrap((PackedUint32Array.unwrap(array) & ~(MASK << offset)) | (value << offset));
     }
 
     function clear(PackedUint32Array array, uint256 index) internal pure returns (PackedUint32Array) {
-        _checkIndex(index);
+        if (index > MAX_INDEX) revert IndexOOB(index);
 
-        uint256 offset = _getOffset(index);
+        uint256 offset = index << 5;
         return PackedUint32Array.wrap((PackedUint32Array.unwrap(array) & ~(MASK << offset)));
     }
 
@@ -57,8 +61,17 @@ library PackedUint32ArrayLib {
     }
 
     function sum(PackedUint32Array array) internal pure returns (uint256) {
-        return array.get(0) + array.get(1) + array.get(2) + array.get(3) + array.get(4) + array.get(5) + array.get(6)
-            + array.get(7);
+        uint256 total;
+        uint256 mask = MASK;
+
+        for (uint256 offset = 0; offset < 255;) {
+            uint256 value = (PackedUint32Array.unwrap(array) & (MASK << offset)) >> offset;
+            unchecked {
+                total = total + value;
+                offset = offset + 32;
+            }
+        }
+        return total;
     }
 
     function eq(PackedUint32Array arrayA, PackedUint32Array arrayB) internal pure returns (bool) {
@@ -67,18 +80,5 @@ library PackedUint32ArrayLib {
 
     function neq(PackedUint32Array arrayA, PackedUint32Array arrayB) internal pure returns (bool) {
         return PackedUint32Array.unwrap(arrayA) != PackedUint32Array.unwrap(arrayB);
-    }
-
-    function _checkIndex(uint256 index) private pure {
-        if (index > MAX_INDEX) revert IndexOOB(index, MAX_INDEX);
-    }
-
-    function _checkValue(uint256 value) private pure {
-        if (value > MAX_VALUE) revert ValueOOB(value, MAX_VALUE);
-    }
-
-    /// @dev todo optimize this with shl
-    function _getOffset(uint256 index) private pure returns (uint256) {
-        return index * VALUE_BITS;
     }
 }
