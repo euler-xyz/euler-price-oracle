@@ -6,7 +6,6 @@ import {LibClone} from "@solady/utils/LibClone.sol";
 
 contract OracleFactory is Ownable {
     struct ResolutionStrategy {
-        address referenceAsset;
         uint256 oracleImplementationId;
         bytes initData;
     }
