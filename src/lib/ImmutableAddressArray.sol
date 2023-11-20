@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-contract FixedSizeAddressArray {
+contract ImmutableAddressArray {
     uint256 private constant MAX_CARDINALITY = 8;
 
     uint256 internal immutable cardinality;

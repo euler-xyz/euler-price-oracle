@@ -2,16 +2,16 @@
 pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
-import {FixedSizeAddressArray} from "src/lib/FixedSizeAddressArray.sol";
+import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
-abstract contract Aggregator is FixedSizeAddressArray {
+abstract contract Aggregator is ImmutableAddressArray {
     uint256 public immutable quorum;
 
     error QuorumNotReached(uint256 count, uint256 quorum);
     error QuorumTooLarge(uint256 quorum, uint256 maxQuorum);
     error QuorumZero();
 
-    constructor(address[] memory _oracles, uint256 _quorum) FixedSizeAddressArray(_oracles) {
+    constructor(address[] memory _oracles, uint256 _quorum) ImmutableAddressArray(_oracles) {
         if (_quorum == 0) revert QuorumZero();
         if (_quorum > cardinality) revert QuorumTooLarge(_quorum, cardinality);
 

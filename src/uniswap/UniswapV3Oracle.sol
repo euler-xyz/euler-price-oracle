@@ -30,12 +30,17 @@ abstract contract UniswapV3Oracle is IOracle {
         return true;
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+    function getQuote(uint256 inAmount, address base, address quote) public view returns (uint256) {
         if (inAmount > type(uint128).max) revert InAmountTooLarge();
         UniswapV3Config config = _getOrRevertConfig(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());
         return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
+    }
+
+    function getQuotes(uint256 inAmount, address base, address quote) public view returns (uint256, uint256) {
+        uint256 outAmount = getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
     }
 
     function _getConfig(address base, address quote) internal view returns (UniswapV3Config) {
