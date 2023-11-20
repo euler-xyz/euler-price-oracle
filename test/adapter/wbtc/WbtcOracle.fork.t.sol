@@ -10,7 +10,7 @@ import {
     WETH
 } from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {WbtcOracle} from "src/wbtc/WbtcOracle.sol";
+import {WbtcOracle} from "src/adapter/wbtc/WbtcOracle.sol";
 
 contract WbtcOracleForkTest is ForkTest {
     WbtcOracle oracle;

@@ -6,7 +6,7 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {UniswapV3OracleHarness} from "test/utils/UniswapV3OracleHarness.sol";
 import {MockERC20} from "test/utils/MockERC20.sol";
-import {UniswapV3Config, UniswapV3ConfigLib} from "src/uniswap/UniswapV3Config.sol";
+import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 
 contract UniswapV3OracleTest is Test {
     address constant UNISWAP_V3_FACTORY = address(0x3333);

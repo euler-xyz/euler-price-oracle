@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import {FEED_REGISTRY, LDO, USDT, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {ImmutableChainlinkOracle} from "src/chainlink/ImmutableChainlinkOracle.sol";
+import {ImmutableChainlinkOracle} from "src/adapter/chainlink/ImmutableChainlinkOracle.sol";
 
 contract ImmutableChainlinkOracleForkTest is ForkTest {
     ImmutableChainlinkOracle oracle;

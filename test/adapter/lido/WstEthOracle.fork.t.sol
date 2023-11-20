@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import {FEED_REGISTRY, CHAINLINK_STETH_ETH_FEED, WETH, WSTETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {WstEthOracle} from "src/lido/WstEthOracle.sol";
+import {WstEthOracle} from "src/adapter/lido/WstEthOracle.sol";
 
 contract WstEthOracleForkTest is ForkTest {
     WstEthOracle oracle;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {ChainlinkOracle} from "src/chainlink/ChainlinkOracle.sol";
+import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {OracleDescription} from "src/interfaces/OracleDescription.sol";
 
 contract ImmutableChainlinkOracle is ChainlinkOracle {

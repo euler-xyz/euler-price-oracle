@@ -3,8 +3,8 @@ pragma solidity 0.8.22;
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {UniswapV3Config} from "src/uniswap/UniswapV3Config.sol";
-import {UniswapV3Oracle} from "src/uniswap/UniswapV3Oracle.sol";
+import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
+import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 
 contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
     uint24 public constant DEFAULT_TWAP_WINDOW = 30 minutes;

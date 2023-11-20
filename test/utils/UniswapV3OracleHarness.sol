@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {UniswapV3Config} from "src/uniswap/UniswapV3Config.sol";
-import {UniswapV3Oracle} from "src/uniswap/UniswapV3Oracle.sol";
+import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
+import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 
 contract UniswapV3OracleHarness is UniswapV3Oracle {
     constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}

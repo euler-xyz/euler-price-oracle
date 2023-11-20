@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import "forge-std/Test.sol";
-import {UniswapV3Config, UniswapV3ConfigLib} from "src/uniswap/UniswapV3Config.sol";
+import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 
 contract UniswapV3ConfigTest is Test {
     function testFuzz_Config(

@@ -5,7 +5,7 @@ import {console2} from "forge-std/console2.sol";
 import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PYTH, PYTH_ETH_USD_FEED, PYTH_USDC_USD_FEED, USDC, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {ImmutablePythOracle} from "src/pyth/ImmutablePythOracle.sol";
+import {ImmutablePythOracle} from "src/adapter/pyth/ImmutablePythOracle.sol";
 
 contract ImmutablePythOracleForkTest is ForkTest {
     ImmutablePythOracle oracle;

@@ -5,7 +5,7 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
-import {UniswapV3Config, UniswapV3ConfigLib} from "src/uniswap/UniswapV3Config.sol";
+import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 
 abstract contract UniswapV3Oracle is IOracle {
     IUniswapV3Factory public immutable uniswapV3Factory;

@@ -3,8 +3,8 @@ pragma solidity 0.8.22;
 
 import {UNISWAP_V3_FACTORY, USDC, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {ImmutableUniswapV3Oracle} from "src/uniswap/ImmutableUniswapV3Oracle.sol";
-import {UniswapV3Config} from "src/uniswap/UniswapV3Config.sol";
+import {ImmutableUniswapV3Oracle} from "src/adapter/uniswap/ImmutableUniswapV3Oracle.sol";
+import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
 
 contract ImmutableUniswapV3OracleForkTest is ForkTest {
     ImmutableUniswapV3Oracle oracle;
