@@ -62,8 +62,6 @@ library PackedUint32ArrayLib {
 
     function sum(PackedUint32Array array) internal pure returns (uint256) {
         uint256 total;
-        uint256 mask = MASK;
-
         for (uint256 offset = 0; offset < 255;) {
             uint256 value = (PackedUint32Array.unwrap(array) & (MASK << offset)) >> offset;
             unchecked {
