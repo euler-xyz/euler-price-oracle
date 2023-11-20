@@ -34,7 +34,7 @@ contract WeightedAggregator is Aggregator {
                     ++j;
                 }
             }
-            weightedSum += quotes[i] * _weights.get(i);
+            weightedSum += quotes[i] * _weights.get(j);
             unchecked {
                 ++i;
             }

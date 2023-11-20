@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
+import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 abstract contract Aggregator is ImmutableAddressArray {
     uint256 public immutable quorum;

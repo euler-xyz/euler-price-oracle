@@ -4,8 +4,9 @@ pragma solidity 0.8.22;
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
+import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
-contract ConstantBackoffLinearStrategy is ImmutableAddressArray {
+contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
     uint256 public immutable backOff;
     PackedUint32Array public cooldowns;
 
@@ -61,30 +62,6 @@ contract ConstantBackoffLinearStrategy is ImmutableAddressArray {
 
         _updateCooldowns(_cooldowns);
         return (0, 0);
-    }
-
-    function _tryGetQuote(IOracle oracle, uint256 inAmount, address base, address quote)
-        private
-        view
-        returns (bool, /* success */ uint256 /* outAmount */ )
-    {
-        try oracle.getQuote(inAmount, base, quote) returns (uint256 outAmount) {
-            return (true, outAmount);
-        } catch {
-            return (false, 0);
-        }
-    }
-
-    function _tryGetQuotes(IOracle oracle, uint256 inAmount, address base, address quote)
-        private
-        view
-        returns (bool, /* success */ uint256, /* askOut */ uint256 /* askOut */ )
-    {
-        try oracle.getQuotes(inAmount, base, quote) returns (uint256 bidOut, uint256 askOut) {
-            return (true, bidOut, askOut);
-        } catch {
-            return (false, 0, 0);
-        }
     }
 
     function _updateCooldowns(PackedUint32Array _cooldowns) internal {

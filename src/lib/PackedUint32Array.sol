@@ -52,8 +52,8 @@ library PackedUint32ArrayLib {
         return PackedUint32Array.wrap((PackedUint32Array.unwrap(array) & ~(MASK << offset)));
     }
 
-    function mask(PackedUint32Array array, PackedUint32Array map) internal pure returns (PackedUint32Array) {
-        return PackedUint32Array.wrap(PackedUint32Array.unwrap(array) & PackedUint32Array.unwrap(map));
+    function mask(PackedUint32Array array, PackedUint32Array bitMask) internal pure returns (PackedUint32Array) {
+        return PackedUint32Array.wrap(PackedUint32Array.unwrap(array) & PackedUint32Array.unwrap(bitMask));
     }
 
     function sum(PackedUint32Array array) internal pure returns (uint256) {
