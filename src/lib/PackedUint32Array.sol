@@ -14,6 +14,22 @@ library PackedUint32ArrayLib {
     error ValueOOB(uint256 value, uint256 maxValue);
     error IndexOOB(uint256 index, uint256 maxIndex);
 
+    function from(uint256[] memory inArray) internal pure returns (PackedUint32Array) {
+        uint256 length = inArray.length - 1;
+        _checkIndex(length - 1);
+
+        PackedUint32Array array;
+
+        for (uint256 i = 0; i < length;) {
+            array = array.set(i, inArray[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        return array;
+    }
+
     function get(PackedUint32Array array, uint256 index) internal pure returns (uint256) {
         _checkIndex(index);
 
@@ -34,6 +50,15 @@ library PackedUint32ArrayLib {
 
         uint256 offset = _getOffset(index);
         return PackedUint32Array.wrap((PackedUint32Array.unwrap(array) & ~(MASK << offset)));
+    }
+
+    function mask(PackedUint32Array array, PackedUint32Array map) internal pure returns (PackedUint32Array) {
+        return PackedUint32Array.wrap(PackedUint32Array.unwrap(array) & PackedUint32Array.unwrap(map));
+    }
+
+    function sum(PackedUint32Array array) internal pure returns (uint256) {
+        return array.get(0) + array.get(1) + array.get(2) + array.get(3) + array.get(4) + array.get(5) + array.get(6)
+            + array.get(7);
     }
 
     function eq(PackedUint32Array arrayA, PackedUint32Array arrayB) internal pure returns (bool) {

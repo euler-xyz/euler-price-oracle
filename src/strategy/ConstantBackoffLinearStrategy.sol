@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
-import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
+import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 
 contract ConstantBackoffLinearStrategy is ImmutableAddressArray {
     uint256 public immutable backOff;

@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
+import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 
 abstract contract Aggregator is ImmutableAddressArray {
     uint256 public immutable quorum;
@@ -21,6 +22,7 @@ abstract contract Aggregator is ImmutableAddressArray {
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         uint256[] memory answers = new uint256[](cardinality);
         uint256 numAnswers;
+        PackedUint32Array successMask;
 
         for (uint256 i = 0; i < cardinality;) {
             IOracle oracle = IOracle(_get(i));
@@ -28,6 +30,7 @@ abstract contract Aggregator is ImmutableAddressArray {
 
             unchecked {
                 if (success) {
+                    successMask = successMask.set(i, PackedUint32ArrayLib.MAX_VALUE);
                     answers[numAnswers] = answer;
                     numAnswers++;
                 }
@@ -43,11 +46,11 @@ abstract contract Aggregator is ImmutableAddressArray {
             mstore(answers, numAnswers)
         }
 
-        // aggregation logic - sort answers and return the median
-        return _aggregateQuotes(answers);
+        // custom aggregation logic here
+        return _aggregateQuotes(answers, successMask);
     }
 
-    function _aggregateQuotes(uint256[] memory quotes) internal view virtual returns (uint256);
+    function _aggregateQuotes(uint256[] memory, PackedUint32Array) internal view virtual returns (uint256);
 
     function _tryOracle(IOracle oracle, uint256 inAmount, address base, address quote)
         private
