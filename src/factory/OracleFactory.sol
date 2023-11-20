@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {LibClone} from "@solady/utils/LibClone.sol";
 import {Ownable} from "@solady/auth/Ownable.sol";
+import {LibClone} from "@solady/utils/LibClone.sol";
 
 contract OracleFactory is Ownable {
     struct ResolutionStrategy {
