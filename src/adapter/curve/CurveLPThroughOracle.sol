@@ -7,7 +7,6 @@ import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
 contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
-    address public immutable weth;
     ICurveRegistry public immutable metaRegistry;
     ICurveRegistry public immutable stableRegistry;
     IOracle public immutable forwardOracle;
@@ -18,14 +17,12 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
     error NoPoolFound(address lpToken);
 
     constructor(
-        address _weth,
         address _metaRegistry,
         address _stableRegistry,
         address _forwardOracle,
         address _lpToken,
         address[] memory _poolTokens
     ) ImmutableAddressArray(_poolTokens) {
-        weth = _weth;
         metaRegistry = ICurveRegistry(_metaRegistry);
         stableRegistry = ICurveRegistry(_stableRegistry);
         forwardOracle = IOracle(_forwardOracle);
