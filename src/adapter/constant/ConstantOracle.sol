@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 contract ConstantOracle {
-    uint256 public constant PRECISION_DECIMALS = 27;
+    uint256 public constant PRECISION = 10 ** 27;
     address public immutable base;
     address public immutable quote;
     uint256 public immutable rate;
@@ -21,13 +21,13 @@ contract ConstantOracle {
 
     function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
         if (_base != base || _quote != quote) revert NotSupported(_base, _quote);
-        uint256 price = _inAmount * rate / 10 ** PRECISION_DECIMALS;
+        uint256 price = _inAmount * rate / PRECISION;
         return price;
     }
 
     function getQuotes(uint256 _inAmount, address _base, address _quote) external view returns (uint256, uint256) {
         if (_base != base || _quote != quote) revert NotSupported(_base, _quote);
-        uint256 price = _inAmount * rate / 10 ** PRECISION_DECIMALS;
+        uint256 price = _inAmount * rate / PRECISION;
         return (price, price);
     }
 }

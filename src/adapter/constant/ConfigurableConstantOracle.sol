@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 contract ConfigurableConstantOracle {
-    uint256 public constant PRECISION_DECIMALS = 27;
+    uint256 public constant PRECISION = 10 ** 27;
 
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
 
@@ -30,13 +30,13 @@ contract ConfigurableConstantOracle {
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         uint256 rate = _getOrRevertConfig(base, quote);
-        uint256 price = inAmount * rate / 10 ** PRECISION_DECIMALS;
+        uint256 price = inAmount * rate / PRECISION;
         return price;
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 rate = _getOrRevertConfig(base, quote);
-        uint256 price = inAmount * rate / 10 ** PRECISION_DECIMALS;
+        uint256 price = inAmount * rate / PRECISION;
         return (price, price);
     }
 
