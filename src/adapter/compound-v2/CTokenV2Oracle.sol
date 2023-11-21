@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import {ICTokenV2} from "src/adapter/compound-v2/ICTokenV2.sol";
 
-contract CTokenV2ThroughOracle {
+contract CTokenV2Oracle {
     address public immutable cToken;
     address public immutable underlying;
 
