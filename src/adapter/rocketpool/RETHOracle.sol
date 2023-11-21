@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
 
-contract RETHOracle {
+contract RethOracle {
     address public immutable weth;
     address public immutable reth;
 
