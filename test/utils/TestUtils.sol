@@ -9,3 +9,20 @@ function boundAddr(address addr) pure returns (address) {
 
     return addr;
 }
+
+function boundAddrs(address[] memory addrs) pure returns (address[] memory) {
+    for (uint256 i = 0; i < addrs.length; ++i) {
+        addrs[i] = boundAddr(addrs[i]);
+    }
+    return addrs;
+}
+
+function makeAddrs(uint256 length) pure returns (address[] memory) {
+    address[] memory addrs = new address[](length);
+
+    for (uint256 i = 0; i < length; ++i) {
+        addrs[i] = address(uint160(uint256(keccak256(abi.encodePacked(i)))));
+    }
+
+    return addrs;
+}

@@ -33,7 +33,7 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
                 if (success) {
                     successMask = successMask.set(i, PackedUint32ArrayLib.MAX_VALUE);
                     answers[numAnswers] = answer;
-                    numAnswers++;
+                    ++numAnswers;
                 }
                 ++i;
             }

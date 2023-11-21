@@ -13,7 +13,7 @@ contract MedianAggregator is Aggregator {
         LibSort.insertionSort(quotes);
         uint256 length = quotes.length;
         uint256 midpoint = length / 2;
-        if (length % 2 == 0) {
+        if (length % 2 == 1) {
             return quotes[midpoint];
         } else {
             return (quotes[midpoint] + quotes[midpoint - 1]) / 2;
