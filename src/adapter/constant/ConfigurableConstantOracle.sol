@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-contract ConstantRateOracle {
+contract ConfigurableConstantOracle {
     uint256 public constant PRECISION_DECIMALS = 27;
-    uint256 public immutable maxStaleness;
 
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
 
