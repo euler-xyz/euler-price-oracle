@@ -11,7 +11,7 @@ contract ImmutablePythOracle is PythOracle {
         PythOracle(_pyth, _maxStaleness, tokens, feedIds)
     {}
 
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+    function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         PythStructs.Price memory baseStruct = _fetchPriceStruct(base);
         PythStructs.Price memory quoteStruct = _fetchPriceStruct(quote);
 
@@ -21,7 +21,12 @@ contract ImmutablePythOracle is PythOracle {
         return _combinePrices(inAmount, baseStruct, quoteStruct, baseDecimals, quoteDecimals);
     }
 
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+    function getQuotes(uint256 inAmount, address base, address quote)
+        external
+        view
+        override
+        returns (uint256, uint256)
+    {
         PythStructs.Price memory baseStruct = _fetchPriceStruct(base);
         PythStructs.Price memory quoteStruct = _fetchPriceStruct(quote);
 

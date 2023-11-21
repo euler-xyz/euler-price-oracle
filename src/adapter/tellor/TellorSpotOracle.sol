@@ -3,9 +3,10 @@ pragma solidity 0.8.22;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {UsingTellor} from "@tellor/UsingTellor.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
 /// @dev we can optimize construction of queries quite a bit
-contract TellorSpotOracle is UsingTellor {
+contract TellorSpotOracle is UsingTellor, IOracle {
     /// @dev Tellor is an optimistic oracle so too recent values are not trusted.
     /// @custom:read https://tellor.io/best-practices-for-oracle-users-on-ethereum/
     uint256 public immutable minStaleness;
@@ -54,27 +55,12 @@ contract TellorSpotOracle is UsingTellor {
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        TellorConfig memory config = configs[base][quote];
-        if (bytes(config.asset).length == 0) revert ConfigDoesNotExist(base, quote);
-
-        bytes32 queryId = keccak256(abi.encode("SpotPrice", abi.encode(config.asset, config.denom)));
-        uint256 maxTimestamp = block.timestamp - minStaleness;
-        (bytes memory answer, uint256 updatedAt) = getDataBefore(queryId, maxTimestamp);
-        if (updatedAt == 0) revert CouldNotPrice();
-
-        uint256 staleness = block.timestamp - updatedAt;
-        if (staleness > maxStaleness) revert PriceTooStale(staleness, maxStaleness);
-
-        uint256 price = abi.decode(answer, (uint256));
-        if (price == 0) revert InvalidPrice(price);
-
-        if (!config.inverse) return inAmount * price / 10 ** config.baseDecimals;
-        else return inAmount * 10 ** config.quoteDecimals / price;
+        return _getQuote(inAmount, base, quote);
     }
 
-    function canQuote(uint256, address base, address quote) external view returns (bool) {
-        TellorConfig memory config = configs[base][quote];
-        return bytes(config.asset).length > 0;
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
     }
 
     function _initConfig(InitTellorConfig memory config) internal {
@@ -96,5 +82,24 @@ contract TellorSpotOracle is UsingTellor {
             quoteDecimals: baseDecimals,
             inverse: true
         });
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        TellorConfig memory config = configs[base][quote];
+        if (bytes(config.asset).length == 0) revert ConfigDoesNotExist(base, quote);
+
+        bytes32 queryId = keccak256(abi.encode("SpotPrice", abi.encode(config.asset, config.denom)));
+        uint256 maxTimestamp = block.timestamp - minStaleness;
+        (bytes memory answer, uint256 updatedAt) = getDataBefore(queryId, maxTimestamp);
+        if (updatedAt == 0) revert CouldNotPrice();
+
+        uint256 staleness = block.timestamp - updatedAt;
+        if (staleness > maxStaleness) revert PriceTooStale(staleness, maxStaleness);
+
+        uint256 price = abi.decode(answer, (uint256));
+        if (price == 0) revert InvalidPrice(price);
+
+        if (!config.inverse) return inAmount * price / 10 ** config.baseDecimals;
+        else return inAmount * 10 ** config.quoteDecimals / price;
     }
 }

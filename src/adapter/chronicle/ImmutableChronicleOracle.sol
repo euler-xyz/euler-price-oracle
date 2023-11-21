@@ -3,8 +3,9 @@ pragma solidity 0.8.22;
 
 import {IChronicle} from "@chronicle-std/IChronicle.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
-contract ImmutableChronicleOracle {
+contract ImmutableChronicleOracle is IOracle {
     uint256 public immutable maxStaleness;
     mapping(address base => mapping(address quote => ChronicleConfig)) public configs;
 
@@ -36,23 +37,13 @@ contract ImmutableChronicleOracle {
         }
     }
 
-    function canQuote(uint256, address base, address quote) public view returns (bool) {
-        return configs[base][quote].feed != address(0);
-    }
-
-    function getQuote(uint256 inAmount, address base, address quote) public view returns (uint256) {
-        ChronicleConfig memory config = _getOrRevertConfig(base, quote);
-
-        (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
-        if (age > maxStaleness) revert PriceTooStale(age, maxStaleness);
-
-        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+        return _getQuote(inAmount, base, quote);
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 price = getQuote(inAmount, base, quote);
-        return (price, price);
+        uint256 outAmount = _getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
     }
 
     function _initConfig(address base, address quote, address feed) internal {
@@ -71,5 +62,15 @@ contract ImmutableChronicleOracle {
         ChronicleConfig memory config = configs[base][quote];
         if (config.feed == address(0)) revert NotConfigured(base, quote);
         return config;
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        ChronicleConfig memory config = _getOrRevertConfig(base, quote);
+
+        (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
+        if (age > maxStaleness) revert PriceTooStale(age, maxStaleness);
+
+        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
+        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
     }
 }

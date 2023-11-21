@@ -5,8 +5,9 @@ import {Denominations} from "@chainlink/Denominations.sol";
 import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
-abstract contract ChainlinkOracle {
+abstract contract ChainlinkOracle is IOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
     uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
@@ -38,15 +39,18 @@ abstract contract ChainlinkOracle {
         weth = _weth;
     }
 
-    function canQuote(uint256, address base, address quote) external view virtual returns (bool) {
-        ChainlinkConfig memory config = _getConfig(base, quote);
-        if (config.feed == address(0)) return false;
-        return true;
+    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
+        return _getQuote(inAmount, base, quote);
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
-        ChainlinkConfig memory config = _getConfig(base, quote);
-        return _getQuoteWithConfig(config, inAmount, base, quote);
+    function getQuotes(uint256 inAmount, address base, address quote)
+        external
+        view
+        virtual
+        returns (uint256, uint256)
+    {
+        uint256 outAmount = _getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
     }
 
     function _getQuoteWithConfig(ChainlinkConfig memory config, uint256 inAmount, address base, address quote)
@@ -164,5 +168,10 @@ abstract contract ChainlinkOracle {
         if (base == weth) return (quote, Denominations.ETH, true);
 
         revert NotSupported(base, quote);
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        ChainlinkConfig memory config = _getConfig(base, quote);
+        return _getQuoteWithConfig(config, inAmount, base, quote);
     }
 }

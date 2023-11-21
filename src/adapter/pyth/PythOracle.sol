@@ -4,8 +4,9 @@ pragma solidity 0.8.22;
 import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pyth-sdk-solidity/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
-abstract contract PythOracle {
+abstract contract PythOracle is IOracle {
     IPyth public immutable pyth;
     uint256 public immutable maxStaleness;
 
@@ -39,29 +40,12 @@ abstract contract PythOracle {
         }
     }
 
-    function canQuote(uint256, address base, address quote) external view returns (bool) {
-        bytes32 baseFeedId = configs[base].feedId;
-        if (baseFeedId == 0) return false;
-        bytes32 quoteFeedId = configs[quote].feedId;
-        if (quoteFeedId == 0) return false;
-
-        PythStructs.Price memory baseStruct;
-        try pyth.getPriceNoOlderThan(baseFeedId, maxStaleness) returns (PythStructs.Price memory _priceStruct) {
-            baseStruct = _priceStruct;
-        } catch {
-            return false;
-        }
-
-        PythStructs.Price memory quoteStruct;
-        try pyth.getPriceNoOlderThan(baseFeedId, maxStaleness) returns (PythStructs.Price memory _priceStruct) {
-            quoteStruct = _priceStruct;
-        } catch {
-            return false;
-        }
-
-        // todo: more checks
-        return true;
-    }
+    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256);
+    function getQuotes(uint256 inAmount, address base, address quote)
+        external
+        view
+        virtual
+        returns (uint256, uint256);
 
     function _initConfig(address token, bytes32 feedId) internal {
         uint8 decimals = ERC20(token).decimals();

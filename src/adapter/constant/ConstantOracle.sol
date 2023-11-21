@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-contract ConstantOracle {
+import {IOracle} from "src/interfaces/IOracle.sol";
+
+contract ConstantOracle is IOracle {
     uint256 public constant PRECISION = 10 ** 27;
     address public immutable base;
     address public immutable quote;
@@ -15,19 +17,17 @@ contract ConstantOracle {
         rate = _rate;
     }
 
-    function canQuote(uint256, address _base, address _quote) external view returns (bool) {
-        return base == _base && quote == _quote;
-    }
-
     function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
-        if (_base != base || _quote != quote) revert NotSupported(_base, _quote);
-        uint256 price = _inAmount * rate / PRECISION;
-        return price;
+        return _getQuote(_inAmount, _base, _quote);
     }
 
     function getQuotes(uint256 _inAmount, address _base, address _quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(_inAmount, _base, _quote);
+        return (outAmount, outAmount);
+    }
+
+    function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
         if (_base != base || _quote != quote) revert NotSupported(_base, _quote);
-        uint256 price = _inAmount * rate / PRECISION;
-        return (price, price);
+        return _inAmount * rate / PRECISION;
     }
 }

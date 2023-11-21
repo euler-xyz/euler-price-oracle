@@ -4,8 +4,8 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {IOracle} from "src/interfaces/IOracle.sol";
 import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
+import {IOracle} from "src/interfaces/IOracle.sol";
 
 abstract contract UniswapV3Oracle is IOracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
@@ -22,24 +22,12 @@ abstract contract UniswapV3Oracle is IOracle {
         uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
     }
 
-    function canQuote(uint256 inAmount, address base, address quote) external view returns (bool) {
-        if (inAmount > type(uint128).max) return false;
-        UniswapV3Config config = _getConfig(base, quote);
-        if (config.isEmpty()) return false;
-        if (config.getValidUntil() < block.timestamp) return false;
-        return true;
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+        return _getQuote(inAmount, base, quote);
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) public view returns (uint256) {
-        if (inAmount > type(uint128).max) revert InAmountTooLarge();
-        UniswapV3Config config = _getOrRevertConfig(base, quote);
-
-        (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());
-        return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
-    }
-
-    function getQuotes(uint256 inAmount, address base, address quote) public view returns (uint256, uint256) {
-        uint256 outAmount = getQuote(inAmount, base, quote);
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
     }
 
@@ -81,5 +69,13 @@ abstract contract UniswapV3Oracle is IOracle {
 
     function _sortTokens(address tokenA, address tokenB) internal pure returns (address, address) {
         return (tokenA < tokenB) ? (tokenA, tokenB) : (tokenB, tokenA);
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        if (inAmount > type(uint128).max) revert InAmountTooLarge();
+        UniswapV3Config config = _getOrRevertConfig(base, quote);
+
+        (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());
+        return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
     }
 }

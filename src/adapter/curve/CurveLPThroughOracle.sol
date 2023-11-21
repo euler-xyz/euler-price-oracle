@@ -43,7 +43,21 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
         }
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) public view override returns (uint256) {
+    function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
+        return _getQuote(inAmount, base, quote);
+    }
+
+    function getQuotes(uint256 inAmount, address base, address quote)
+        external
+        view
+        override
+        returns (uint256, uint256)
+    {
+        uint256 outAmount = _getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         if (base != lpToken) revert NotSupported(base, quote);
 
         uint256[8] memory balances = metaRegistry.get_balances(pool);
@@ -59,10 +73,5 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
         uint256 supply = ERC20(lpToken).totalSupply();
 
         return inAmount * supply / outAmountSum;
-    }
-
-    function getQuotes(uint256 inAmount, address base, address quote) public view override returns (uint256, uint256) {
-        uint256 outAmount = getQuote(inAmount, base, quote);
-        return (outAmount, outAmount);
     }
 }

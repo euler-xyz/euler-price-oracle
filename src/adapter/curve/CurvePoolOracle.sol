@@ -104,10 +104,6 @@ pragma solidity 0.8.22;
 //         }
 //     }
 
-//     function canQuote(uint256, address base, address quote) public view override returns (bool) {
-//         return configs[base][quote].pool != address(0);
-//     }
-
 //     function _getAsset(address token) private pure returns (address) {
 //         if (token == weth) return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 //         return token;

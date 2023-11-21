@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-contract ConfigurableConstantOracle {
+import {IOracle} from "src/interfaces/IOracle.sol";
+
+contract ConfigurableConstantOracle is IOracle {
     uint256 public constant PRECISION = 10 ** 27;
 
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
@@ -24,20 +26,13 @@ contract ConfigurableConstantOracle {
         }
     }
 
-    function canQuote(uint256, address base, address quote) external view returns (bool) {
-        return configs[base][quote] != 0;
-    }
-
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        uint256 rate = _getOrRevertConfig(base, quote);
-        uint256 price = inAmount * rate / PRECISION;
-        return price;
+        return _getQuote(inAmount, base, quote);
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 rate = _getOrRevertConfig(base, quote);
-        uint256 price = inAmount * rate / PRECISION;
-        return (price, price);
+        uint256 outAmount = _getQuote(inAmount, base, quote);
+        return (outAmount, outAmount);
     }
 
     function _initConfig(address base, address quote, uint256 rate) internal {
@@ -49,5 +44,10 @@ contract ConfigurableConstantOracle {
         uint256 rate = configs[base][quote];
         if (rate == 0) revert NotConfigured(base, quote);
         return rate;
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        uint256 rate = _getOrRevertConfig(base, quote);
+        return inAmount * rate / PRECISION;
     }
 }
