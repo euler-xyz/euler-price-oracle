@@ -1,5 +1,5 @@
-// // SPDX-License-Identifier: UNLICENSED
-// pragma solidity 0.8.22;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.22;
 
 // import {IOracle} from "src/interfaces/IOracle.sol";
 
@@ -43,7 +43,7 @@
 
 //     function initConfig(address base, address quote) external {
 //         address pool = metaRegistry.get_pool_from_lp_token(base);
-//         if(pool == address(0)) {
+//         if (pool == address(0)) {
 //             pool = metaRegistry.get_pool_from_lp_token(quote);
 //         }
 
@@ -65,10 +65,6 @@
 //             pool: pool,
 //             numTokens: index
 //         });
-//     }
-
-//     function _setConfig(address base, address quote, CurveConfig memory config) external {
-//         configs[base][quote] = config;
 //     }
 
 //     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
@@ -115,5 +111,9 @@
 //     function _getAsset(address token) private pure returns (address) {
 //         if (token == weth) return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 //         return token;
+//     }
+
+//     function _setConfig(address base, address quote, CurveConfig memory config) internal {
+//         configs[base][quote] = config;
 //     }
 // }
