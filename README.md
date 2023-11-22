@@ -1,5 +1,6 @@
 # Euler Oracles
 
+## Table of Contents
 <!-- TOC FOLLOWS -->
 <!-- START OF TOC -->
 <!-- md-toc: https://github.com/hoytech/md-toc -->
