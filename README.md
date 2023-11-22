@@ -5,6 +5,7 @@
 <!-- START OF TOC -->
 <!-- md-toc: https://github.com/hoytech/md-toc -->
 
+* [Table of Contents](#table-of-contents)
 * [Introduction](#introduction)
 * [Interface](#interface)
 * [Data structures](#data-structures)
