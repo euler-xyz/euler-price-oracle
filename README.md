@@ -74,7 +74,7 @@ function _aggregateQuotes(
     uint256[] memory quotes, 
     PackedUint32Array mask
 ) internal view returns (uint256) {
-        /// custom aggregation logic
+    /// custom aggregation logic
 }
 ```
 
