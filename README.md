@@ -70,9 +70,12 @@ Aggregator strategies simultaneously query up to 8 underlying oracles and apply 
 #### Custom Algorithms
 To implement a custom algorithm extend the base `Aggregator` contract and override the virtual `_aggregateQuotes` function.
 ```solidity
-    function _aggregateQuotes(uint256[] memory quotes, PackedUint32Array mask) internal view override returns (uint256) {
+function _aggregateQuotes(
+    uint256[] memory quotes, 
+    PackedUint32Array mask
+) internal view returns (uint256) {
         /// custom aggregation logic
-    }
+}
 ```
 
 `quotes` is a compressed array of all valid quotes. `mask` is a bitmask-like data structure that indicates which of the underlying oracles returned successfully.
