@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {ICurveRegistry} from "src/adapter/curve/ICurveRegistry.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
 contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
@@ -55,6 +56,10 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IOracle {
     {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.CurveLPThroughOracle();
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

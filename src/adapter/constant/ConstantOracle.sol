@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConstantOracle is IOracle {
     uint256 public constant PRECISION = 10 ** 27;
@@ -24,6 +25,10 @@ contract ConstantOracle is IOracle {
     function getQuotes(uint256 _inAmount, address _base, address _quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(_inAmount, _base, _quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.ConstantOracle();
     }
 
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {

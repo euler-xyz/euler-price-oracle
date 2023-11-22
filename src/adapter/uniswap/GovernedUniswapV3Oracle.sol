@@ -29,4 +29,8 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
         address token1 = IUniswapV3Pool(pool).token1();
         configs[token0][token1] = UniswapV3ConfigLib.empty();
     }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.GovernedUniswapV3Oracle(owner());
+    }
 }

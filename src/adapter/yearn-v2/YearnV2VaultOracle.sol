@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IYearnV2Vault} from "src/adapter/yearn-v2/IYearnV2Vault.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract YearnV2VaultOracle is IOracle {
     address public immutable yvToken;
@@ -27,6 +28,10 @@ contract YearnV2VaultOracle is IOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.YearnV2VaultOracle();
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

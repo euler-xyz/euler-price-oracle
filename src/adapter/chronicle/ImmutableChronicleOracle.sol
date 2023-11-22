@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {IChronicle} from "@chronicle-std/IChronicle.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutableChronicleOracle is IOracle {
     uint256 public immutable maxStaleness;
@@ -72,5 +73,9 @@ contract ImmutableChronicleOracle is IOracle {
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
+    }
+
+    function description() external view returns (OracleDescription.Description memory) {
+        return OracleDescription.ImmutableChronicleOracle(maxStaleness);
     }
 }

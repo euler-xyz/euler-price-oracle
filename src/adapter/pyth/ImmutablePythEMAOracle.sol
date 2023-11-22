@@ -5,6 +5,7 @@ import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pyth-sdk-solidity/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutablePythEMAOracle is PythOracle {
     constructor(address _pyth, uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds)
@@ -34,5 +35,9 @@ contract ImmutablePythEMAOracle is PythOracle {
         uint8 quoteDecimals = configs[quote].decimals;
 
         return _combinePricesWithSpread(inAmount, baseStruct, quoteStruct, baseDecimals, quoteDecimals);
+    }
+
+    function description() external view returns (OracleDescription.Description memory) {
+        return OracleDescription.ImmutablePythEMAOracle(maxStaleness);
     }
 }

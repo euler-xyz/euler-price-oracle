@@ -5,6 +5,7 @@ import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
     uint24 public constant DEFAULT_TWAP_WINDOW = 30 minutes;
@@ -42,5 +43,9 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
         uint32 validUntil = uint32(block.timestamp) + selectedTwapWindow / 4; // todo: this can be a bit more accurate
 
         return _setConfig(token0, token1, selectedPool, validUntil, selectedFee, uint24(selectedTwapWindow));
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.ImmutableUniswapV3Oracle();
     }
 }

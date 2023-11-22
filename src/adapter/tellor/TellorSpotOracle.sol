@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {UsingTellor} from "@tellor/UsingTellor.sol";
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @dev we can optimize construction of queries quite a bit
 contract TellorSpotOracle is UsingTellor, IOracle {
@@ -61,6 +62,10 @@ contract TellorSpotOracle is UsingTellor, IOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.TellorSpotOracle(maxStaleness);
     }
 
     function _initConfig(InitTellorConfig memory config) internal {
