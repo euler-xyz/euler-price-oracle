@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
@@ -27,7 +27,7 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
         PackedUint32Array successMask;
 
         for (uint256 i = 0; i < cardinality;) {
-            IOracle oracle = IOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_get(i));
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
 
             unchecked {

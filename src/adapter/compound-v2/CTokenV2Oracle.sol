@@ -2,10 +2,10 @@
 pragma solidity 0.8.22;
 
 import {ICTokenV2} from "src/adapter/compound-v2/ICTokenV2.sol";
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract CTokenV2Oracle is IOracle {
+contract CTokenV2Oracle is IPriceOracle {
     address public immutable cToken;
     address public immutable underlying;
 

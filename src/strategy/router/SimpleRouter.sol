@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {Router} from "src/strategy/router/Router.sol";
 
@@ -13,7 +13,7 @@ contract SimpleRouter is Router {
     {}
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
-        IOracle oracle = oracles[base][quote];
+        IPriceOracle oracle = oracles[base][quote];
         if (address(oracle) == address(0)) revert NoOracleSet(base, quote);
         return oracle.getQuote(inAmount, base, quote);
     }
@@ -24,7 +24,7 @@ contract SimpleRouter is Router {
         override
         returns (uint256, uint256)
     {
-        IOracle oracle = oracles[base][quote];
+        IPriceOracle oracle = oracles[base][quote];
         if (address(oracle) == address(0)) revert NoOracleSet(base, quote);
         return oracle.getQuotes(inAmount, base, quote);
     }

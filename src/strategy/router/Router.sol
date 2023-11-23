@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-abstract contract Router is IOracle {
-    mapping(address base => mapping(address quote => IOracle)) public oracles;
+abstract contract Router is IPriceOracle {
+    mapping(address base => mapping(address quote => IPriceOracle)) public oracles;
 
     error ArityMismatch(uint256 arityA, uint256 arityB, uint256 arityC);
 
@@ -21,7 +21,7 @@ abstract contract Router is IOracle {
             address quote = _quotes[i];
             address oracle = _oracles[i];
 
-            oracles[base][quote] = IOracle(oracle);
+            oracles[base][quote] = IPriceOracle(oracle);
 
             unchecked {
                 ++i;

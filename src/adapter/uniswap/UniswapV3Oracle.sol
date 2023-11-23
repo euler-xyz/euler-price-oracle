@@ -5,9 +5,9 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 
-abstract contract UniswapV3Oracle is IOracle {
+abstract contract UniswapV3Oracle is IPriceOracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
     mapping(address token0 => mapping(address token1 => UniswapV3Config)) public configs;
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;

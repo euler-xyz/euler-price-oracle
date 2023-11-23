@@ -4,7 +4,7 @@ pragma solidity 0.8.22;
 import "forge-std/Test.sol";
 import {AggregatorHarness} from "test/utils/AggregatorHarness.sol";
 import {boundAddr, boundAddrs, makeAddrs} from "test/utils/TestUtils.sol";
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
@@ -55,7 +55,7 @@ contract AggregatorTest is Test {
         AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < numOracles; ++i) {
-            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), "oops");
+            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
         vm.expectRevert(abi.encodeWithSelector(Aggregator.QuorumNotReached.selector, 0, quorum));
@@ -75,11 +75,11 @@ contract AggregatorTest is Test {
         AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum - 1; ++i) {
-            vm.mockCall(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), abi.encode(1));
+            vm.mockCall(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(1));
         }
 
         for (uint256 i = quorum; i < numOracles; ++i) {
-            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), "oops");
+            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
         vm.expectRevert(abi.encodeWithSelector(Aggregator.QuorumNotReached.selector, quorum - 1, quorum));
@@ -95,11 +95,11 @@ contract AggregatorTest is Test {
         AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum; ++i) {
-            vm.mockCall(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), abi.encode(1));
+            vm.mockCall(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(1));
         }
 
         for (uint256 i = quorum + 1; i < numOracles; ++i) {
-            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), "oops");
+            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
         aggregator.getQuote(inAmount, base, quote);
@@ -118,11 +118,11 @@ contract AggregatorTest is Test {
         AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum; ++i) {
-            vm.mockCall(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), abi.encode(1));
+            vm.mockCall(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(1));
         }
 
         for (uint256 i = quorum + 1; i < numOracles; ++i) {
-            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IOracle.getQuote.selector), "oops");
+            vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
         aggregator.getQuote(inAmount, base, quote);

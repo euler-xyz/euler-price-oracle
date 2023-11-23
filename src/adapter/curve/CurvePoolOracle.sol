@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-// import {IOracle} from "src/interfaces/IOracle.sol";
+// import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 
 // interface ICurve2Pool {
 //     function ma_half_time() external view returns (uint256);
@@ -21,7 +21,7 @@ pragma solidity 0.8.22;
 //     function get_coins(address pool) view returns (address[8] memory);
 // }
 
-// contract CurveLPOracle is IOracle {
+// contract CurveLPOracle is IPriceOracle {
 //     address public immutable weth;
 //     ICurveRegistry public immutable metaRegistry;
 //     ICurveRegistry public immutable stableRegistry;

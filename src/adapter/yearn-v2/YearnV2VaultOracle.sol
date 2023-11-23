@@ -3,10 +3,10 @@ pragma solidity 0.8.22;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IYearnV2Vault} from "src/adapter/yearn-v2/IYearnV2Vault.sol";
-import {IOracle} from "src/interfaces/IOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract YearnV2VaultOracle is IOracle {
+contract YearnV2VaultOracle is IPriceOracle {
     address public immutable yvToken;
     address public immutable underlying;
     uint8 public immutable yvTokenDecimals;
