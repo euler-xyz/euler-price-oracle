@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {Router} from "src/strategy/router/Router.sol";
 
 contract SimpleRouter is Router {
@@ -26,5 +27,9 @@ contract SimpleRouter is Router {
         IOracle oracle = oracles[base][quote];
         if (address(oracle) == address(0)) revert NoOracleSet(base, quote);
         return oracle.getQuotes(inAmount, base, quote);
+    }
+
+    function description() external pure override returns (OracleDescription.Description memory) {
+        return OracleDescription.SimpleRouter();
     }
 }

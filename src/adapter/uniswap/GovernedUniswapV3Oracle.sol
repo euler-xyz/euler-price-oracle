@@ -6,6 +6,7 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
     error PoolMismatch(address configPool, address factoryPool);
@@ -30,7 +31,7 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
         configs[token0][token1] = UniswapV3ConfigLib.empty();
     }
 
-    function description() external pure returns (OracleDescription.Description memory) {
+    function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.GovernedUniswapV3Oracle(owner());
     }
 }

@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
@@ -50,6 +51,8 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
         // custom aggregation logic here
         return _aggregateQuotes(answers, successMask);
     }
+
+    function description() external pure virtual returns (OracleDescription.Description memory);
 
     function _aggregateQuotes(uint256[] memory, PackedUint32Array) internal view virtual returns (uint256);
 }

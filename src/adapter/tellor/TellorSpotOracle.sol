@@ -64,7 +64,7 @@ contract TellorSpotOracle is UsingTellor, IOracle {
         return (outAmount, outAmount);
     }
 
-    function description() external pure returns (OracleDescription.Description memory) {
+    function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.TellorSpotOracle(maxStaleness);
     }
 

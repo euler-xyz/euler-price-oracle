@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 abstract contract Router is IOracle {
     mapping(address base => mapping(address quote => IOracle)) public oracles;
@@ -28,11 +29,12 @@ abstract contract Router is IOracle {
         }
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {}
+    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256);
     function getQuotes(uint256 inAmount, address base, address quote)
         external
         view
         virtual
-        returns (uint256, uint256)
-    {}
+        returns (uint256, uint256);
+
+    function description() external view virtual returns (OracleDescription.Description memory);
 }

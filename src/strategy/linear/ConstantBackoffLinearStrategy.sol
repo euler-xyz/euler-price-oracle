@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
@@ -62,6 +63,10 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
 
         _updateCooldowns(_cooldowns);
         return (0, 0);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.ConstantBackoffLinearStrategy();
     }
 
     function _updateCooldowns(PackedUint32Array _cooldowns) internal {

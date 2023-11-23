@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import {IOracle} from "src/interfaces/IOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 contract LinearStrategy is IOracle, TryCallOracle, ImmutableAddressArray {
@@ -38,5 +39,9 @@ contract LinearStrategy is IOracle, TryCallOracle, ImmutableAddressArray {
         }
 
         revert NoAnswer();
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.LinearStrategy();
     }
 }

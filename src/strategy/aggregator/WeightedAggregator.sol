@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
@@ -13,6 +14,10 @@ contract WeightedAggregator is Aggregator {
         if (_oracles.length != _weights.length) revert ArityMismatch(_oracles.length, _weights.length);
 
         weights = PackedUint32ArrayLib.from(_weights);
+    }
+
+    function description() external pure override returns (OracleDescription.Description memory) {
+        return OracleDescription.WeightedAggregator();
     }
 
     function _aggregateQuotes(uint256[] memory quotes, PackedUint32Array successMask)
