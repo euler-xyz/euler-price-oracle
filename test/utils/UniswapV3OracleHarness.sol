@@ -8,7 +8,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract UniswapV3OracleHarness is UniswapV3Oracle {
     constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}
 
-    function description() external view returns (OracleDescription.Description memory d) {}
+    function description() external view returns (OracleDescription.Description memory) {}
 
     function getConfig(address base, address quote) external view returns (UniswapV3Config) {
         return _getConfig(base, quote);
