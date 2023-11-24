@@ -10,6 +10,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Constant",
             children: new address[](0)
         });
     }
@@ -22,6 +23,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Linear",
             children: new address[](0)
         });
     }
@@ -34,6 +36,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Constant",
             children: new address[](0)
         });
     }
@@ -46,6 +49,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Compound V2",
             children: new address[](0)
         });
     }
@@ -58,6 +62,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Curve LP Token",
             children: new address[](0)
         });
     }
@@ -70,6 +75,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Router",
             children: new address[](0)
         });
     }
@@ -86,6 +92,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: governor, supportsBidAskSpread: false}),
+            name: "Chainlink",
             children: new address[](0)
         });
     }
@@ -98,6 +105,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
+            name: "Uniswap V3",
             children: new address[](0)
         });
     }
@@ -110,6 +118,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
+            name: "Chainlink",
             children: new address[](0)
         });
     }
@@ -122,6 +131,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
+            name: "Chronicle",
             children: new address[](0)
         });
     }
@@ -134,6 +144,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
+            name: "Pyth",
             children: new address[](0)
         });
     }
@@ -146,6 +157,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
+            name: "Pyth",
             children: new address[](0)
         });
     }
@@ -158,6 +170,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Uniswap V3",
             children: new address[](0)
         });
     }
@@ -170,6 +183,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Linear",
             children: new address[](0)
         });
     }
@@ -182,6 +196,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Aggregator (Max)",
             children: new address[](0)
         });
     }
@@ -194,6 +209,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Aggregator (Median)",
             children: new address[](0)
         });
     }
@@ -206,6 +222,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Aggregator (Mean)",
             children: new address[](0)
         });
     }
@@ -218,6 +235,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Aggregator (Min)",
             children: new address[](0)
         });
     }
@@ -230,6 +248,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Router",
             children: new address[](0)
         });
     }
@@ -242,6 +261,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Reth",
             children: new address[](0)
         });
     }
@@ -254,6 +274,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
+            name: "Tellor",
             children: new address[](0)
         });
     }
@@ -266,6 +287,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Yearn V2 Vault",
             children: new address[](0)
         });
     }
@@ -278,6 +300,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Aggregator (Weighted)",
             children: new address[](0)
         });
     }
@@ -290,6 +313,7 @@ library OracleDescription {
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Lido wstEth",
             children: new address[](0)
         });
     }
@@ -349,6 +373,7 @@ library OracleDescription {
         RequestModel requestModel;
         Variant variant;
         Configuration configuration;
+        string name;
         address[] children;
     }
 }
