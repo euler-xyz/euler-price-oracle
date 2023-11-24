@@ -188,7 +188,7 @@ library OracleDescription {
         });
     }
 
-    function MaxAggregator() internal pure returns (Description memory) {
+    function SimpleAggregator() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.AGGREGATE_MAX,
             authority: Authority.IMMUTABLE,
@@ -196,46 +196,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Max)",
-            children: new address[](0)
-        });
-    }
-
-    function MedianAggregator() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.AGGREGATE_MEDIAN,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Median)",
-            children: new address[](0)
-        });
-    }
-
-    function MeanAggregator() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.AGGREGATE_MEAN,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Mean)",
-            children: new address[](0)
-        });
-    }
-
-    function MinAggregator() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.AGGREGATE_MIN,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Min)",
+            name: "Aggregator (Simple)",
             children: new address[](0)
         });
     }
