@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
+import {AggregatorAlgorithms} from "src/strategy/aggregator/AggregatorAlgorithms.sol";
 
 contract WeightedAggregator is Aggregator {
     PackedUint32Array public immutable weights;
@@ -27,24 +28,6 @@ contract WeightedAggregator is Aggregator {
         returns (uint256)
     {
         PackedUint32Array _weights = weights;
-        uint256 totalWeight = _weights.mask(successMask).sum();
-        uint256 weightedSum;
-        uint256 length = quotes.length;
-
-        uint256 j;
-        for (uint256 i = 0; i < length;) {
-            for (; j < length;) {
-                if (successMask.get(j) != 0) break;
-                unchecked {
-                    ++j;
-                }
-            }
-            weightedSum += quotes[i] * _weights.get(j);
-            unchecked {
-                ++i;
-            }
-        }
-
-        return weightedSum / totalWeight;
+        return AggregatorAlgorithms.weightedArithmeticMean(quotes, _weights, successMask);
     }
 }
