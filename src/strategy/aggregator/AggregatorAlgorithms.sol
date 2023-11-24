@@ -83,4 +83,34 @@ library AggregatorAlgorithms {
 
         return weightedSum / totalWeight;
     }
+
+    enum ArithmeticOperation {
+        ADD,
+        SUB,
+        MUL,
+        DIV
+    }
+
+    function combine(uint256[] memory quotes, PackedUint32Array, ArithmeticOperation[] memory ops)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 result = quotes[0];
+        uint256 length = quotes.length;
+
+        for (uint256 i = 0; i < length;) {
+            ArithmeticOperation op = ops[i];
+            uint256 quote = quotes[i];
+            if (op == ArithmeticOperation.ADD) result += quote;
+            else if (op == ArithmeticOperation.SUB) result -= quote;
+            else if (op == ArithmeticOperation.MUL) result *= quote;
+            else if (op == ArithmeticOperation.DIV) result *= quote;
+            unchecked {
+                ++i;
+            }
+        }
+
+        return result;
+    }
 }
