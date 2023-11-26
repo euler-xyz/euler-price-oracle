@@ -3,13 +3,12 @@ pragma solidity 0.8.22;
 
 import {IWstEth} from "src/adapter/lido/IWstEth.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract WstEthOracle is IPriceOracle {
     address public immutable stEth;
     address public immutable wstEth;
-
-    error NotSupported(address base, address quote);
 
     constructor(address _stEth, address _wstEth) {
         stEth = _stEth;
@@ -40,6 +39,6 @@ contract WstEthOracle is IPriceOracle {
             return inAmount * rate / 1e18;
         }
 
-        revert NotSupported(base, quote);
+        revert Errors.NotSupported(base, quote);
     }
 }

@@ -32,9 +32,6 @@ pragma solidity 0.8.22;
 //         uint8 numTokens;
 //     }
 
-//     error NotSupported(address base, address quote);
-//     error NoPoolFound(address base, address quote);
-
 //     constructor(address _weth, address _metaRegistry, address _stableRegistry) {
 //         weth = _weth;
 //         metaRegistry = ICurveRegistry(_metaRegistry);
@@ -48,7 +45,7 @@ pragma solidity 0.8.22;
 //         }
 
 //         // no such lp token
-//         if (pool == address(0)) revert NoPoolFound(base, quote);
+//         if (pool == address(0)) revert Errors.CurvePoolNotFound(base, quote);
 
 //         address[8] memory coins = metaRegistry.get_coins(pool);
 
@@ -70,7 +67,7 @@ pragma solidity 0.8.22;
 //     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
 //         CurveConfig memory config = configs[base][quote];
 //         address pool = config.pool;
-//         if (pool == address(0)) revert NotSupported(base, quote);
+//         if (pool == address(0)) revert Errors.NotSupported(base, quote);
 
 //         uint256 numTokens = config.numTokens;
 //         address[8] memory balances = metaRegistry.get_balances(pool);

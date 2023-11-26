@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {ICurveRegistry} from "src/adapter/curve/ICurveRegistry.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
@@ -13,9 +14,6 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
     IPriceOracle public immutable forwardOracle;
     address public immutable lpToken;
     address public immutable pool;
-
-    error NotSupported(address base, address quote);
-    error NoPoolFound(address lpToken);
 
     constructor(
         address _metaRegistry,
@@ -30,7 +28,7 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
         lpToken = _lpToken;
 
         address _pool = metaRegistry.get_pool_from_lp_token(lpToken);
-        if (_pool == address(0)) revert NoPoolFound(lpToken);
+        if (_pool == address(0)) revert Errors.CurvePoolNotFound(lpToken);
         pool = _pool;
 
         address[8] memory poolTokens = metaRegistry.get_coins(pool);
@@ -63,7 +61,7 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != lpToken) revert NotSupported(base, quote);
+        if (base != lpToken) revert Errors.NotSupported(base, quote);
 
         uint256[8] memory balances = metaRegistry.get_balances(pool);
 

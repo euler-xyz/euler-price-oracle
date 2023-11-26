@@ -48,7 +48,6 @@ contract ImmutableAddressArray {
     }
 
     function _getOrReturnZero(address[] memory arr, uint256 i) private pure returns (address) {
-        if (i < arr.length) return arr[i];
-        return address(0);
+        return i < arr.length ? arr[i] : address(0);
     }
 }

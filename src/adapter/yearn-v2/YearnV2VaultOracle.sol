@@ -4,6 +4,7 @@ pragma solidity 0.8.22;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IYearnV2Vault} from "src/adapter/yearn-v2/IYearnV2Vault.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract YearnV2VaultOracle is IPriceOracle {
@@ -11,8 +12,6 @@ contract YearnV2VaultOracle is IPriceOracle {
     address public immutable underlying;
     uint8 public immutable yvTokenDecimals;
     uint8 public immutable underlyingDecimals;
-
-    error NotSupported(address base, address quote);
 
     constructor(address _yvToken) {
         yvToken = _yvToken;
@@ -45,6 +44,6 @@ contract YearnV2VaultOracle is IPriceOracle {
             return inAmount * price / 10 ** yvTokenDecimals;
         }
 
-        revert NotSupported(base, quote);
+        revert Errors.NotSupported(base, quote);
     }
 }

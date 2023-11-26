@@ -5,12 +5,11 @@ import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
     uint24 public constant DEFAULT_TWAP_WINDOW = 30 minutes;
-
-    error NoPoolFound(address base, address quote);
 
     constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}
 
@@ -38,7 +37,7 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
             }
         }
 
-        if (selectedPool == address(0)) revert NoPoolFound(base, quote);
+        if (selectedPool == address(0)) revert Errors.UniV3PoolNotFound(base, quote);
 
         uint32 validUntil = uint32(block.timestamp) + selectedTwapWindow / 4; // todo: this can be a bit more accurate
 

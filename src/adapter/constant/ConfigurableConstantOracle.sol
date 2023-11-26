@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConfigurableConstantOracle is IPriceOracle {
@@ -9,13 +10,9 @@ contract ConfigurableConstantOracle is IPriceOracle {
 
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
 
-    error AlreadyConfigured(address base, address quote);
-    error ArityMismatch(uint256 arityA, uint256 arityB, uint256 arityC);
-    error NotConfigured(address base, address quote);
-
     constructor(address[] memory bases, address[] memory quotes, uint256[] memory rates) {
         if (bases.length != quotes.length || quotes.length != rates.length) {
-            revert ArityMismatch(bases.length, quotes.length, rates.length);
+            revert Errors.Arity3Mismatch(bases.length, quotes.length, rates.length);
         }
 
         uint256 length = bases.length;
@@ -41,13 +38,13 @@ contract ConfigurableConstantOracle is IPriceOracle {
     }
 
     function _initConfig(address base, address quote, uint256 rate) internal {
-        if (configs[base][quote] != 0) revert AlreadyConfigured(base, quote);
+        if (configs[base][quote] != 0) revert Errors.AlreadyConfigured(base, quote);
         configs[base][quote] = rate;
     }
 
     function _getOrRevertConfig(address base, address quote) internal view returns (uint256) {
         uint256 rate = configs[base][quote];
-        if (rate == 0) revert NotConfigured(base, quote);
+        if (rate == 0) revert Errors.NotSupported(base, quote);
         return rate;
     }
 

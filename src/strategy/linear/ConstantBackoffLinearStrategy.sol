@@ -11,8 +11,6 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
     uint256 public immutable backOff;
     PackedUint32Array public cooldowns;
 
-    error NoAnswer();
-
     constructor(address[] memory _oracles, uint256 _backoff) ImmutableAddressArray(_oracles) {
         backOff = _backoff;
     }

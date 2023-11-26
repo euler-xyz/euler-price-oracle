@@ -6,6 +6,7 @@ import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 
 abstract contract ChainlinkOracle is IPriceOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
@@ -25,14 +26,6 @@ abstract contract ChainlinkOracle is IPriceOracle {
         uint8 feedDecimals;
         bool inverse;
     }
-
-    error CallReverted(bytes reason);
-    error InvalidAnswer(int256 answer);
-    error NoFeedConfigured(address base, address quote);
-    error NotSupported(address base, address quote);
-    error PriceTooStale(uint256 staleness, uint256 maxStaleness);
-    error RoundIncomplete();
-    error RoundTooLong(uint256 duration, uint256 maxDuration);
 
     constructor(address _feedRegistry, address _weth) {
         feedRegistry = FeedRegistryInterface(_feedRegistry);
@@ -67,22 +60,22 @@ abstract contract ChainlinkOracle is IPriceOracle {
         }
 
         (bool success, bytes memory returnData) = config.feed.staticcall(data);
-        if (!success) revert CallReverted(returnData);
+        if (!success) revert Errors.CallReverted(returnData);
 
         (, int256 answer, uint256 startedAt, uint256 updatedAt,) =
             abi.decode(returnData, (uint80, int256, uint256, uint256, uint80));
 
-        if (answer <= 0) revert InvalidAnswer(answer);
-        if (updatedAt == 0) revert RoundIncomplete();
+        if (answer <= 0) revert Errors.InvalidAnswer(answer);
+        if (updatedAt == 0) revert Errors.RoundIncomplete();
 
         uint256 roundDuration = updatedAt - startedAt;
         if (roundDuration > config.maxDuration) {
-            revert RoundTooLong(roundDuration, config.maxDuration);
+            revert Errors.RoundTooLong(roundDuration, config.maxDuration);
         }
 
         uint256 staleness = block.timestamp - updatedAt;
         if (staleness >= config.maxStaleness) {
-            revert PriceTooStale(staleness, config.maxStaleness);
+            revert Errors.PriceTooStale(staleness, config.maxStaleness);
         }
 
         uint256 unitPrice = uint256(answer);
@@ -93,7 +86,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
 
     function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {
         ChainlinkConfig memory config = configs[base][quote];
-        if (config.feed == address(0)) revert NoFeedConfigured(base, quote);
+        if (config.feed == address(0)) revert Errors.NoFeedConfigured(base, quote);
         return config;
     }
 
@@ -159,7 +152,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
     }
 
     function _getFeedDecimals(address asset, address denom) internal pure returns (uint8) {
-        if (denom != Denominations.ETH) revert NotSupported(asset, denom);
+        if (denom != Denominations.ETH) revert Errors.NotSupported(asset, denom);
         return 18;
     }
 
@@ -167,7 +160,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
         if (quote == weth) return (base, Denominations.ETH, false);
         if (base == weth) return (quote, Denominations.ETH, true);
 
-        revert NotSupported(base, quote);
+        revert Errors.NotSupported(base, quote);
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

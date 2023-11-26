@@ -3,13 +3,12 @@ pragma solidity 0.8.22;
 
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract RethOracle is IPriceOracle {
     address public immutable weth;
     address public immutable reth;
-
-    error NotSupported(address base, address quote);
 
     constructor(address _weth, address _reth) {
         weth = _weth;
@@ -38,6 +37,6 @@ contract RethOracle is IPriceOracle {
             return IReth(reth).getRethValue(inAmount);
         }
 
-        revert NotSupported(base, quote);
+        revert Errors.NotSupported(base, quote);
     }
 }

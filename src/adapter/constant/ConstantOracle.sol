@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConstantOracle is IPriceOracle {
@@ -9,8 +10,6 @@ contract ConstantOracle is IPriceOracle {
     address public immutable base;
     address public immutable quote;
     uint256 public immutable rate;
-
-    error NotSupported(address base, address quote);
 
     constructor(address _base, address _quote, uint256 _rate) {
         base = _base;
@@ -32,7 +31,7 @@ contract ConstantOracle is IPriceOracle {
     }
 
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
-        if (_base != base || _quote != quote) revert NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.NotSupported(_base, _quote);
         return _inAmount * rate / PRECISION;
     }
 }

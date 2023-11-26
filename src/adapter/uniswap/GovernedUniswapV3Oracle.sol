@@ -6,11 +6,10 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
-    error PoolMismatch(address configPool, address factoryPool);
-
     constructor(address _uniswapV3Factory, address _owner) UniswapV3Oracle(_uniswapV3Factory) {
         _initializeOwner(_owner);
     }
@@ -20,7 +19,7 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
         address token1 = IUniswapV3Pool(pool).token1();
         uint24 fee = IUniswapV3Pool(pool).fee();
         address factoryPool = uniswapV3Factory.getPool(token0, token1, fee);
-        if (factoryPool != pool) revert PoolMismatch(pool, factoryPool);
+        if (factoryPool != pool) revert Errors.PoolMismatch(pool, factoryPool);
 
         _setConfig(token0, token1, pool, type(uint32).max, fee, twapWindow);
     }

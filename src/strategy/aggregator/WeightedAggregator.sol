@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {OracleDescription} from "src/lib/OracleDescription.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 import {AggregatorAlgorithms} from "src/strategy/aggregator/AggregatorAlgorithms.sol";
@@ -9,11 +10,8 @@ import {AggregatorAlgorithms} from "src/strategy/aggregator/AggregatorAlgorithms
 contract WeightedAggregator is Aggregator {
     PackedUint32Array public immutable weights;
 
-    error ArityMismatch(uint256 arityA, uint256 arityB);
-
     constructor(address[] memory _oracles, uint256[] memory _weights, uint256 _quorum) Aggregator(_oracles, _quorum) {
-        if (_oracles.length != _weights.length) revert ArityMismatch(_oracles.length, _weights.length);
-
+        if (_oracles.length != _weights.length) revert Errors.Arity2Mismatch(_oracles.length, _weights.length);
         weights = PackedUint32ArrayLib.from(_weights);
     }
 

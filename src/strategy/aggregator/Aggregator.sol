@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
@@ -10,13 +11,9 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
     uint256 public immutable quorum;
 
-    error QuorumNotReached(uint256 count, uint256 quorum);
-    error QuorumTooLarge(uint256 quorum, uint256 maxQuorum);
-    error QuorumZero();
-
     constructor(address[] memory _oracles, uint256 _quorum) ImmutableAddressArray(_oracles) {
-        if (_quorum == 0) revert QuorumZero();
-        if (_quorum > cardinality) revert QuorumTooLarge(_quorum, cardinality);
+        if (_quorum == 0) revert Errors.QuorumZero();
+        if (_quorum > cardinality) revert Errors.QuorumTooLarge(_quorum, cardinality);
 
         quorum = _quorum;
     }
@@ -40,7 +37,7 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        if (numAnswers < quorum) revert QuorumNotReached(numAnswers, quorum);
+        if (numAnswers < quorum) revert Errors.QuorumNotReached(numAnswers, quorum);
 
         assembly {
             // update the length of answer

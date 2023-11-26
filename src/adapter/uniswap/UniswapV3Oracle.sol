@@ -6,6 +6,7 @@ import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 
 abstract contract UniswapV3Oracle is IPriceOracle {
     IUniswapV3Factory public immutable uniswapV3Factory;
@@ -13,10 +14,6 @@ abstract contract UniswapV3Oracle is IPriceOracle {
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
     event ConfigSet(address indexed token0, address indexed token1, address indexed pool, uint24 twapWindow);
-
-    error ConfigExpired(address base, address quote);
-    error InAmountTooLarge();
-    error NoPoolConfigured(address base, address quote);
 
     constructor(address _uniswapV3Factory) {
         uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
@@ -38,8 +35,8 @@ abstract contract UniswapV3Oracle is IPriceOracle {
 
     function _getOrRevertConfig(address base, address quote) internal view returns (UniswapV3Config) {
         UniswapV3Config config = _getConfig(base, quote);
-        if (config.isEmpty()) revert NoPoolConfigured(base, quote);
-        if (config.getValidUntil() < block.timestamp) revert ConfigExpired(base, quote);
+        if (config.isEmpty()) revert Errors.NoPoolConfigured(base, quote);
+        if (config.getValidUntil() < block.timestamp) revert Errors.ConfigExpired(base, quote);
         return config;
     }
 
@@ -72,7 +69,7 @@ abstract contract UniswapV3Oracle is IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (inAmount > type(uint128).max) revert InAmountTooLarge();
+        if (inAmount > type(uint128).max) revert Errors.InAmountTooLarge();
         UniswapV3Config config = _getOrRevertConfig(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());

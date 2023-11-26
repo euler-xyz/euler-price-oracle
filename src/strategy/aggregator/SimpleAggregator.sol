@@ -2,6 +2,7 @@
 pragma solidity 0.8.22;
 
 import {LibSort} from "@solady/utils/LibSort.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
@@ -15,8 +16,6 @@ contract SimpleAggregator is Aggregator {
         MIN
     }
 
-    error InvalidAlgorithm();
-
     function(uint256[] memory, PackedUint32Array) view returns (uint256) internal immutable algorithm;
 
     constructor(address[] memory _oracles, uint256 _quorum, Algorithm _algorithm) Aggregator(_oracles, _quorum) {
@@ -29,7 +28,7 @@ contract SimpleAggregator is Aggregator {
         } else if (_algorithm == Algorithm.MIN) {
             algorithm = AggregatorAlgorithms.min;
         } else {
-            revert InvalidAlgorithm();
+            revert Errors.InvalidAlgorithm();
         }
     }
 

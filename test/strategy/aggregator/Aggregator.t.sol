@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {AggregatorHarness} from "test/utils/AggregatorHarness.sol";
 import {boundAddr, boundAddrs, makeAddrs} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
@@ -23,14 +24,14 @@ contract AggregatorTest is Test {
 
     function test_Constructor_RevertsWhen_QuorumIsZero(address[] memory oracles) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
-        vm.expectRevert(Aggregator.QuorumZero.selector);
+        vm.expectRevert(Errors.QuorumZero.selector);
         new AggregatorHarness(oracles, 0);
     }
 
     function test_Constructor_RevertsWhen_QuorumGtOraclesLength(address[] memory oracles, uint256 quorum) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
         quorum = bound(quorum, oracles.length + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Aggregator.QuorumTooLarge.selector, quorum, oracles.length));
+        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumTooLarge.selector, quorum, oracles.length));
         new AggregatorHarness(oracles, quorum);
     }
 
@@ -58,7 +59,7 @@ contract AggregatorTest is Test {
             vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
-        vm.expectRevert(abi.encodeWithSelector(Aggregator.QuorumNotReached.selector, 0, quorum));
+        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumNotReached.selector, 0, quorum));
         aggregator.getQuote(inAmount, base, quote);
     }
 
@@ -82,7 +83,7 @@ contract AggregatorTest is Test {
             vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
-        vm.expectRevert(abi.encodeWithSelector(Aggregator.QuorumNotReached.selector, quorum - 1, quorum));
+        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumNotReached.selector, quorum - 1, quorum));
         aggregator.getQuote(inAmount, base, quote);
     }
 

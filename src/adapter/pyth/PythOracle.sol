@@ -5,6 +5,7 @@ import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pyth-sdk-solidity/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 
 abstract contract PythOracle is IPriceOracle {
     IPyth public immutable pyth;
@@ -18,18 +19,11 @@ abstract contract PythOracle is IPriceOracle {
     /// @dev all Pyth crypto feeds are USD-denominated
     mapping(address token => PythConfig) public configs;
 
-    error ArityMismatch(uint256 arityA, uint256 arityB);
-    error ConfigAlreadyExists(address token);
-    error ConfigDoesNotExist(address token);
-    error InvalidConfidenceInterval(int64 price, uint64 conf);
-    error InvalidExponent(int32 expo);
-    error InvalidPrice(int64 price);
-
     constructor(address _pyth, uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds) {
         pyth = IPyth(_pyth);
         maxStaleness = _maxStaleness;
 
-        if (tokens.length != feedIds.length) revert ArityMismatch(tokens.length, feedIds.length);
+        if (tokens.length != feedIds.length) revert Errors.Arity2Mismatch(tokens.length, feedIds.length);
         uint256 length = tokens.length;
 
         for (uint256 i = 0; i < length;) {
@@ -54,13 +48,13 @@ abstract contract PythOracle is IPriceOracle {
 
     function _fetchPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert ConfigDoesNotExist(token);
+        if (feedId == 0) revert Errors.NotSupported(token, address(0));
         return pyth.getPriceNoOlderThan(feedId, maxStaleness);
     }
 
     function _fetchEMAPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert ConfigDoesNotExist(token);
+        if (feedId == 0) revert Errors.NotSupported(token, address(0));
         return pyth.getEmaPriceNoOlderThan(feedId, maxStaleness);
     }
 
@@ -155,15 +149,15 @@ abstract contract PythOracle is IPriceOracle {
 
     function _sanityCheckPriceStruct(PythStructs.Price memory price) internal pure {
         if (price.price <= 0) {
-            revert InvalidPrice(price.price);
+            revert Errors.InvalidPythPrice(price.price);
         }
 
         if (price.conf > uint64(type(int64).max) || int64(price.conf) > price.price) {
-            revert InvalidConfidenceInterval(price.price, price.conf);
+            revert Errors.InvalidPythConfidenceInterval(price.price, price.conf);
         }
 
         if (price.expo > 255 || price.expo < -255) {
-            revert InvalidExponent(price.expo);
+            revert Errors.InvalidPythExponent(price.expo);
         }
     }
 }

@@ -3,13 +3,12 @@ pragma solidity 0.8.22;
 
 import {ICTokenV2} from "src/adapter/compound-v2/ICTokenV2.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract CTokenV2Oracle is IPriceOracle {
     address public immutable cToken;
     address public immutable underlying;
-
-    error NotSupported(address base, address quote);
 
     constructor(address _cToken) {
         cToken = _cToken;
@@ -30,7 +29,7 @@ contract CTokenV2Oracle is IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != cToken || quote != underlying) revert NotSupported(base, quote);
+        if (base != cToken || quote != underlying) revert Errors.NotSupported(base, quote);
 
         uint256 rate = ICTokenV2(cToken).exchangeRateStored();
         return inAmount * rate / 1e18;

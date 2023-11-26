@@ -3,12 +3,11 @@ pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
-    error NoAnswer();
-
     constructor(address[] memory _oracles) ImmutableAddressArray(_oracles) {}
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -23,7 +22,7 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert NoAnswer();
+        revert Errors.NoAnswer();
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
@@ -38,7 +37,7 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert NoAnswer();
+        revert Errors.NoAnswer();
     }
 
     function description() external pure returns (OracleDescription.Description memory) {

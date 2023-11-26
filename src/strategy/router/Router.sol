@@ -2,16 +2,15 @@
 pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 abstract contract Router is IPriceOracle {
     mapping(address base => mapping(address quote => IPriceOracle)) public oracles;
 
-    error ArityMismatch(uint256 arityA, uint256 arityB, uint256 arityC);
-
     constructor(address[] memory _bases, address[] memory _quotes, address[] memory _oracles) {
         if (_bases.length != _quotes.length || _quotes.length != _oracles.length) {
-            revert ArityMismatch(_bases.length, _quotes.length, _oracles.length);
+            revert Errors.Arity3Mismatch(_bases.length, _quotes.length, _oracles.length);
         }
 
         uint256 length = _bases.length;
