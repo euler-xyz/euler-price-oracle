@@ -7,9 +7,17 @@ import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
+/// @author totomanov
+/// @notice Query up to 8 oracles in order and return the first successful answer.
+/// @dev Uses `ImmutableAddressArray` to save on SLOADs. Supports up to 8 oracles.
 contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
+    /// @notice Deploy a new LinearStrategy.
+    /// @param _oracles The oracles to try, called in the given order.
     constructor(address[] memory _oracles) ImmutableAddressArray(_oracles) {}
 
+    /// @inheritdoc IPriceOracle
+    /// @dev Reverts if the list of oracles is exhausted without a successful answer.
+    /// @return The first successful quote.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         for (uint256 i = 0; i < cardinality;) {
             IPriceOracle oracle = IPriceOracle(_arrayGet(i));
@@ -25,6 +33,9 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
         revert Errors.PriceOracle_NoAnswer();
     }
 
+    /// @inheritdoc IPriceOracle
+    /// @dev Reverts if the list of oracles is exhausted without a successful answer.
+    /// @return The first successful quote.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         for (uint256 i = 0; i < cardinality;) {
             IPriceOracle oracle = IPriceOracle(_arrayGet(i));
@@ -40,6 +51,7 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
         revert Errors.PriceOracle_NoAnswer();
     }
 
+    /// @inheritdoc IPriceOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.LinearStrategy();
     }

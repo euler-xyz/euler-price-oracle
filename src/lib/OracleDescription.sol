@@ -67,19 +67,6 @@ library OracleDescription {
         });
     }
 
-    function FallbackRouter() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Router",
-            children: new address[](0)
-        });
-    }
-
     function GovernedChainlinkOracle(uint256 maxStaleness, address governor)
         internal
         pure
@@ -158,6 +145,19 @@ library OracleDescription {
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
             name: "Pyth",
+            children: new address[](0)
+        });
+    }
+
+    function ImmutableRouter() internal pure returns (Description memory) {
+        return Description({
+            algorithm: Algorithm.SPOT,
+            authority: Authority.IMMUTABLE,
+            paymentModel: PaymentModel.FREE,
+            requestModel: RequestModel.INTERNAL,
+            variant: Variant.ADAPTER,
+            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "Router",
             children: new address[](0)
         });
     }

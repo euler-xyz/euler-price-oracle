@@ -16,7 +16,7 @@ contract TryCallOracleHarness is TryCallOracle {
     function tryGetQuotes(IPriceOracle oracle, uint256 inAmount, address base, address quote)
         external
         view
-        returns (bool, /* success */ uint256, /* askOut */ uint256 /* askOut */ )
+        returns (bool, /* success */ uint256, /* askOutAmount */ uint256 /* askOutAmount */ )
     {
         return _tryGetQuotes(oracle, inAmount, base, quote);
     }

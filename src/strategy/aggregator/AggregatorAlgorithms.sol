@@ -5,6 +5,12 @@ import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {LibSort} from "@solady/utils/LibSort.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 
+/// @author totomanov
+/// @notice Statistical algorithms for oracle aggregators.
+/// @dev All algorithms take an array of quotes and an optional bitmask.
+/// Algorithms MUST NOT revert unless due to numerical over/underflow.
+/// Algorithms MUST assume that `quotes` is non-empty and has no more than 8 elements.
+/// Algorithms MAY define additional parameters e.g. weights.
 library AggregatorAlgorithms {
     function max(uint256[] memory quotes, PackedUint32Array) internal pure returns (uint256) {
         uint256 _max;
@@ -58,7 +64,7 @@ library AggregatorAlgorithms {
         return _min;
     }
 
-    function weightedArithmeticMean(uint256[] memory quotes, PackedUint32Array weights, PackedUint32Array successMask)
+    function weightedMean(uint256[] memory quotes, PackedUint32Array weights, PackedUint32Array successMask)
         internal
         pure
         returns (uint256)

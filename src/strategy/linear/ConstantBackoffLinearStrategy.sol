@@ -7,18 +7,35 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
+/// @author totomanov
+/// @notice Query up to 8 oracles in order and return the first successful answer.
+/// Failed oracles are backed off for a pre-configured number of seconds.
+/// During the backoff period the oracle is skipped.
+/// @dev Uses `ImmutableAddressArray` to save on SLOADs. Supports up to 8 oracles.
+/// IMPORTANT INTEGRATOR NOTE: `getQuote` and `getQuotes` are NOT view methods.
+/// They do not revert but return 0 if the list is exhausted without a successful answer.
+/// This is because `cooldowns` may need to be updated in storage during execution.
 contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
-    uint256 public immutable backOff;
+    PackedUint32Array public immutable backoffs;
     PackedUint32Array public cooldowns;
 
-    constructor(address[] memory _oracles, uint256 _backoff) ImmutableAddressArray(_oracles) {
-        backOff = _backoff;
+    /// @notice Deploy a new LinearStrategy.
+    /// @param _oracles The oracles to try, called in the given order.
+    /// @param _backoffs The number of seconds to wait before retrying an oracle.
+    /// Backoff indices correspond to oracles indices.
+    constructor(address[] memory _oracles, PackedUint32Array _backoffs) ImmutableAddressArray(_oracles) {
+        backoffs = _backoffs;
     }
 
+    /// @dev IMPORTANT INTEGRATOR NOTE: `getQuote` and `getQuotes` are NOT view methods.
+    /// They do not revert but return 0 if the list is exhausted without a successful answer.
+    /// This is because `cooldowns` may need to be updated in storage during execution.
+    /// @return The first successful quote or 0 if no valid answer was returned.
     function getQuote(uint256 inAmount, address base, address quote) external returns (uint256) {
         PackedUint32Array _cooldowns = cooldowns;
 
         for (uint256 i = 0; i < cardinality; ++i) {
+            // Skip the oracle if it's backed off.
             uint256 cooldown = _cooldowns.get(i);
             if (cooldown > block.timestamp) continue;
 
@@ -29,7 +46,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
                 _updateCooldowns(_cooldowns);
                 return answer;
             } else {
-                cooldowns.set(i, block.timestamp + backOff);
+                cooldowns.set(i, block.timestamp + backoffs.get(i));
             }
         }
 
@@ -37,6 +54,10 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
         return 0;
     }
 
+    /// @dev IMPORTANT INTEGRATOR NOTE: `getQuote` and `getQuotes` are NOT view methods.
+    /// They do not revert but return 0 if the list is exhausted without a successful answer.
+    /// This is because `cooldowns` may need to be updated in storage during execution.
+    /// @return The first successful quote or 0 if no valid answer was returned.
     function getQuotes(uint256 inAmount, address base, address quote) external returns (uint256, uint256) {
         PackedUint32Array _cooldowns = cooldowns;
 
@@ -51,7 +72,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
                 _updateCooldowns(_cooldowns);
                 return (bid, ask);
             } else {
-                cooldowns.set(i, block.timestamp + backOff);
+                cooldowns.set(i, block.timestamp + backoffs.get(i));
             }
 
             unchecked {

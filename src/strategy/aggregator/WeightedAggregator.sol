@@ -26,6 +26,6 @@ contract WeightedAggregator is Aggregator {
         returns (uint256)
     {
         PackedUint32Array _weights = weights;
-        return AggregatorAlgorithms.weightedArithmeticMean(quotes, _weights, successMask);
+        return AggregatorAlgorithms.weightedMean(quotes, _weights, successMask);
     }
 }

@@ -77,12 +77,12 @@ contract TryCallOracleTest is Test {
         address quote
     ) public {
         oracle = boundAddr(oracle);
-        (bool success, uint256 bidOut, uint256 askOut) =
+        (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
             harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
 
         assertFalse(success);
-        assertEq(bidOut, 0);
-        assertEq(askOut, 0);
+        assertEq(bidOutAmount, 0);
+        assertEq(askOutAmount, 0);
     }
 
     function test_TryGetQuotes_WhenReturnsInvalidLengthData_ReturnsFalseAndZero(
@@ -95,11 +95,11 @@ contract TryCallOracleTest is Test {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length != 64);
         vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), returnData);
-        (bool success, uint256 bidOut, uint256 askOut) =
+        (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
             harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
         assertFalse(success);
-        assertEq(bidOut, 0);
-        assertEq(askOut, 0);
+        assertEq(bidOutAmount, 0);
+        assertEq(askOutAmount, 0);
     }
 
     function test_TryGetQuotes_WhenReturns64Bytes_ReturnsTrueAndData(
@@ -112,12 +112,12 @@ contract TryCallOracleTest is Test {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length == 64);
         vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), returnData);
-        (bool success, uint256 bidOut, uint256 askOut) =
+        (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
             harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
         assertTrue(success);
         (uint256 resBidOut, uint256 resAskOut) = abi.decode(returnData, (uint256, uint256));
-        assertEq(bidOut, resBidOut);
-        assertEq(askOut, resAskOut);
+        assertEq(bidOutAmount, resBidOut);
+        assertEq(askOutAmount, resAskOut);
     }
 
     function test_TryGetQuotes_WhenReturnsTwoUint256s_ReturnsTrueAndData(
@@ -132,10 +132,10 @@ contract TryCallOracleTest is Test {
         vm.mockCall(
             oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(returnBidOut, returnAskOut)
         );
-        (bool success, uint256 bidOut, uint256 askOut) =
+        (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
             harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
         assertTrue(success);
-        assertEq(bidOut, returnBidOut);
-        assertEq(askOut, returnAskOut);
+        assertEq(bidOutAmount, returnBidOut);
+        assertEq(askOutAmount, returnAskOut);
     }
 }

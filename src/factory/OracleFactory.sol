@@ -20,12 +20,14 @@ contract OracleFactory is Ownable {
         OracleStrategy[] strategies;
     }
 
-    address[] public allowedOracles;
+    mapping(bytes32 typehash => address implementation) public implementations;
     mapping(address vault => address oracle) public deployedOracles;
 
     event OracleDeployed(address indexed vault, address indexed oracle);
 
     error OracleAlreadyDeployed(address vault, address oracle);
+    error ImplementationExists(bytes32 typehash, address implementation);
+    error ImplementationDoesNotExist(bytes32 typehash, address implementation);
 
     constructor(address _owner) {
         _initializeOwner(_owner);
@@ -39,7 +41,15 @@ contract OracleFactory is Ownable {
         if (oracle != address(0)) revert OracleAlreadyDeployed(vault, oracle);
     }
 
-    function addImplementation(address oracle) public onlyOwner {
-        allowedOracles.push(oracle);
+    function setImplementation(bytes32 typehash, address implementation) public onlyOwner {
+        address current = implementations[typehash];
+        if (current != address(0)) revert ImplementationExists(typehash, current);
+        implementations[typehash] = implementation;
+    }
+
+    function upgradeImplementation(bytes32 typehash, address implementation) public onlyOwner {
+        address current = implementations[typehash];
+        if (current == address(0)) revert ImplementationDoesNotExist(typehash, current);
+        implementations[typehash] = implementation;
     }
 }

@@ -152,25 +152,22 @@ contract LinearStrategyTest is Test {
         return oracles;
     }
 
-    function _mockGetQuoteRevert(uint256 index) private returns (address) {
+    function _mockGetQuoteRevert(uint256 index) private {
         address oracle = _nthOracle(index);
         vm.mockCallRevert(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
     }
 
-    function _mockGetQuoteReturn(uint256 index, uint256 outAmount) private returns (address) {
+    function _mockGetQuoteReturn(uint256 index, uint256 outAmount) private {
         address oracle = _nthOracle(index);
         vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(outAmount));
     }
 
-    function _mockGetQuotesRevert(uint256 index) private returns (address) {
+    function _mockGetQuotesRevert(uint256 index) private {
         address oracle = _nthOracle(index);
         vm.mockCallRevert(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), "oops");
     }
 
-    function _mockGetQuotesReturn(uint256 index, uint256 bidOutAmount, uint256 askOutAmount)
-        private
-        returns (address)
-    {
+    function _mockGetQuotesReturn(uint256 index, uint256 bidOutAmount, uint256 askOutAmount) private {
         address oracle = _nthOracle(index);
         vm.mockCall(
             oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(bidOutAmount, askOutAmount)
