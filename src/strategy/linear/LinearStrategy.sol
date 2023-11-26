@@ -2,8 +2,8 @@
 pragma solidity 0.8.22;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
