@@ -22,7 +22,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
             uint256 cooldown = _cooldowns.get(i);
             if (cooldown > block.timestamp) continue;
 
-            IPriceOracle oracle = IPriceOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
 
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
             if (success) {
@@ -44,7 +44,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
             uint256 cooldown = _cooldowns.get(i);
             if (cooldown > block.timestamp) continue;
 
-            IPriceOracle oracle = IPriceOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
 
             (bool success, uint256 bid, uint256 ask) = _tryGetQuotes(oracle, inAmount, base, quote);
             if (success) {

@@ -60,22 +60,22 @@ abstract contract ChainlinkOracle is IPriceOracle {
         }
 
         (bool success, bytes memory returnData) = config.feed.staticcall(data);
-        if (!success) revert Errors.CallReverted(returnData);
+        if (!success) revert Errors.Chainlink_CallReverted(returnData);
 
         (, int256 answer, uint256 startedAt, uint256 updatedAt,) =
             abi.decode(returnData, (uint80, int256, uint256, uint256, uint80));
 
-        if (answer <= 0) revert Errors.InvalidAnswer(answer);
-        if (updatedAt == 0) revert Errors.RoundIncomplete();
+        if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
+        if (updatedAt == 0) revert Errors.Chainlink_RoundIncomplete();
 
         uint256 roundDuration = updatedAt - startedAt;
         if (roundDuration > config.maxDuration) {
-            revert Errors.RoundTooLong(roundDuration, config.maxDuration);
+            revert Errors.Chainlink_RoundTooLong(roundDuration, config.maxDuration);
         }
 
         uint256 staleness = block.timestamp - updatedAt;
         if (staleness >= config.maxStaleness) {
-            revert Errors.PriceTooStale(staleness, config.maxStaleness);
+            revert Errors.PriceOracle_TooStale(staleness, config.maxStaleness);
         }
 
         uint256 unitPrice = uint256(answer);
@@ -86,7 +86,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
 
     function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {
         ChainlinkConfig memory config = configs[base][quote];
-        if (config.feed == address(0)) revert Errors.NoFeedConfigured(base, quote);
+        if (config.feed == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return config;
     }
 
@@ -152,7 +152,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
     }
 
     function _getFeedDecimals(address asset, address denom) internal pure returns (uint8) {
-        if (denom != Denominations.ETH) revert Errors.NotSupported(asset, denom);
+        if (denom != Denominations.ETH) revert Errors.PriceOracle_NotSupported(asset, denom);
         return 18;
     }
 
@@ -160,7 +160,7 @@ abstract contract ChainlinkOracle is IPriceOracle {
         if (quote == weth) return (base, Denominations.ETH, false);
         if (base == weth) return (quote, Denominations.ETH, true);
 
-        revert Errors.NotSupported(base, quote);
+        revert Errors.PriceOracle_NotSupported(base, quote);
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

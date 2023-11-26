@@ -37,6 +37,6 @@ contract RethOracle is IPriceOracle {
             return IReth(reth).getRethValue(inAmount);
         }
 
-        revert Errors.NotSupported(base, quote);
+        revert Errors.PriceOracle_NotSupported(base, quote);
     }
 }

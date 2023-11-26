@@ -35,7 +35,7 @@ abstract contract UniswapV3Oracle is IPriceOracle {
 
     function _getOrRevertConfig(address base, address quote) internal view returns (UniswapV3Config) {
         UniswapV3Config config = _getConfig(base, quote);
-        if (config.isEmpty()) revert Errors.NoPoolConfigured(base, quote);
+        if (config.isEmpty()) revert Errors.PriceOracle_NotSupported(base, quote);
         if (config.getValidUntil() < block.timestamp) revert Errors.ConfigExpired(base, quote);
         return config;
     }
@@ -69,7 +69,7 @@ abstract contract UniswapV3Oracle is IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (inAmount > type(uint128).max) revert Errors.InAmountTooLarge();
+        if (inAmount > type(uint128).max) revert Errors.PriceOracle_Overflow();
         UniswapV3Config config = _getOrRevertConfig(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());

@@ -29,7 +29,7 @@ contract CTokenV2Oracle is IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != cToken || quote != underlying) revert Errors.NotSupported(base, quote);
+        if (base != cToken || quote != underlying) revert Errors.PriceOracle_NotSupported(base, quote);
 
         uint256 rate = ICTokenV2(cToken).exchangeRateStored();
         return inAmount * rate / 1e18;

@@ -44,7 +44,7 @@ contract ImmutableChronicleOracle is IPriceOracle {
     }
 
     function _initConfig(address base, address quote, address feed) internal {
-        if (configs[base][quote].feed != address(0)) revert Errors.AlreadyConfigured(base, quote);
+        if (configs[base][quote].feed != address(0)) revert Errors.ConfigExists(base, quote);
 
         uint8 baseDecimals = ERC20(base).decimals();
         uint8 quoteDecimals = ERC20(quote).decimals();
@@ -57,7 +57,7 @@ contract ImmutableChronicleOracle is IPriceOracle {
 
     function _getOrRevertConfig(address base, address quote) internal view returns (ChronicleConfig memory) {
         ChronicleConfig memory config = configs[base][quote];
-        if (config.feed == address(0)) revert Errors.NotSupported(base, quote);
+        if (config.feed == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return config;
     }
 
@@ -65,7 +65,7 @@ contract ImmutableChronicleOracle is IPriceOracle {
         ChronicleConfig memory config = _getOrRevertConfig(base, quote);
 
         (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
-        if (age > maxStaleness) revert Errors.PriceTooStale(age, maxStaleness);
+        if (age > maxStaleness) revert Errors.PriceOracle_TooStale(age, maxStaleness);
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;

@@ -13,7 +13,7 @@ contract SimpleRouter is Router {
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         IPriceOracle oracle = oracles[base][quote];
-        if (address(oracle) == address(0)) revert Errors.NotSupported(base, quote);
+        if (address(oracle) == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return oracle.getQuote(inAmount, base, quote);
     }
 
@@ -24,7 +24,7 @@ contract SimpleRouter is Router {
         returns (uint256, uint256)
     {
         IPriceOracle oracle = oracles[base][quote];
-        if (address(oracle) == address(0)) revert Errors.NotSupported(base, quote);
+        if (address(oracle) == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return oracle.getQuotes(inAmount, base, quote);
     }
 

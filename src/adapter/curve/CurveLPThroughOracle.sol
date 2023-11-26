@@ -28,14 +28,14 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
         lpToken = _lpToken;
 
         address _pool = metaRegistry.get_pool_from_lp_token(lpToken);
-        if (_pool == address(0)) revert Errors.CurvePoolNotFound(lpToken);
+        if (_pool == address(0)) revert Errors.Curve_PoolNotFound(lpToken);
         pool = _pool;
 
         address[8] memory poolTokens = metaRegistry.get_coins(pool);
 
         for (uint256 index = 0; index < 8;) {
             address poolToken = poolTokens[index];
-            if (poolToken != _get(index)) break;
+            if (poolToken != _arrayGet(index)) break;
             unchecked {
                 ++index;
             }
@@ -61,14 +61,14 @@ contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != lpToken) revert Errors.NotSupported(base, quote);
+        if (base != lpToken) revert Errors.PriceOracle_NotSupported(base, quote);
 
         uint256[8] memory balances = metaRegistry.get_balances(pool);
 
         uint256 outAmountSum;
         for (uint256 i = 0; i < cardinality; ++i) {
             uint256 tokenInAmount = balances[i];
-            address poolToken = _get(i);
+            address poolToken = _arrayGet(i);
             uint256 outAmount = forwardOracle.getQuote(tokenInAmount, poolToken, quote);
             outAmountSum += outAmount;
         }

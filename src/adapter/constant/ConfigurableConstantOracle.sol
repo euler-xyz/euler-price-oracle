@@ -38,13 +38,13 @@ contract ConfigurableConstantOracle is IPriceOracle {
     }
 
     function _initConfig(address base, address quote, uint256 rate) internal {
-        if (configs[base][quote] != 0) revert Errors.AlreadyConfigured(base, quote);
+        if (configs[base][quote] != 0) revert Errors.ConfigExists(base, quote);
         configs[base][quote] = rate;
     }
 
     function _getOrRevertConfig(address base, address quote) internal view returns (uint256) {
         uint256 rate = configs[base][quote];
-        if (rate == 0) revert Errors.NotSupported(base, quote);
+        if (rate == 0) revert Errors.PriceOracle_NotSupported(base, quote);
         return rate;
     }
 

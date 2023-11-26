@@ -48,13 +48,13 @@ abstract contract PythOracle is IPriceOracle {
 
     function _fetchPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert Errors.NotSupported(token, address(0));
+        if (feedId == 0) revert Errors.PriceOracle_NotSupported(token, address(0));
         return pyth.getPriceNoOlderThan(feedId, maxStaleness);
     }
 
     function _fetchEMAPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert Errors.NotSupported(token, address(0));
+        if (feedId == 0) revert Errors.PriceOracle_NotSupported(token, address(0));
         return pyth.getEmaPriceNoOlderThan(feedId, maxStaleness);
     }
 
@@ -149,15 +149,15 @@ abstract contract PythOracle is IPriceOracle {
 
     function _sanityCheckPriceStruct(PythStructs.Price memory price) internal pure {
         if (price.price <= 0) {
-            revert Errors.InvalidPythPrice(price.price);
+            revert Errors.Pyth_InvalidPrice(price.price);
         }
 
         if (price.conf > uint64(type(int64).max) || int64(price.conf) > price.price) {
-            revert Errors.InvalidPythConfidenceInterval(price.price, price.conf);
+            revert Errors.Pyth_InvalidConfidenceInterval(price.price, price.conf);
         }
 
         if (price.expo > 255 || price.expo < -255) {
-            revert Errors.InvalidPythExponent(price.expo);
+            revert Errors.Pyth_InvalidExponent(price.expo);
         }
     }
 }

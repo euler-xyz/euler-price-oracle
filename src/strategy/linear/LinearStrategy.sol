@@ -12,7 +12,7 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
 
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
             if (success) return answer;
@@ -22,12 +22,12 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert Errors.NoAnswer();
+        revert Errors.PriceOracle_NoAnswer();
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
 
             (bool success, uint256 bid, uint256 ask) = _tryGetQuotes(oracle, inAmount, base, quote);
             if (success) return (bid, ask);
@@ -37,7 +37,7 @@ contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert Errors.NoAnswer();
+        revert Errors.PriceOracle_NoAnswer();
     }
 
     function description() external pure returns (OracleDescription.Description memory) {

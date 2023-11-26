@@ -31,7 +31,7 @@ contract ConstantOracle is IPriceOracle {
     }
 
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
-        if (_base != base || _quote != quote) revert Errors.NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
         return _inAmount * rate / PRECISION;
     }
 }

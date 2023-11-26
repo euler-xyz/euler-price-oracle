@@ -38,7 +38,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuoteRevert(1);
         _mockGetQuoteRevert(2);
 
-        vm.expectRevert(Errors.NoAnswer.selector);
+        vm.expectRevert(Errors.PriceOracle_NoAnswer.selector);
         strategy.getQuote(inAmount, base, quote);
     }
 
@@ -92,7 +92,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuotesRevert(1);
         _mockGetQuotesRevert(2);
 
-        vm.expectRevert(Errors.NoAnswer.selector);
+        vm.expectRevert(Errors.PriceOracle_NoAnswer.selector);
         strategy.getQuotes(inAmount, base, quote);
     }
 

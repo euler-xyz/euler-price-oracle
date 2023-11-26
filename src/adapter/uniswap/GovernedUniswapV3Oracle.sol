@@ -19,7 +19,7 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
         address token1 = IUniswapV3Pool(pool).token1();
         uint24 fee = IUniswapV3Pool(pool).fee();
         address factoryPool = uniswapV3Factory.getPool(token0, token1, fee);
-        if (factoryPool != pool) revert Errors.PoolMismatch(pool, factoryPool);
+        if (factoryPool != pool) revert Errors.UniswapV3_PoolMismatch(pool, factoryPool);
 
         _setConfig(token0, token1, pool, type(uint32).max, fee, twapWindow);
     }

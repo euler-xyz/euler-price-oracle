@@ -45,7 +45,7 @@ pragma solidity 0.8.22;
 //         }
 
 //         // no such lp token
-//         if (pool == address(0)) revert Errors.CurvePoolNotFound(base, quote);
+//         if (pool == address(0)) revert Errors.Curve_PoolNotFound(base, quote);
 
 //         address[8] memory coins = metaRegistry.get_coins(pool);
 
@@ -67,7 +67,7 @@ pragma solidity 0.8.22;
 //     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
 //         CurveConfig memory config = configs[base][quote];
 //         address pool = config.pool;
-//         if (pool == address(0)) revert Errors.NotSupported(base, quote);
+//         if (pool == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
 
 //         uint256 numTokens = config.numTokens;
 //         address[8] memory balances = metaRegistry.get_balances(pool);

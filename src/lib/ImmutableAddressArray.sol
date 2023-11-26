@@ -34,7 +34,7 @@ contract ImmutableAddressArray {
         e7 = _getOrReturnZero(arr, 7);
     }
 
-    function _get(uint256 i) internal view returns (address) {
+    function _arrayGet(uint256 i) internal view returns (address) {
         if (i > cardinality - 1) revert IndexOOB(i, cardinality - 1);
         if (i == 0) return e0;
         if (i == 1) return e1;
@@ -45,6 +45,18 @@ contract ImmutableAddressArray {
         if (i == 6) return e6;
         if (i == 7) return e7;
         revert(); // unreachable, suppress compiler warning
+    }
+
+    function _arrayFind(address a) internal view returns (uint256) {
+        if (a == e0) return 0;
+        if (a == e1) return 1;
+        if (a == e2) return 2;
+        if (a == e3) return 3;
+        if (a == e4) return 4;
+        if (a == e5) return 5;
+        if (a == e6) return 6;
+        if (a == e7) return 7;
+        return type(uint256).max;
     }
 
     function _getOrReturnZero(address[] memory arr, uint256 i) private pure returns (address) {

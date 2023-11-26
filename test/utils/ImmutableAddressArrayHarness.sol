@@ -11,6 +11,6 @@ contract ImmutableAddressArrayHarness is ImmutableAddressArray {
     }
 
     function get(uint256 i) external view returns (address) {
-        return _get(i);
+        return _arrayGet(i);
     }
 }

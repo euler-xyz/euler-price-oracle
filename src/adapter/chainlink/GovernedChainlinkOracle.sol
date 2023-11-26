@@ -19,7 +19,7 @@ contract GovernedChainlinkOracle is ChainlinkOracle, Ownable {
         onlyOwner
     {
         bool isEnabled = feedRegistry.isFeedEnabled(feed);
-        if (!isEnabled) revert Errors.ChainlinkFeedNotEnabled(feed);
+        if (!isEnabled) revert Errors.Chainlink_FeedNotEnabled(feed);
 
         _setConfig(base, quote, feed, maxStaleness, maxDuration, inverse);
 

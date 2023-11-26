@@ -28,7 +28,7 @@ contract SimpleAggregator is Aggregator {
         } else if (_algorithm == Algorithm.MIN) {
             algorithm = AggregatorAlgorithms.min;
         } else {
-            revert Errors.InvalidAlgorithm();
+            revert Errors.Aggregator_InvalidAlgorithm();
         }
     }
 

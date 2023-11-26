@@ -24,14 +24,14 @@ contract AggregatorTest is Test {
 
     function test_Constructor_RevertsWhen_QuorumIsZero(address[] memory oracles) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
-        vm.expectRevert(Errors.QuorumZero.selector);
+        vm.expectRevert(Errors.Aggregator_QuorumZero.selector);
         new AggregatorHarness(oracles, 0);
     }
 
     function test_Constructor_RevertsWhen_QuorumGtOraclesLength(address[] memory oracles, uint256 quorum) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
         quorum = bound(quorum, oracles.length + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumTooLarge.selector, quorum, oracles.length));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Aggregator_QuorumTooLarge.selector, quorum, oracles.length));
         new AggregatorHarness(oracles, quorum);
     }
 
@@ -43,7 +43,7 @@ contract AggregatorTest is Test {
         assertEq(aggregator.quorum(), quorum);
     }
 
-    function test_GetQuote_RevertsWhen_NoAnswers(
+    function test_GetQuote_RevertsWhen_PriceOracle_NoAnswers(
         uint256 numOracles,
         uint256 quorum,
         uint256 inAmount,
@@ -59,7 +59,7 @@ contract AggregatorTest is Test {
             vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumNotReached.selector, 0, quorum));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Aggregator_QuorumNotReached.selector, 0, quorum));
         aggregator.getQuote(inAmount, base, quote);
     }
 
@@ -83,7 +83,7 @@ contract AggregatorTest is Test {
             vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
         }
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.QuorumNotReached.selector, quorum - 1, quorum));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Aggregator_QuorumNotReached.selector, quorum - 1, quorum));
         aggregator.getQuote(inAmount, base, quote);
     }
 

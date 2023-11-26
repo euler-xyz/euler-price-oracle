@@ -12,8 +12,8 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
     uint256 public immutable quorum;
 
     constructor(address[] memory _oracles, uint256 _quorum) ImmutableAddressArray(_oracles) {
-        if (_quorum == 0) revert Errors.QuorumZero();
-        if (_quorum > cardinality) revert Errors.QuorumTooLarge(_quorum, cardinality);
+        if (_quorum == 0) revert Errors.Aggregator_QuorumZero();
+        if (_quorum > cardinality) revert Errors.Aggregator_QuorumTooLarge(_quorum, cardinality);
 
         quorum = _quorum;
     }
@@ -24,7 +24,7 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
         PackedUint32Array successMask;
 
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_get(i));
+            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
 
             unchecked {
@@ -37,7 +37,7 @@ abstract contract Aggregator is TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        if (numAnswers < quorum) revert Errors.QuorumNotReached(numAnswers, quorum);
+        if (numAnswers < quorum) revert Errors.Aggregator_QuorumNotReached(numAnswers, quorum);
 
         assembly {
             // update the length of answer
