@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+/// @author totomanov
+/// @notice Stores common errors in Oracles.
+/// @dev Collected here to reduce clutter in oracle contracts.
 library Errors {
     error Aggregator_InvalidAlgorithm();
     error Aggregator_QuorumNotReached(uint256 count, uint256 quorum);
