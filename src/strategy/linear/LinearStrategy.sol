@@ -12,7 +12,7 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 /// @dev Uses `ImmutableAddressArray` to save on SLOADs. Supports up to 8 oracles.
 contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
     /// @notice Deploy a new LinearStrategy.
-    /// @param _oracles The oracles to try, called in the given order.
+    /// @param _oracles The oracles to try in the given order.
     constructor(address[] memory _oracles) ImmutableAddressArray(_oracles) {}
 
     /// @inheritdoc IPriceOracle

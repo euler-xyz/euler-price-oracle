@@ -3,16 +3,16 @@ pragma solidity 0.8.22;
 
 import {Test} from "forge-std/Test.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
-import {AggregatorAlgorithmsHarness} from "test/utils/AggregatorAlgorithmsHarness.sol";
+import {AggregatorFunctionsHarness} from "test/utils/AggregatorFunctionsHarness.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
-contract AggregatorAlgorithmsTest is Test {
+contract AggregatorFunctionsTest is Test {
     uint256 private constant SHUFFLE_ITERATIONS = 10;
-    AggregatorAlgorithmsHarness private immutable algorithms;
+    AggregatorFunctionsHarness private immutable algorithms;
 
     constructor() {
-        algorithms = new AggregatorAlgorithmsHarness();
+        algorithms = new AggregatorFunctionsHarness();
     }
 
     function test_Max_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {

@@ -2,23 +2,23 @@
 pragma solidity 0.8.22;
 
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
-import {AggregatorAlgorithms} from "src/strategy/aggregator/AggregatorAlgorithms.sol";
+import {AggregatorFunctions} from "src/strategy/aggregator/AggregatorFunctions.sol";
 
-contract AggregatorAlgorithmsHarness {
+contract AggregatorFunctionsHarness {
     function max(uint256[] memory quotes, PackedUint32Array mask) external pure returns (uint256) {
-        return AggregatorAlgorithms.max(quotes, mask);
+        return AggregatorFunctions.max(quotes, mask);
     }
 
     function mean(uint256[] memory quotes, PackedUint32Array mask) external pure returns (uint256) {
-        return AggregatorAlgorithms.mean(quotes, mask);
+        return AggregatorFunctions.mean(quotes, mask);
     }
 
     function median(uint256[] memory quotes, PackedUint32Array mask) external pure returns (uint256) {
-        return AggregatorAlgorithms.median(quotes, mask);
+        return AggregatorFunctions.median(quotes, mask);
     }
 
     function min(uint256[] memory quotes, PackedUint32Array mask) external pure returns (uint256) {
-        return AggregatorAlgorithms.min(quotes, mask);
+        return AggregatorFunctions.min(quotes, mask);
     }
 
     function weightedMean(uint256[] memory quotes, PackedUint32Array weights, PackedUint32Array mask)
@@ -26,6 +26,6 @@ contract AggregatorAlgorithmsHarness {
         pure
         returns (uint256)
     {
-        return AggregatorAlgorithms.weightedMean(quotes, weights, mask);
+        return AggregatorFunctions.weightedMean(quotes, weights, mask);
     }
 }

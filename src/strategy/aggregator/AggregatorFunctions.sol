@@ -7,11 +7,12 @@ import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 
 /// @author totomanov
 /// @notice Statistical algorithms for oracle aggregators.
-/// @dev All algorithms take an array of quotes and an optional bitmask.
+/// @dev All functions take an array of quotes and an optional bitmask.
 /// Algorithms MUST NOT revert unless due to numerical over/underflow.
 /// Algorithms MUST assume that `quotes` is non-empty and has no more than 8 elements.
-/// Algorithms MAY define additional parameters e.g. weights.
-library AggregatorAlgorithms {
+/// Algorithms MAY define additional parameters such as weights.
+library AggregatorFunctions {
+    /// @dev Return the largest value from the list. The bitmask is ignored.
     function max(uint256[] memory quotes, PackedUint32Array) internal pure returns (uint256) {
         uint256 _max;
 
@@ -26,6 +27,7 @@ library AggregatorAlgorithms {
         return _max;
     }
 
+    /// @dev Return the arithmetic mean of the quotes list. The bitmask is ignored.
     function mean(uint256[] memory quotes, PackedUint32Array) internal pure returns (uint256) {
         uint256 sum;
 
@@ -39,6 +41,9 @@ library AggregatorAlgorithms {
         return sum / quotes.length;
     }
 
+    /// @dev Return the median value in the quotes list. The bitmask is ignored.
+    /// Uses Solady's LibSort to sort the quotes.
+    /// If the array has odd length, then return the average of the two middle values.
     function median(uint256[] memory quotes, PackedUint32Array) internal pure returns (uint256) {
         // sort and return the median
         LibSort.insertionSort(quotes);
@@ -51,6 +56,7 @@ library AggregatorAlgorithms {
         }
     }
 
+    /// @dev Return the smallest value from the list. The bitmask is ignored.
     function min(uint256[] memory quotes, PackedUint32Array) internal pure returns (uint256) {
         uint256 _min = type(uint256).max;
 
@@ -64,6 +70,8 @@ library AggregatorAlgorithms {
         return _min;
     }
 
+    /// @dev Return the weighted arithmetic mean of the quotes list.
+    /// The bitmask is used to determine the total sum of weights.
     function weightedMean(uint256[] memory quotes, PackedUint32Array weights, PackedUint32Array successMask)
         internal
         pure
@@ -97,6 +105,7 @@ library AggregatorAlgorithms {
         DIV
     }
 
+    /// @dev Draft. TODO: abstract away
     function combine(uint256[] memory quotes, PackedUint32Array, ArithmeticOperation[] memory ops)
         internal
         pure

@@ -20,7 +20,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
     PackedUint32Array public cooldowns;
 
     /// @notice Deploy a new LinearStrategy.
-    /// @param _oracles The oracles to try, called in the given order.
+    /// @param _oracles The oracles to try in the given order.
     /// @param _backoffs The number of seconds to wait before retrying an oracle.
     /// Backoff indices correspond to oracles indices.
     constructor(address[] memory _oracles, PackedUint32Array _backoffs) ImmutableAddressArray(_oracles) {
