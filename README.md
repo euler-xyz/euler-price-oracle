@@ -321,5 +321,5 @@ flowchart
 
 **Explanation:**
 
-In the Risk Manager, the oracles address is configured to be `Router`. This is the root node of the configuration tree.
-The Risk Manager calls `Router` to price `wstEth/eth`. The call is routed to the `Cross Combiner` which multiplies the `wstEth/stEth` exchange rate from the Lido contract and the `stEth/eth` price returned by the `Linear Strategy`. The `Linear Strategy` first tries to fetch `wstEth/eth` from Chainlink but fails. It then falls back to Uniswap V3, which returns a successful price. At this point the resolution is done and the `wstEth/eth` price is returned.
+In the Risk Manager, the oracle address is configured as `Router`. This is also the root node of the configuration tree.
+The Risk Manager calls `Router` to price `wstEth/eth`. The call is routed to the `Cross Combiner` which multiplies the `wstEth/stEth` exchange rate from the Lido contract and the `stEth/eth` price returned by the `Linear Strategy`. The `Linear Strategy` first tries to fetch `wstEth/eth` from Chainlink but fails. It then falls back to Uniswap V3, which sucessfully returns a price. At this point the resolution is done and the resolved `wstEth/eth` price is returned.
