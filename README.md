@@ -61,19 +61,18 @@ function getQuotes(uint256 inAmount, address base, address quote) external view 
 ## Specification
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 ### Definitions
-- **Asset:** An ERC20 token (denoted by its contract address), a currency (denoted by its ISO 4217 numeric code) or the native coin (denoted by `0xEeee...EEeE`)
+- **Asset:** An ERC20 token (denoted by its contract address), a currency (denoted by its ISO 4217 numeric code) or the native coin (denoted by `0xEeee...EEeE`).
 - **Base:** The asset which is being priced. This is the numerator of the base/quote pair.
 - **Quote:** The asset which is used as the unit of account. This is the denominator of the base/quote pair.
 - **EOracle:** Smart contracts that implement the `IEOracle` interface. EOracles can be composed together as part of the Euler Oracles system.
 EOracles do not necessarily interface with external providers. They may be used as utility layers for routing, aggregation, or shared governance.
 - **Adapter:** An EOracle that directly connects to external contracts or systems that provide pricing. An adapter validates the data and processes it
 to conform to the `IEOracle` interface. An adapter may connect to canonical oracle systems like Chainlink or query external DeFi contracts for exchange rates 
-(Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded to be an adapter for consistency.
-- **Strategy:** An EOracle that serves as an intermediary logic layer. Strategies forward calls to one or many child EOracles. An example strategy is a router for base/quote pairs or a median aggregator of multiple adapters.=
+(Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded as an adapter for consistency.
+- **Strategy:** An EOracle that serves as an intermediary logic layer. Strategies forward calls to one or many child EOracles. An example strategy is a router for base/quote pairs or a median aggregator of multiple adapters.
 - **Resolution tree:** A tree data structure with EOracles as nodes. The resolution tree defines the complete oracle configuration for a given EVault. 
-External calls will always enter via the root of the tree and follow nested call path down to a leaf. The value returned by the leaf will be propagated to the root and returned to the caller. 
-Leaves of the resolution tree are adapters. Internal nodes are strategies. The tree branches out when it contains a strategy that connects to multiple child EOracles. 
-The resolution tree only defines the topology of the oracle configuration. The path taken by a specific call may depend on the logic inside strategies.
+External calls will always enter via the root of the tree and resolve via a subtree that contains the root.
+Leaves of the resolution tree are adapters. Internal nodes are strategies. The tree branches out when it contains a strategy that connects to multiple child EOracles. Strategies aggregate the answers of their immediate children into a single value, which is propagated up the ancestry chain to the root. The resolution tree only defines the topology of the oracle configuration. The path taken by a specific call may depend on the logic inside strategies.
 
 ### Methods
 Oracles MUST implement `description`, `getQuote` and `getQuotes` as defined by the `IPriceOracle` interface. The methods MUST behave as specified in this section.
@@ -269,3 +268,58 @@ Router strategies implement traffic control algorithms. Routers are most useful 
 #### Supported Router Algorithms
 - `SimpleRouter` supports an on-chain mapping of `(base,quote) -> oracle`.
 - `FallbackRouter` extends `SimpleRouter` with a fallback oracle that is queried for all unresolved paths.
+
+## Composing EOracles
+
+### Example Configuration
+```mermaid
+flowchart
+    direction TB
+    Root[/Risk Manager/]:::external
+    style Root stroke-width:2px
+
+    Router(Router):::strategy
+    Linear(Linear Strategy):::strategy
+    Combiner(Cross Combiner):::strategy
+
+    STETH[stETH Gateway]:::adapter
+    ChainlinkOracle[Immutable Chainlink Oracle]:::adapter
+
+    Chainlink[/Chainlink/]:::external
+    UniV3[/Uniswap V3/]:::external
+    Pyth[/Pyth EMA/]:::external
+    Lido[/Lido/]:::external
+
+    Root-.->Router
+    Router-->|if wstEth/eth|Combiner
+    Router-->|else|Linear
+    Combiner-->|wstEth/stEth|STETH
+    Combiner-->|stEth/eth|Linear
+    Linear-->|first try|ChainlinkOracle
+    Linear-->|then try|UniV3Oracle
+    Linear-->|else try|PythOracle
+
+    ChainlinkOracle-.->Chainlink
+    UniV3Oracle-.->UniV3
+    PythOracle-.->Pyth
+    STETH-.->Lido
+
+    classDef strategy stroke:orange
+    classDef strategy stroke:orange
+    classDef external stroke:purple,stroke-dasharray: 5 5
+    linkStyle 0,1,11,3,4,5,6,8,9 stroke:green,stroke-width:4px
+    linkStyle 8 stroke:red,stroke-width:4px
+
+    subgraph Legend
+        direction LR
+        L1(Strategy):::strategy
+        Adapter[Adapter]:::adapter
+        External[/External/]:::external
+    end
+
+```
+
+**Explanation:**
+
+In the Risk Manager, the oracles address is configured to be `Router`. This is the root node of the configuration tree.
+The Risk Manager calls `Router` to price `wstEth/eth`. The call is routed to the `Cross Combiner` which multiplies the `wstEth/stEth` exchange rate from the Lido contract and the `stEth/eth` price returned by the `Linear Strategy`. The `Linear Strategy` first tries to fetch `wstEth/eth` from Chainlink but fails. It then falls back to Uniswap V3, which returns a successful price. At this point the resolution is done and the `wstEth/eth` price is returned.
