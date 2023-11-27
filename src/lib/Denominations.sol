@@ -8,11 +8,12 @@ pragma solidity 0.8.22;
 /// as well as Gold (XAU), Silver (XAG), and No Currency (XXX).
 /// Oracles MAY support additional currencies following the ISO 4217 standard.
 /// Oracles MUST use `ETH` to denote the native coin of the blockchain if the native coin does not implement ERC20 (e.g. on Ethereum).
-/// Oracles MUST use the ERC20 contract address to denote the native coin of the blockchain if the native coin implements ERC20 (e.g. on TRON Network);
+/// Oracles MUST use the ERC20 contract address to denote the native coin of the blockchain if the native coin implements ERC20 (e.g. on TRON Network).
 /// Oracles MAY internally treat the canonical wrapped token and the native coin interchangably.
 /// Oracles MAY use `NO_CURRENCY` to denote unknown or non-ISO 4217 currencies provided they implement an alternative, unambiguous standard of denomination.
 library Denominations {
     address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address internal constant BTC = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
     address internal constant AUD = address(36);
     address internal constant CAD = address(124);
     address internal constant CNY = address(156);

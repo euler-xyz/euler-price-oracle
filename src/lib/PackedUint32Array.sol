@@ -103,6 +103,6 @@ library PackedUint32ArrayLib {
 
     /// @notice Check if two arrays are not element-wise equal.
     function neq(PackedUint32Array arrayA, PackedUint32Array arrayB) internal pure returns (bool) {
-        return PackedUint32Array.unwrap(arrayA) != PackedUint32Array.unwrap(arrayB);
+        return !eq(arrayA, arrayB)
     }
 }
