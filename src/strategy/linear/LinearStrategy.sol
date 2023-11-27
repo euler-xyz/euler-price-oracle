@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {BaseOracle} from "src/BaseOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
@@ -10,7 +11,7 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 /// @author totomanov
 /// @notice Query up to 8 oracles in order and return the first successful answer.
 /// @dev Uses `ImmutableAddressArray` to save on SLOADs. Supports up to 8 oracles.
-contract LinearStrategy is IPriceOracle, TryCallOracle, ImmutableAddressArray {
+contract LinearStrategy is BaseOracle, TryCallOracle, ImmutableAddressArray {
     /// @notice Deploy a new LinearStrategy.
     /// @param _oracles The oracles to try in the given order.
     constructor(address[] memory _oracles) ImmutableAddressArray(_oracles) {}

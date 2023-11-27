@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {BaseOracle} from "src/BaseOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @author totomanov
 /// @notice Oracle resolver for base-quote pairs.
-contract SimpleRouter is IPriceOracle {
+contract SimpleRouter is BaseOracle {
     IPriceOracle public immutable fallbackOracle;
     mapping(address base => mapping(address quote => IPriceOracle)) public oracles;
 

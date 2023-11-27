@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConfigurableConstantOracle is IPriceOracle {
+contract ConfigurableConstantOracle is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
 
     mapping(address base => mapping(address quote => uint256 rate)) public configs;

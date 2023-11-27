@@ -2,11 +2,11 @@
 pragma solidity 0.8.22;
 
 import {IWstEth} from "src/adapter/lido/IWstEth.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract WstEthOracle is IPriceOracle {
+contract WstEthOracle is BaseOracle {
     address public immutable stEth;
     address public immutable wstEth;
 

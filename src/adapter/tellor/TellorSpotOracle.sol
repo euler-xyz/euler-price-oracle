@@ -3,12 +3,12 @@ pragma solidity 0.8.22;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {UsingTellor} from "@tellor/UsingTellor.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @dev we can optimize construction of queries quite a bit
-contract TellorSpotOracle is UsingTellor, IPriceOracle {
+contract TellorSpotOracle is BaseOracle, UsingTellor {
     /// @dev Tellor is an optimistic oracle so too recent values are not trusted.
     /// @custom:read https://tellor.io/best-practices-for-oracle-users-on-ethereum/
     uint256 public immutable minStaleness;

@@ -9,12 +9,10 @@ import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
-    constructor(address _uniswapV3Factory, address _owner) UniswapV3Oracle(_uniswapV3Factory) {
-        _initializeOwner(_owner);
-    }
+contract GovernedUniswapV3Oracle is UniswapV3Oracle {
+    constructor(address _uniswapV3Factory, address _owner) UniswapV3Oracle(_uniswapV3Factory) {}
 
-    function addConfig(address pool, uint24 twapWindow) public onlyOwner {
+    function addConfig(address pool, uint24 twapWindow) public onlyGovernor {
         address token0 = IUniswapV3Pool(pool).token0();
         address token1 = IUniswapV3Pool(pool).token1();
         uint24 fee = IUniswapV3Pool(pool).fee();
@@ -24,13 +22,13 @@ contract GovernedUniswapV3Oracle is Ownable, UniswapV3Oracle {
         _setConfig(token0, token1, pool, type(uint32).max, fee, twapWindow);
     }
 
-    function removeConfig(address pool) public onlyOwner {
+    function removeConfig(address pool) public onlyGovernor {
         address token0 = IUniswapV3Pool(pool).token0();
         address token1 = IUniswapV3Pool(pool).token1();
         configs[token0][token1] = UniswapV3ConfigLib.empty();
     }
 
     function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.GovernedUniswapV3Oracle(owner());
+        return OracleDescription.GovernedUniswapV3Oracle(governor);
     }
 }

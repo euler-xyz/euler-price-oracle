@@ -2,13 +2,14 @@
 pragma solidity 0.8.22;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {ICurveRegistry} from "src/adapter/curve/ICurveRegistry.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
-contract CurveLPThroughOracle is ImmutableAddressArray, IPriceOracle {
+contract CurveLPThroughOracle is BaseOracle, ImmutableAddressArray {
     ICurveRegistry public immutable metaRegistry;
     ICurveRegistry public immutable stableRegistry;
     IPriceOracle public immutable forwardOracle;

@@ -5,10 +5,10 @@ import {Denominations} from "@chainlink/Denominations.sol";
 import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-abstract contract ChainlinkOracle is IPriceOracle {
+abstract contract ChainlinkOracle is BaseOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
     uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;

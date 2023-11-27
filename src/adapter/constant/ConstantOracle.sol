@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConstantOracle is IPriceOracle {
+contract ConstantOracle is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
     address public immutable base;
     address public immutable quote;

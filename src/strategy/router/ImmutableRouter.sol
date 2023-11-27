@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {BaseOracle} from "src/BaseOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
@@ -8,10 +9,9 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @author totomanov
 /// @notice Optimized oracle resolver for base-quote pairs.
-/// Supports only one quote. May optionally have a fallback oracle.
+/// Supports up to 4 base assets against the same quote asset and an optional fallback oracle.
 /// @dev Uses `ImmutableAddressArray` to save on SLOADs.
-/// Supports up to 4 base assets.
-contract ImmutableRouter is IPriceOracle, ImmutableAddressArray {
+contract ImmutableRouter is BaseOracle, ImmutableAddressArray {
     address public immutable quote;
     address public immutable fallbackOracle;
 

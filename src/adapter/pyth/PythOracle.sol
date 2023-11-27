@@ -4,10 +4,10 @@ pragma solidity 0.8.22;
 import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pyth-sdk-solidity/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-abstract contract PythOracle is IPriceOracle {
+abstract contract PythOracle is BaseOracle {
     IPyth public immutable pyth;
     uint256 public immutable maxStaleness;
 

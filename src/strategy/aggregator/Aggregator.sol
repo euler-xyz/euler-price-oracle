@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {BaseOracle} from "src/BaseOracle.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
@@ -10,7 +11,7 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 /// @author totomanov
 /// @notice Reduce an array of quotes by applying a statistical function.
-abstract contract Aggregator is IPriceOracle, TryCallOracle, ImmutableAddressArray {
+abstract contract Aggregator is BaseOracle, TryCallOracle, ImmutableAddressArray {
     uint256 public immutable quorum;
 
     /// @param _oracles The list of oracles to call simultaneously.

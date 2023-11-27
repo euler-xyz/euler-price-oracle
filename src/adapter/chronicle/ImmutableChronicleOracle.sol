@@ -3,11 +3,11 @@ pragma solidity 0.8.22;
 
 import {IChronicle} from "@chronicle-std/IChronicle.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ImmutableChronicleOracle is IPriceOracle {
+contract ImmutableChronicleOracle is BaseOracle {
     uint256 public immutable maxStaleness;
     mapping(address base => mapping(address quote => ChronicleConfig)) public configs;
 

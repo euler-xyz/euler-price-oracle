@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
+import {BaseOracle} from "src/BaseOracle.sol";
 import {ICTokenV2} from "src/adapter/compound-v2/ICTokenV2.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract CTokenV2Oracle is IPriceOracle {
+contract CTokenV2Oracle is BaseOracle {
     address public immutable cToken;
     address public immutable underlying;
 
