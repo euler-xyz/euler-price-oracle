@@ -4,13 +4,7 @@ pragma solidity 0.8.22;
 /// @author totomanov
 /// @notice Common PriceOracle denominations for assets that are not tokens.
 /// @dev Currencies are represented by ISO 4217 numeric codes.
-/// Only the top 10 most traded currencies are listed here [https://www.bis.org/statistics/rpfx22_fx.pdf](Source),
-/// as well as Gold (XAU), Silver (XAG), and No Currency (XXX).
-/// Oracles MAY support additional currencies following the ISO 4217 standard.
-/// Oracles MUST use `ETH` to denote the native coin of the blockchain if the native coin does not implement ERC20 (e.g. on Ethereum).
-/// Oracles MUST use the ERC20 contract address to denote the native coin of the blockchain if the native coin implements ERC20 (e.g. on TRON Network).
-/// Oracles MAY internally treat the canonical wrapped token and the native coin interchangably.
-/// Oracles MAY use `NO_CURRENCY` to denote unknown or non-ISO 4217 currencies provided they implement an alternative, unambiguous standard of denomination.
+/// Only the top 10 most traded currencies are listed here, as well as Gold (XAU), Silver (XAG), and No Currency (XXX).
 library Denominations {
     address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address internal constant BTC = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;
