@@ -202,23 +202,163 @@ An adapter validates the data and processes it to conform to the `IEOracle` inte
 (Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded as an adapter for consistency.
 Adapters connect to external oracles and adapt their interfaces and answers to the `IEOracle` interface.
 
-### Size-sensitive Pricing
-By their interface EOracles are size-sensitive. The caller supplies `inAmount` and expects the EOracle to return `outAmount`, the price-equivalent amount of the quote asset. 
+### Size-aware Pricing
+The EOracle interface is *size-aware*. The caller supplies `inAmount` and expects the EOracle to return `outAmount`, the price-equivalent amount of the quote asset. 
 
-However, external oracles are usually size-insensitive. For example, the USDC/ETH feed on Chainlink will return the amount of ETH equivalent to 1 USDC. The EOracle that integrates with Chainlink must scale the feed price up or down to arrive at `outAmount`.
+On the other hand, external oracles usually provide unit prices. For example, the USDC/ETH feed on Chainlink will return the amount of ETH equivalent to 1 USDC. The EOracle must scale the unit price up or down to arrive at `outAmount`.
 
-For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because `inAmount` of the base asset cannot be immediately exchanged to the quote asset without incurring slippage, which pushes down the effective price. 
+For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because of AMM slippage, which strictly increases with trade size. This behavior is inherent in all constant-function market makers. [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf). We call this divergence property *scale error*.
 
-The inherent properties of constant-function market makers are that trade slippage is always non-zero and it strictly increases with trade size. In the case of a constant-product AMM, slippage growth is linear [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf).
+Scale error is a tail for a lending market. Consider a lending pair where the collateral asset has thin on-chain liquidity. When liquidating a large position. When this EOracle would indicate
 
 #### Reducing Scale Error
-Scale error presents a bad-debt risk to a lending market. Consider a lending pair where the collateral asset has thin on-chain liquidity. An opportunistic borrower can EOracle would indicate
+Scale error should be accounted for in the RiskManager. The Risk Manager can discount `outAmount` by internally modelling the instantaneous slippage of the implied AMM implied by `getQuote`. It can also implement additional risk measures such as supply caps to counter the resulting tail-end inaccuracies.
 
- large borrowing position  to  considerScale error can be reduced in two places: RiskManager and EOracle. Scale errors affects a lending market negatively by
 
->When a Risk Manager connects to such an EOracle, it must implement additional risk measures such as supply caps to counter the resulting tail-end inaccuracies.
+<!-- 
+$$\mathbf{s}(k,\lambda) =\frac{\lambda\ln(1+k)}{1+\lambda\ln(1+k)}$$
 
-### Integrating Pull-Based Systems
+where $\lambda > 0$ is a measure of the liquidity of the asset and $k = \frac{inAmount}{unit}$. 
+
+The properties of $\mathbf{s}(k)$ are that
+$$\mathbf{s}(0,\lambda) = 0$$
+$$\mathbf{s}(k,0) = 0$$
+$$\lim_{k \to +\infty}\mathbf{s}(k,\lambda) = 1$$ 
+
+Large values for $\lambda$ will make $\mathbf{s}$ converge faster to 1 so $\lambda$ should be inversely proportional to on-chain liquidity. Note that the overall liquidity of an asset should be measured across DEXes and all pairings should be taken into account.
+
+| Size  | Empirical Slippage | Modelled Slippage |
+| -- | -- | -- |
+| 100000  | 0.0048 | x  |
+| 500000  | 0.0228 | x  |
+| 1000000  | 0.064 | x  |
+| 5000000  | 62.22 | x  |
+| 10000000  | 80.47 | x  | -->
+### Oracle Request Models
+#### Push-based Systems
+Push-based oracle systems have an off-chain *consensus network* of materially invested third parties. The network agrees on the current price and pushes it periodically on-chain to a *feed contract.* The EOracle directly reads this price from the feed.
+
+Since writing data to the blockchain is expensive, push oracles implement trigger conditions which decide when to push a price to the feed. A common trigger strategy is defining the *deviation threshold* $\delta_{min} \in(0,1)$. This quantity is the minimum change needed relative to the last pushed price. The recorded price $p$ is updated if the candidate price $\hat{p}>p+\delta_{min}p$ or $\hat{p}<p-\delta_{min}p$.
+
+The true price $\mathbf{p}$ may lie anywhere in the range $(p-\delta_{min}p,\ p+\delta_{min}p)$. Ignoring drift, $\mathbf{p}$ can be modelled as a one-dimensional Wiener process $W_t$, therefore $\mathbf{p} \sim N(p,\ \sigma^2)$, truncated to $\mathbf{p} \in (p-\delta_{min}p,\ p+\delta_{min}p)$.
+
+In the implementation `getQuotes` an EOracle may choose to ignore deviation and return $(p,\ p)$. It may return the full range $(p-\delta_{min}p,\ p+\delta_{min}p)$ or a confidence interval over the latter trunctated normal distribution.
+
+
+##### Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant EOracle ⛓️
+    participant Feed ⛓️
+    participant Network ☁️
+
+    Network ☁️->>Feed ⛓️: ...
+    Network ☁️->>Feed ⛓️: Push Price
+
+    loop Request Sequence
+        User->>EOracle ⛓️: getQuote
+        EOracle ⛓️->>Feed ⛓️: Read Latest Price
+    end
+
+    Network ☁️->>Feed ⛓️: Push Price
+    Network ☁️->>Feed ⛓️: ...
+```
+
+**Request sequence**
+1. User calls `getQuote` on EOracle.
+1. EOracle reads the latest pushed price from the feed.
+
+#### Pull-based Systems
+
+##### Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant EOracle ⛓️
+    participant Feed ⛓️
+    participant Feed ☁️
+    participant Network ☁️
+
+    Network ☁️-)Feed ☁️: ...
+    Network ☁️-)Feed ☁️: Update Price
+
+    loop Request Sequence
+        User-) Network ☁️: Pull Price
+        activate Network ☁️
+        Network ☁️-)Feed ⛓️: Write Price
+        deactivate Network ☁️
+        User->>EOracle ⛓️: getQuote
+        EOracle ⛓️->>Feed ⛓️: Read Latest Price
+    end
+
+    Network ☁️-)Feed ☁️: Update Price
+    Network ☁️-)Feed ☁️: ...
+```
+
+**Request sequence**
+1. User requests off-chain a price update from the network.
+1. Network fulfills the request by writing the price on-chain.
+1. User calls `getQuote` on EOracle.
+1. EOracle reads the latest pushed price from the feed.
+
+#### Signature-based Systems
+
+##### Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant EOracle ⛓️
+    participant Cache ⛓️
+    participant Feed ☁️
+    participant Network ☁️
+
+    Network ☁️-)Feed ☁️: ...
+    Network ☁️-)Feed ☁️: Update Signed Price
+
+    loop Request Sequence
+        User-)Feed ☁️: Read Signed Price
+        User->>Cache ⛓️:Push Signed Price
+        User->>EOracle ⛓️: getQuote
+        EOracle ⛓️->>Cache ⛓️: Read Latest Price
+    end
+
+    Network ☁️-)Feed ☁️: Update Signed Price
+    Network ☁️-)Feed ☁️: ...
+```
+
+**Request sequence**
+1. User requests the latest signed price from the network.
+1. Network fulfills the request by sending the signed price to the user.
+1. User pushes the message on-chain to a custom cache contract. The cache contract validates the message and stores the price.
+1. User calls `getQuote` on EOracle.
+1. EOracle reads the latest pushed price from the cache.
+
+#### Dummy Systems
+
+##### Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant EOracle ⛓️
+    participant DeFi Contract ⛓️
+    participant Users
+
+    Users->>DeFi Contract ⛓️: ...
+    Users->>DeFi Contract ⛓️: Update Action
+
+    loop Request Sequence
+        User->>EOracle ⛓️: getQuote
+        EOracle ⛓️->>DeFi Contract ⛓️: Read Exchange Rate
+    end
+
+    Users->>DeFi Contract ⛓️: Update Action
+    Users->>DeFi Contract ⛓️: ...
+```
+
+**Request sequence**
+1. User calls `getQuote` on EOracle.
+1. EOracle reads or infers an exchange rate from the current state of a DeFi contract.
 
 ### Chainlink
 Queries a Chainlink oracle.
