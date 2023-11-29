@@ -77,7 +77,7 @@ Unhandled price divergence presents a tail risk for lending markets. During liqu
 Price divergence should be accounted for in the risk configuration of the lending market. The received `outAmount` may need to be discounted according to a model for instantaneous slippage of the AMM trade that is implied by `getQuote`. Additional risk policies such as supply caps can be a hard limit on the effects of price divergence.
 
 #### Modelling Slippage
-Todo
+Todo - this is actually not a very good model
 
 $$\mathbf{s}(k,\lambda) =\frac{\lambda\ln(1+k)}{1+\lambda\ln(1+k)}$$
 
