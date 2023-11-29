@@ -6,8 +6,7 @@
 * [Introduction](#introduction)
 * [Interface](#interface)
 * [Adapters](#adapters)
-    * [Size-aware Pricing](#size-aware-pricing)
-        * [Reducing Scale Error](#reducing-scale-error)
+    * [Price Divergence](#price-divergence)
     * [Request Models](#request-models)
         * [Push-based Systems](#push-based-systems)
         * [Pull-based Systems](#pull-based-systems)
@@ -62,23 +61,19 @@ function getQuotes(uint256 inAmount, address base, address quote) external view 
 ```
 
 ## Adapters
-An adapter is an EOracle that directly interfaces with an external oracle. Adapters translate between the language of `IEOracle` and the external system.
-An adapter validates the data and processes it to conform to the `IEOracle` interface. An adapter may connect to canonical oracle systems like Chainlink or query external DeFi contracts for exchange rates 
+An adapter is an EOracle that directly interfaces with an external oracle. It validates the received data and casts it to the shared interface. An adapter may connect to canonical oracle systems like Chainlink or query external DeFi contracts for exchange rates 
 (Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded as an adapter for consistency.
-Adapters connect to external oracles and adapt their interfaces and answers to the `IEOracle` interface.
 
-### Size-aware Pricing
+### Price Divergence
 The EOracle interface is *size-aware*. The caller supplies `inAmount` and expects the EOracle to return `outAmount`, the price-equivalent amount of the quote asset. 
 
 On the other hand, external oracles usually provide unit prices. For example, the USDC/ETH feed on Chainlink will return the amount of ETH equivalent to 1 USDC. The EOracle must scale the unit price up or down to arrive at `outAmount`.
 
-For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because of AMM slippage, which strictly increases with trade size. This behavior is inherent in all constant-function market makers. [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf). We call this divergence property *scale error*.
+For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because of AMM slippage, which strictly increases with trade size. This behavior is inherent in all constant-function market makers. [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf). We call this phenominon *price divergence*.
 
-Scale error is a tail for a lending market. Consider a lending pair where the collateral asset has thin on-chain liquidity. When liquidating a large position. When this EOracle would indicate
+Unhandled price divergence presents a tail risk for lending markets. During liquidaton, selling collateral into AMMs with thin liquidity will push the price further down, which may eventually trigger a destructive liquidation spiral.
 
-#### Reducing Scale Error
-Scale error should be accounted for in the RiskManager. The Risk Manager can discount `outAmount` by internally modelling the instantaneous slippage of the implied AMM implied by `getQuote`. It can also implement additional risk measures such as supply caps to counter the resulting tail-end inaccuracies.
-
+Price divergence should be accounted for in the risk configuration of the lending market. The received `outAmount` may need to be discounted according to a model for instantaneous slippage of the AMM trade that is implied by `getQuote`. Additional risk policies such as supply caps can be a hard limit on the effects of price divergence.
 
 <!-- 
 $$\mathbf{s}(k,\lambda) =\frac{\lambda\ln(1+k)}{1+\lambda\ln(1+k)}$$
