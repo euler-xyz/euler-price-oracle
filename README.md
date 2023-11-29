@@ -242,12 +242,11 @@ Large values for $\lambda$ will make $\mathbf{s}$ converge faster to 1 so $\lamb
 #### Push-based Systems
 Push-based oracle systems have an off-chain *consensus network* of materially invested third parties. The network agrees on the current price and pushes it periodically on-chain to a *feed contract.* The EOracle directly reads this price from the feed.
 
-Since writing data to the blockchain is expensive, push oracles implement trigger conditions which decide when to push a price to the feed. A common trigger strategy is defining the *deviation threshold* $\delta_{min} \in(0,1)$. This quantity is the minimum change needed relative to the last pushed price. The recorded price $p$ is updated if the candidate price $\hat{p}>p+\delta_{min}p$ or $\hat{p}<p-\delta_{min}p$.
+Since writing data to the blockchain is expensive, push oracles implement trigger conditions which decide when to push a price to the feed. A common trigger strategy is by defining *deviation threshold* $\delta_{min} \in(0,1)$ for the feed. The recorded price $p$ is updated only if the instantaneous price $p*$ sufficiently deviates from $p$, more precisely when $|1-\frac{p*}{p}| > \delta_{min}$.
 
 The true price $\mathbf{p}$ may lie anywhere in the range $(p-\delta_{min}p,\ p+\delta_{min}p)$. Ignoring drift, $\mathbf{p}$ can be modelled as a one-dimensional Wiener process $W_t$, therefore $\mathbf{p} \sim N(p,\ \sigma^2)$, truncated to $\mathbf{p} \in (p-\delta_{min}p,\ p+\delta_{min}p)$.
 
-In the implementation `getQuotes` an EOracle may choose to ignore deviation and return $(p,\ p)$. It may return the full range $(p-\delta_{min}p,\ p+\delta_{min}p)$ or a confidence interval over the latter trunctated normal distribution.
-
+In the implementation of `getQuotes` an EOracle may choose to ignore the deviation and return $(p,\ p)$. It may return the full range $([)p-\delta_{min}p,\ p+\delta_{min}p)$, or a tighter range confidence interval over the latter trunctated normal distribution.
 
 **Sequence Diagram**
 ```mermaid
