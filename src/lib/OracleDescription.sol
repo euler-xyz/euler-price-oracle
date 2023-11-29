@@ -57,7 +57,7 @@ library OracleDescription {
         });
     }
 
-    function CurveLPThroughOracle() internal pure returns (Description memory) {
+    function CurveLPOracle() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.SPOT,
             authority: Authority.IMMUTABLE,

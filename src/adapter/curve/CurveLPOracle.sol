@@ -9,7 +9,7 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
-contract CurveLPThroughOracle is BaseOracle, ImmutableAddressArray {
+contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
     ICurveRegistry public immutable metaRegistry;
     ICurveRegistry public immutable stableRegistry;
     IPriceOracle public immutable forwardOracle;
@@ -58,7 +58,7 @@ contract CurveLPThroughOracle is BaseOracle, ImmutableAddressArray {
     }
 
     function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.CurveLPThroughOracle();
+        return OracleDescription.CurveLPOracle();
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

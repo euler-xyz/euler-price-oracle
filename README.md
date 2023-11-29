@@ -8,7 +8,7 @@
 * [Table of Contents](#table-of-contents)
 * [Introduction](#introduction)
 * [Interface](#interface)
-* [Specification](#specification)
+* [EOracle Specification](#eoracle-specification)
     * [Definitions](#definitions)
     * [Methods](#methods)
         * [`description`](#description)
@@ -28,17 +28,18 @@
         * [Pull-based Systems](#pull-based-systems)
         * [Signature-based Systems](#signature-based-systems)
         * [Dummy Systems](#dummy-systems)
-    * [Chainlink](#chainlink)
-    * [Chronicle](#chronicle)
-    * [Compound V2](#compound-v2)
-    * [Constant](#constant)
-    * [Curve](#curve)
-    * [Lido](#lido)
-    * [Pyth](#pyth)
-    * [RocketPool](#rocketpool)
-    * [Tellor](#tellor)
-    * [Uniswap V3](#uniswap-v3)
-    * [Yearn V2](#yearn-v2)
+    * [Supported Adapters](#supported-adapters)
+        * [Chainlink](#chainlink)
+        * [Chronicle](#chronicle)
+        * [Compound V2](#compound-v2)
+        * [Constant](#constant)
+        * [Curve](#curve)
+        * [Lido](#lido)
+        * [Pyth](#pyth)
+        * [RocketPool](#rocketpool)
+        * [Tellor](#tellor)
+        * [Uniswap V3](#uniswap-v3)
+        * [Yearn V2](#yearn-v2)
 * [Strategies](#strategies)
     * [Aggregators](#aggregators)
         * [Supported Aggregator Algorithms](#supported-aggregator-algorithms)
@@ -53,35 +54,26 @@
 <!-- END OF TOC -->
 
 ## Introduction
+**Euler Oracles** is a smart contract framework for deploying and managing custom price oracle configurations. Out of the box it provides integrations with 10+ leading blockchain oracles. Using the built-in primitives for routing, quote aggregation, and redundancy, teams can define a custom pricing strategy that suits their product's needs. Euler Oracles is built to solve the unique challenges posed by immutable lending markets yet allows for external governance to be retained and eventually revoked.
 
 ## Interface
 Euler Oracles conform to the shared `IEOracle` interface.
 ```solidity
-error EOracle_NoAnswer();
-error EOracle_NotSupported(address base, address quote);
-error EOracle_Overflow();
-error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);
-
 function description() external view returns (OracleDescription.Description memory description);
 function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount);
 function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
 ```
 
-## Specification
+## EOracle Specification
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 ### Definitions
 - **Asset:** An ERC20 token (denoted by its contract address), a currency (denoted by its ISO 4217 numeric code) or the native coin (denoted by `0xEeee...EEeE`).
-- **Base:** The asset which is being priced. This is the numerator of the base/quote pair.
-- **Quote:** The asset which is used as the unit of account. This is the denominator of the base/quote pair.
-- **EOracle:** Smart contracts that implement the `IEOracle` interface. EOracles can be composed together as part of the Euler Oracles system.
-EOracles do not necessarily interface with external providers. They may be used as utility layers for routing, aggregation, or shared governance.
-- **Adapter:** An EOracle that directly connects to external contracts or systems that provide pricing. An adapter validates the data and processes it
-to conform to the `IEOracle` interface. An adapter may connect to canonical oracle systems like Chainlink or query external DeFi contracts for exchange rates 
-(Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded as an adapter for consistency.
-- **Strategy:** An EOracle that serves as an intermediary logic layer. Strategies forward calls to one or many child EOracles. An example strategy is a router for base/quote pairs or a median aggregator of multiple adapters.
-- **Resolution tree:** A tree data structure with EOracles as nodes. The resolution tree defines the complete oracle configuration for a given EVault. 
-External calls will always enter via the root of the tree and resolve via a subtree that contains the root.
-Leaves of the resolution tree are adapters. Internal nodes are strategies. The tree branches out when it contains a strategy that connects to multiple child EOracles. Strategies aggregate the answers of their immediate children into a single value, which is propagated up the ancestry chain to the root. The resolution tree only defines the topology of the oracle configuration. The path taken by a specific call may depend on the logic inside strategies.
+- **Base:** The asset which is being priced.
+- **Quote:** The asset which is used as the unit of account for the base.
+- **EOracle:** Smart contracts that implement the `IEOracle` interface. EOracles can be composed together as part of the Euler Oracles framework. They either interface with external pricing providers or serve as utility layers.
+- **Adapter:** An EOracle that directly connects to external contracts or systems that provide pricing. An adapter validates the data and casts it to the common `IEOracle` interface. An adapter may connect to canonical oracle systems like Chainlink, query DeFi contracts, or apply a hard-coded exchange rate.
+- **Strategy:** An EOracle that serves as an intermediary logic layer. Strategies forward calls to several EOracles and combine the results into a single price.
+- **Configuration tree:** A tree data structure composed of EOracles nodes that defines a self-contained oracle configuration.
 
 ### Methods
 Oracles MUST implement `description`, `getQuote` and `getQuotes` as defined by the `IEOracle` interface. The methods MUST behave as specified in this section.
@@ -156,7 +148,7 @@ struct Description {
 - MAY return a zero-spread price if the external system does not support spread quotes i.e. return `(getQuote(in,b,q), getQuote(in,b,q))`
 
 ### Denominations
-Code: [src/lib/Denominations.sol](src/lib/Denominations.sol)
+Source: [src/lib/Denominations.sol](src/lib/Denominations.sol)
 
 Every asset in Euler Oracles is represented by a 160-bit `address`. To avoid ambiguity, EOracles:
 - MUST denote an ERC20 token by its contract address on the host blockchain.
@@ -173,7 +165,7 @@ Every asset in Euler Oracles is represented by a 160-bit `address`. To avoid amb
 `ImmutableAddressArray` and `PackedUint32Array` are custom data structures useful for creating gas-efficient strategy EOracles. 
 
 ### Immutable Address Array
-Code: [src/lib/ImmutableAddressArray.sol](src/lib/ImmutableAddressArray.sol)
+Source: [src/lib/ImmutableAddressArray.sol](src/lib/ImmutableAddressArray.sol)
 
 An abstract contract that implements a fixed-size read-only array of up to 8 addresses.
 
@@ -186,7 +178,7 @@ It internally exposes `get(index) -> element` and `find(element) -> index` metho
 The immutable address array is practically useful for immutable EOracle strategies. See [src/strategy/linear/LinearStrategy.sol](src/strategy/linear/LinearStrategy.sol) for an example of how it can be used.
 
 ### Packed Uint32 Array
-Code: [src/lib/PackedUint32Array.sol](src/lib/PackedUint32Array.sol)
+Source: [src/lib/PackedUint32Array.sol](src/lib/PackedUint32Array.sol)
 
 A [user defined value type](https://soliditylang.org/blog/2021/09/27/user-defined-value-types/) that packs an ordered array of 8 `uint32` values inside a single 256-bit integer. 
 
@@ -198,7 +190,7 @@ The type supports the functions `get`, `set`, `clear`, `mask`, `sum`, `eq`, `neq
 
 See [src/strategy/linear/ConstantBackoffLinearStrategy.sol](src/strategy/linear/ConstantBackoffLinearStrategy.sol) where it is used for storing cooldown timestamps.
 
-See the [weighed mean algorithm](src/strategy/aggregator/AggregatorAlgorithms.sol#L75) where it is used as a bitmask over the immutable address array.
+See the [weighed mean function](src/strategy/aggregator/AggregatorFunctions.sol) where it is used as a bitmask over the immutable address array.
 
 ## Adapters
 An adapter is an EOracle that directly interfaces with an external oracle. Adapters translate between the language of `IEOracle` and the external system.
@@ -244,9 +236,9 @@ Push-based oracle systems have an off-chain *consensus network* of materially in
 
 Since writing data to the blockchain is expensive, push oracles implement trigger conditions which decide when to push a price to the feed. A common trigger strategy is by defining *deviation threshold* $\delta_{min} \in(0,1)$ for the feed. The recorded price $p$ is updated only if the instantaneous price $p*$ sufficiently deviates from $p$, more precisely when $|1-\frac{p*}{p}| > \delta_{min}$.
 
-The true price $\mathbf{p}$ may lie anywhere in the range $(p-\delta_{min}p,\ p+\delta_{min}p)$. Ignoring drift, $\mathbf{p}$ can be modelled as a one-dimensional Wiener process $W_t$, therefore $\mathbf{p} \sim N(p,\ \sigma^2)$, truncated to $\mathbf{p} \in (p-\delta_{min}p,\ p+\delta_{min}p)$.
+The true price $\mathbf{p}$ can be modelled (ignoring drift) as a one-dimensional Wiener process $W_t$, therefore $\mathbf{p} \sim N(p,\ \sigma^2)$, truncated to $\mathbf{p} \in (p-\delta_{min}p,\ p+\delta_{min}p)$.
 
-In the implementation of `getQuotes` an EOracle may choose to ignore the deviation and return $(p,\ p)$. It may return the full range $([)p-\delta_{min}p,\ p+\delta_{min}p)$, or a tighter range confidence interval over the latter trunctated normal distribution.
+In the implementation of `getQuotes` an EOracle may choose to ignore the deviation and return $(p,\ p)$. It may return the full range $(p-\delta_{min}p,\ p+\delta_{min}p)$, or a tighter range confidence interval over the latter trunctated normal distribution.
 
 **Sequence Diagram**
 ```mermaid
@@ -268,7 +260,7 @@ sequenceDiagram
     Network ☁️->>Feed ⛓️: ...
 ```
 
-**Request sequence**
+**Request Sequence**
 1. User calls `getQuote` on EOracle.
 1. EOracle reads the latest pushed price from the feed.
 
@@ -299,7 +291,7 @@ sequenceDiagram
     Network ☁️-)Feed ☁️: ...
 ```
 
-**Request sequence**
+**Request Sequence**
 1. User requests off-chain a price update from the network.
 1. Network fulfills the request by writing the price on-chain.
 1. User calls `getQuote` on EOracle.
@@ -330,7 +322,7 @@ sequenceDiagram
     Network ☁️-)Feed ☁️: ...
 ```
 
-**Request sequence**
+**Request Sequence**
 1. User requests the latest signed price from the network.
 1. Network fulfills the request by sending the signed price to the user.
 1. User pushes the message on-chain to a custom cache contract. The cache contract validates the message and stores the price.
@@ -359,41 +351,71 @@ sequenceDiagram
     Users->>DeFi Contract ⛓️: ...
 ```
 
-**Request sequence**
+**Request Sequence**
 1. User calls `getQuote` on EOracle.
 1. EOracle reads or infers an exchange rate from the current state of a DeFi contract.
 
-### Chainlink
-Queries a Chainlink oracle.
+### Supported Adapters
 
-### Chronicle
-Queries a Chronicle oracle.
+#### Chainlink
+Chainlink is a push-based oracle system. A Chainlink feed is a smart contract that stores the current and historical unit price of a base/quote pair. The quote (denomination) is ETH, USD or BTC. A set of privileged third parties (node operators) can submit on-chain pricing. A quorum is required to update prices. Prices are pushed on-chain when a deviation threshold is exceeded or the price hasn't been updated for a period of time (this parameter is called the *heartbeat*). The trigger parameters are not observable on-chain.
 
-### Compound V2
-Queries a Compound V2 market to price a cToken in terms of its underlying.
+**Trust model**
 
-### Constant
-Returns a fixed exchange rate between two assets.
+Chainlink data feeds sit behind an upgradeable proxy. The upgrade admin is a 4/9 multisig contract. None of the owners of the multisig are publically identified or KYC'd. Two addresses have never transacted.
 
-### Curve
+**Risks**
+
+Chainlink feeds may be [deprecated.](https://docs.chain.link/data-feeds/deprecating-feeds?network=deprecated&page=1)
+
+#### Chronicle
+Chronicle is a push-based oracle system. Chronicle feeds are smart contracts that store the current unit price of a base/quote pair. A set of privileged third parties (node operators) can submit on-chain pricing. A quorum is required to update prices. Prices are pushed on-chain when a deviation threshold is exceeded or the price hasn't been updated for a period of time (this parameter is called the *heartbeat*). The trigger parameters are not observable on-chain.
+
+#### Compound V2
+Source: [CTokenV2Oracle.sol](src/adapter/compound-v2/CTokenV2Oracle.sol)
+
+`CTokenV2Oracle` retrieves the exchange rate of a cToken relative to its underlying asset. It calls `exchangeRateStored` and `accrualBlockNumber` on the cToken contract to get the latest exchange rate and the block in which it was updated. Staleness in seconds can be derived by `12 * 1.02 * (block.number - accrualBlockNumber)`, assuming a 2% [missed slot rate.](https://beaconcha.in/charts/slotviz)
+
+Alternatively, the user can call `accrueInterest` on the cToken contract to force an update to `exchangeRateStored`.
+
+#### Constant
+Source: [ConstantOracle.sol](src/adapter/constant/ConstantOracle.sol)
+
+`ConstantOracle` is a dummy oracle that stores a preconfigured exchange rate.
+
+#### Curve
+Source: [CurveLPOracle.sol](src/adapter/curve/CurveLPOracle.sol)
+
 Queries a Curve pool contract to price an LP token in terms of its underlying tokens.
 
-### Lido
+#### Lido
+Source: [WstEthOracle.sol](src/adapter/lido/WstEthOracle.sol)
+
 Queries the wstEth contract to convert between stEth and wstEth.
 
-### Pyth
+#### Pyth
+Source: [ImmutablePythOracle.sol](src/adapter/pyth/ImmutablePythOracle.sol), [ImmutablePythEMAOracle.sol](src/adapter/pyth/ImmutablePythEMAOracle.sol)
+
 Queries a Pyth oracle. Supports bid-ask spread.
 
-### RocketPool
+#### RocketPool
+Source: [RethOracle.sol](src/adapter/rocketpool/RethOracle.sol)
+
 Queries the Reth contract to convert between Reth and Eth.
 
-### Tellor
+#### Tellor
+Source: [TellorSpotOracle.sol](src/adapter/tellor/TellorSpotOracle.sol)
+
 Queries a Tellor oracle.
 
-### Uniswap V3
+#### Uniswap V3
+Source: [ImmutableUniswapV3Oracle.sol](src/adapter/uniswap/ImmutableUniswapV3Oracle.sol)
+
 Calculates the TWAP price maintained by a Uniswap V3 pool.
 
-### Yearn V2
+#### Yearn V2
+Source: [YearnV2VaultOracle.sol](src/adapter/yearn-v2/YearnV2VaultOracle.sol)
+
 Queries a Yearn V2 vault contract to price a yvToken in terms of its underlying.
 
 ## Strategies
@@ -430,13 +452,16 @@ Linear strategies maintain an ordered set of underlying oracles. Underlying orac
 - `ConstantBackoffLinearStrategy` extends the base algorithm and applies a constant-time backoff to unsuccessful queries. When an underlying oracle fails, it will be skipped for the next time period (e.g. 1 hour).
 
 ### Routers
-Router strategies implement traffic control algorithms. Routers are most useful as top-level entry points for the underlying oracle resolution tree.
+Router strategies implement traffic control algorithms. A routers is often useful as the top-level entry point for the configuration tree.
 
 #### Supported Router Algorithms
 - `SimpleRouter` supports an on-chain mapping of `(base,quote) -> oracle`.
 - `FallbackRouter` extends `SimpleRouter` with a fallback oracle that is queried for all unresolved paths.
 
 ## Composing EOracles
+A *configuration tree* is a tree of EOracles that defines a self-contained oracle configuration. Consumers only need to store the root node of the configuration tree. A call will resolve via a specific subtree of the configuration tree. Leaves are adapters, the contact point with external systems. They propagate quotes to the internal strategy nodes, which collapse multiple quotes into one and return it up the ancestry chain. The tree branches out when it contains a strategy that connects to multiple child EOracles. The resolution tree only defines the topology of the oracle configuration. The path taken by a specific call will depend on the logic inside strategies.
+
+The simplest configuration is a single adapter, e.g. an EOracle that queries a Chainlink feed. A more complex configuration is illustrated below:
 
 ### Example Configuration
 ```mermaid
