@@ -7,6 +7,7 @@
 * [Interface](#interface)
 * [Adapters](#adapters)
     * [Price Divergence](#price-divergence)
+        * [Modelling Slippage](#modelling-slippage)
     * [Request Models](#request-models)
         * [Push-based Systems](#push-based-systems)
         * [Pull-based Systems](#pull-based-systems)
@@ -69,13 +70,15 @@ The EOracle interface is *size-aware*. The caller supplies `inAmount` and expect
 
 On the other hand, external oracles usually provide unit prices. For example, the USDC/ETH feed on Chainlink will return the amount of ETH equivalent to 1 USDC. The EOracle must scale the unit price up or down to arrive at `outAmount`.
 
-For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because of AMM slippage, which strictly increases with trade size. This behavior is inherent in all constant-function market makers. [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf). We call this phenominon *price divergence*.
+For a sufficiently large `inAmount` a linearly scaled price will overestimate the actual market value of the quote asset. This is because of AMM slippage, which strictly increases with trade size. This behavior is inherent in all constant-function market makers. [[Engel and Herlihy 2022]](https://arxiv.org/pdf/2110.09872.pdf). We call this property *price divergence*.
 
-Unhandled price divergence presents a tail risk for lending markets. During liquidaton, selling collateral into AMMs with thin liquidity will push the price further down, which may eventually trigger a destructive liquidation spiral.
+Unhandled price divergence presents a tail risk for lending markets. During liquidation, selling collateral into AMMs with thin liquidity will exacerbate the divergence, which may eventually trigger a destructive liquidation spiral.
 
 Price divergence should be accounted for in the risk configuration of the lending market. The received `outAmount` may need to be discounted according to a model for instantaneous slippage of the AMM trade that is implied by `getQuote`. Additional risk policies such as supply caps can be a hard limit on the effects of price divergence.
 
-<!-- 
+#### Modelling Slippage
+Todo
+
 $$\mathbf{s}(k,\lambda) =\frac{\lambda\ln(1+k)}{1+\lambda\ln(1+k)}$$
 
 where $\lambda > 0$ is a measure of the liquidity of the asset and $k = \frac{inAmount}{unit}$. 
@@ -87,13 +90,6 @@ $$\lim_{k \to +\infty}\mathbf{s}(k,\lambda) = 1$$
 
 Large values for $\lambda$ will make $\mathbf{s}$ converge faster to 1 so $\lambda$ should be inversely proportional to on-chain liquidity. Note that the overall liquidity of an asset should be measured across DEXes and all pairings should be taken into account.
 
-| Size  | Empirical Slippage | Modelled Slippage |
-| -- | -- | -- |
-| 100000  | 0.0048 | x  |
-| 500000  | 0.0228 | x  |
-| 1000000  | 0.064 | x  |
-| 5000000  | 62.22 | x  |
-| 10000000  | 80.47 | x  | -->
 ### Request Models
 #### Push-based Systems
 Push-based oracle systems have an off-chain *consensus network* of materially invested third parties. The network agrees on the current price and pushes it periodically on-chain to a *feed contract.* The EOracle directly reads this price from the feed.
