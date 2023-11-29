@@ -21,9 +21,13 @@
     * [Immutable Address Array](#immutable-address-array)
     * [Packed Uint32 Array](#packed-uint32-array)
 * [Adapters](#adapters)
-    * [Size-sensitive Pricing](#size-sensitive-pricing)
+    * [Size-aware Pricing](#size-aware-pricing)
         * [Reducing Scale Error](#reducing-scale-error)
-    * [Integrating Pull-Based Systems](#integrating-pull-based-systems)
+    * [Request Models](#request-models)
+        * [Push-based Systems](#push-based-systems)
+        * [Pull-based Systems](#pull-based-systems)
+        * [Signature-based Systems](#signature-based-systems)
+        * [Dummy Systems](#dummy-systems)
     * [Chainlink](#chainlink)
     * [Chronicle](#chronicle)
     * [Compound V2](#compound-v2)
@@ -234,7 +238,7 @@ Large values for $\lambda$ will make $\mathbf{s}$ converge faster to 1 so $\lamb
 | 1000000  | 0.064 | x  |
 | 5000000  | 62.22 | x  |
 | 10000000  | 80.47 | x  | -->
-### Oracle Request Models
+### Request Models
 #### Push-based Systems
 Push-based oracle systems have an off-chain *consensus network* of materially invested third parties. The network agrees on the current price and pushes it periodically on-chain to a *feed contract.* The EOracle directly reads this price from the feed.
 
@@ -245,7 +249,7 @@ The true price $\mathbf{p}$ may lie anywhere in the range $(p-\delta_{min}p,\ p+
 In the implementation `getQuotes` an EOracle may choose to ignore deviation and return $(p,\ p)$. It may return the full range $(p-\delta_{min}p,\ p+\delta_{min}p)$ or a confidence interval over the latter trunctated normal distribution.
 
 
-##### Sequence Diagram
+**Sequence Diagram**
 ```mermaid
 sequenceDiagram
     participant User
@@ -271,7 +275,7 @@ sequenceDiagram
 
 #### Pull-based Systems
 
-##### Sequence Diagram
+**Sequence Diagram**
 ```mermaid
 sequenceDiagram
     participant User
@@ -304,7 +308,7 @@ sequenceDiagram
 
 #### Signature-based Systems
 
-##### Sequence Diagram
+**Sequence Diagram**
 ```mermaid
 sequenceDiagram
     participant User
@@ -336,7 +340,7 @@ sequenceDiagram
 
 #### Dummy Systems
 
-##### Sequence Diagram
+**Sequence Diagram**
 ```mermaid
 sequenceDiagram
     participant User
