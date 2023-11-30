@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {AggregatorFunctions} from "src/strategy/aggregator/AggregatorFunctions.sol";

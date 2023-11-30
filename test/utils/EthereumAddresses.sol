@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 // Tokens
 address constant LDO = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;

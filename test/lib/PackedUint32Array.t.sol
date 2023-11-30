@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import "forge-std/Test.sol";
 import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";

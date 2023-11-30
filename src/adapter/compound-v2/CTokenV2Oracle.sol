@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {BaseOracle} from "src/BaseOracle.sol";
 import {ICTokenV2} from "src/adapter/compound-v2/ICTokenV2.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseOracle} from "src/BaseOracle.sol";

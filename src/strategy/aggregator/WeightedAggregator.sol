@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {Errors} from "src/lib/Errors.sol";

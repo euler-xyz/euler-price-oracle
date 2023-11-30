@@ -2,7 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-solc = "0.8.22"
+solc = "0.8.23"
 optimizer = true
 optimizer_runs = 100_000
 no_match_contract = "Fork" # fork tests skipped for easy dev

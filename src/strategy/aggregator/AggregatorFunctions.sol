@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {LibSort} from "@solady/utils/LibSort.sol";

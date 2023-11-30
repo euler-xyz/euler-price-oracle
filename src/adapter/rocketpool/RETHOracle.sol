@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
 import {BaseOracle} from "src/BaseOracle.sol";

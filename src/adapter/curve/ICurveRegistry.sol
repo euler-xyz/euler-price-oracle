@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 interface ICurveRegistry {
     function get_pool_from_lp_token(address lpToken) external view returns (address);

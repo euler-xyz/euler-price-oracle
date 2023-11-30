@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.22;
+pragma solidity 0.8.23;
 
 import {Ownable} from "@solady/auth/Ownable.sol";
 import {LibClone} from "@solady/utils/LibClone.sol";
