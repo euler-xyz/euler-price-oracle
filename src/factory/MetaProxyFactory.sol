@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.23;
+// SPDX-License-Identifier: CC0-1.0
+pragma solidity >=0.7.6;
 
 contract MetaProxyFactory {
     /// @dev Creates a new proxy for `targetContract` with metadata from calldata.
