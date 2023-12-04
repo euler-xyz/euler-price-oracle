@@ -7,13 +7,7 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract CTokenV2Oracle is BaseOracle {
-    address public immutable cToken;
-    address public immutable underlying;
-
-    constructor(address _cToken) {
-        cToken = _cToken;
-        underlying = ICTokenV2(_cToken).underlying();
-    }
+    mapping(address cToken => address underlying) public cTokens;
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -28,10 +22,30 @@ contract CTokenV2Oracle is BaseOracle {
         return OracleDescription.CTokenV2Oracle();
     }
 
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != cToken || quote != underlying) revert Errors.EOracle_NotSupported(base, quote);
+    /// @inheritdoc BaseOracle
+    function _initializeOracle(bytes memory _data) internal override {
+        address[] memory _cTokens = abi.decode(_data, (address[]));
 
-        uint256 rate = ICTokenV2(cToken).exchangeRateStored();
+        uint256 length = _cTokens.length;
+        for (uint256 i = 0; i < length;) {
+            address cToken = _cTokens[i];
+            cTokens[cToken] = ICTokenV2(cToken).underlying();
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        address underlying = cTokens[base];
+        if (underlying == address(0)) {
+            underlying = cTokens[quote];
+            if (underlying == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+
+            uint256 rate = ICTokenV2(quote).exchangeRateStored();
+            return inAmount * 1e18 / rate;
+        }
+        uint256 rate = ICTokenV2(base).exchangeRateStored();
         return inAmount * rate / 1e18;
     }
 }

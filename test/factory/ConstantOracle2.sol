@@ -8,8 +8,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract ConstantOracle2 is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
     uint256 public constant rate = 10 ** 27;
-
-    function initialize() external {}
+    uint256 public initializedValue = 0;
 
     function hey() external pure virtual returns (uint256) {
         return 1;
@@ -26,6 +25,10 @@ contract ConstantOracle2 is BaseOracle {
 
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.ConstantOracle();
+    }
+
+    function _initializeOracle(bytes memory _data) internal override {
+        initializedValue = abi.decode(_data, (uint256));
     }
 
     function UNPACK() internal pure returns (address base, address quote) {

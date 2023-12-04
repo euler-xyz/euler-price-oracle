@@ -5,7 +5,7 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConstantOracle is BaseOracle {
+contract ImmutableConstantOracle is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
     address public immutable base;
     address public immutable quote;
@@ -29,6 +29,8 @@ contract ConstantOracle is BaseOracle {
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.ConstantOracle();
     }
+
+    function _initializeOracle(bytes memory) internal override {}
 
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);

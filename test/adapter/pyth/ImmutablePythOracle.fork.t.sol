@@ -21,7 +21,8 @@ contract ImmutablePythOracleForkTest is ForkTest {
         feedIds[0] = PYTH_USDC_USD_FEED;
         feedIds[1] = PYTH_ETH_USD_FEED;
 
-        oracle = new ImmutablePythOracle(PYTH, 10000 days, tokens, feedIds);
+        oracle = new ImmutablePythOracle(PYTH);
+        oracle.initialize(address(this), abi.encode(10000 days, tokens, feedIds));
     }
 
     function test_GetQuote() public {

@@ -8,9 +8,7 @@ import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutablePythEMAOracle is PythOracle {
-    constructor(address _pyth, uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds)
-        PythOracle(_pyth, _maxStaleness, tokens, feedIds)
-    {}
+    constructor(address _pyth) PythOracle(_pyth) {}
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         PythStructs.Price memory baseStruct = _fetchEMAPriceStruct(base);

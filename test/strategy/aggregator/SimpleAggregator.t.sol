@@ -17,10 +17,14 @@ contract SimpleAggregatorTest is Test {
     constructor() {
         address[] memory oracles = new address[](1);
         oracles[0] = makeAddr("oracle");
-        maxHarness = new SimpleAggregatorHarness(oracles, 1, SimpleAggregator.Algorithm.MAX);
-        meanHarness = new SimpleAggregatorHarness(oracles, 1, SimpleAggregator.Algorithm.MEAN);
-        medianHarness = new SimpleAggregatorHarness(oracles, 1, SimpleAggregator.Algorithm.MEDIAN);
-        minHarness = new SimpleAggregatorHarness(oracles, 1, SimpleAggregator.Algorithm.MIN);
+        maxHarness = new SimpleAggregatorHarness();
+        maxHarness.initialize(address(this), abi.encode(SimpleAggregator.Algorithm.MAX, oracles, 1));
+        meanHarness = new SimpleAggregatorHarness();
+        meanHarness.initialize(address(this), abi.encode(SimpleAggregator.Algorithm.MEAN, oracles, 1));
+        medianHarness = new SimpleAggregatorHarness();
+        medianHarness.initialize(address(this), abi.encode(SimpleAggregator.Algorithm.MEDIAN, oracles, 1));
+        minHarness = new SimpleAggregatorHarness();
+        minHarness.initialize(address(this), abi.encode(SimpleAggregator.Algorithm.MIN, oracles, 1));
     }
 
     function test_Max_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {

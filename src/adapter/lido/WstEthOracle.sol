@@ -28,6 +28,8 @@ contract WstEthOracle is BaseOracle {
         return OracleDescription.WstEthOracle();
     }
 
+    function _initializeOracle(bytes memory) internal override {}
+
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         if (base == stEth && quote == wstEth) {
             uint256 rate = IWstEth(wstEth).tokensPerStEth();

@@ -8,17 +8,13 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract YearnV2VaultOracle is BaseOracle {
-    address public immutable yvToken;
-    address public immutable underlying;
-    uint8 public immutable yvTokenDecimals;
-    uint8 public immutable underlyingDecimals;
-
-    constructor(address _yvToken) {
-        yvToken = _yvToken;
-        underlying = IYearnV2Vault(_yvToken).token();
-        yvTokenDecimals = ERC20(_yvToken).decimals();
-        underlyingDecimals = ERC20(underlying).decimals();
+    struct Config {
+        address underlying;
+        uint8 yvTokenDecimals;
+        uint8 underlyingDecimals;
     }
+
+    mapping(address yvToken => Config) public configs;
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -33,15 +29,41 @@ contract YearnV2VaultOracle is BaseOracle {
         return OracleDescription.YearnV2VaultOracle();
     }
 
+    function _initializeOracle(bytes memory _data) internal override {
+        address[] memory yvTokens = abi.decode(_data, (address[]));
+
+        uint256 length = yvTokens.length;
+        for (uint256 i = 0; i < length;) {
+            address yvToken = yvTokens[i];
+            address underlying = IYearnV2Vault(yvToken).token();
+            uint8 yvTokenDecimals = ERC20(yvToken).decimals();
+            uint8 underlyingDecimals = ERC20(underlying).decimals();
+
+            configs[yvToken] = Config({
+                underlying: underlying,
+                yvTokenDecimals: yvTokenDecimals,
+                underlyingDecimals: underlyingDecimals
+            });
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base == yvToken && quote == underlying) {
-            uint256 price = IYearnV2Vault(yvToken).pricePerShare();
-            return inAmount * 10 ** yvTokenDecimals / price;
+        Config memory config = configs[base];
+        if (config.underlying == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        if (config.underlying == quote) {
+            uint256 price = IYearnV2Vault(base).pricePerShare();
+            return inAmount * 10 ** config.yvTokenDecimals / price;
         }
 
-        if (base == underlying && quote == yvToken) {
-            uint256 price = IYearnV2Vault(yvToken).pricePerShare();
-            return inAmount * price / 10 ** yvTokenDecimals;
+        config = configs[quote];
+        if (config.underlying == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        if (config.underlying == base) {
+            uint256 price = IYearnV2Vault(quote).pricePerShare();
+            return inAmount * price / 10 ** config.yvTokenDecimals;
         }
 
         revert Errors.EOracle_NotSupported(base, quote);

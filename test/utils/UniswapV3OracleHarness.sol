@@ -18,11 +18,8 @@ contract UniswapV3OracleHarness is UniswapV3Oracle {
         return _getConfigOrRevert(base, quote);
     }
 
-    function setConfig(address token0, address token1, address pool, uint32 validUntil, uint24 fee, uint24 twapWindow)
-        external
-        returns (UniswapV3Config)
-    {
-        return _setConfig(token0, token1, pool, validUntil, fee, twapWindow);
+    function setConfig(UniswapV3Oracle.ConfigParams memory params) external returns (UniswapV3Config) {
+        return _setConfig(params);
     }
 
     function setConfig(address token0, address token1, UniswapV3Config config) external {

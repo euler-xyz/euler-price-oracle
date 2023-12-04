@@ -13,6 +13,15 @@ abstract contract UniswapV3Oracle is BaseOracle {
     mapping(address token0 => mapping(address token1 => UniswapV3Config)) public configs;
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
+    struct ConfigParams {
+        address token0;
+        address token1;
+        address pool;
+        uint32 validUntil;
+        uint24 fee;
+        uint24 twapWindow;
+    }
+
     event ConfigSet(address indexed token0, address indexed token1, address indexed pool, uint24 twapWindow);
 
     constructor(address _uniswapV3Factory) {
@@ -28,6 +37,31 @@ abstract contract UniswapV3Oracle is BaseOracle {
         return (outAmount, outAmount);
     }
 
+    function _initializeOracle(bytes memory _data) internal override {
+        ConfigParams[] memory params = abi.decode(_data, (ConfigParams[]));
+
+        uint256 length = params.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _setConfig(ConfigParams memory params) internal returns (UniswapV3Config) {
+        uint8 token0Decimals = ERC20(params.token0).decimals();
+        uint8 token1Decimals = ERC20(params.token1).decimals();
+
+        UniswapV3Config config = UniswapV3ConfigLib.from(
+            params.pool, params.validUntil, params.twapWindow, params.fee, token0Decimals, token1Decimals
+        );
+        configs[params.token0][params.token1] = config;
+
+        emit ConfigSet(params.token0, params.token1, params.pool, params.twapWindow);
+        return config;
+    }
+
     function _getConfig(address base, address quote) internal view returns (UniswapV3Config) {
         (address token0, address token1) = _sortTokens(base, quote);
         return configs[token0][token1];
@@ -37,21 +71,6 @@ abstract contract UniswapV3Oracle is BaseOracle {
         UniswapV3Config config = _getConfig(base, quote);
         if (config.isEmpty()) revert Errors.EOracle_NotSupported(base, quote);
         if (config.getValidUntil() < block.timestamp) revert Errors.ConfigExpired(base, quote);
-        return config;
-    }
-
-    function _setConfig(address token0, address token1, address pool, uint32 validUntil, uint24 fee, uint24 twapWindow)
-        internal
-        returns (UniswapV3Config)
-    {
-        uint8 token0Decimals = ERC20(token0).decimals();
-        uint8 token1Decimals = ERC20(token1).decimals();
-
-        UniswapV3Config config =
-            UniswapV3ConfigLib.from(pool, validUntil, twapWindow, fee, token0Decimals, token1Decimals);
-        configs[token0][token1] = config;
-
-        emit ConfigSet(token0, token1, pool, twapWindow);
         return config;
     }
 

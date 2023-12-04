@@ -8,13 +8,13 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract GovernedChainlinkOracle is ChainlinkOracle {
     event ConfigRemoved(address indexed base, address indexed quote);
 
-    constructor(address _feedRegistry, address _weth, address _owner) ChainlinkOracle(_feedRegistry, _weth) {}
+    constructor(address _feedRegistry, address _weth) ChainlinkOracle(_feedRegistry, _weth) {}
 
-    function setConfig(ChainlinkOracle.SetConfigParams memory params) external onlyGovernor {
+    function setConfig(ChainlinkOracle.ConfigParams memory params) external onlyGovernor {
         bool isEnabled = feedRegistry.isFeedEnabled(params.feed);
         if (!isEnabled) revert Errors.Chainlink_FeedNotEnabled(params.feed);
 
-        _setConfig(params.base, params.quote, params.feed, params.maxStaleness, params.maxDuration, params.inverse);
+        _setConfig(params);
     }
 
     function removeConfig(address base, address quote) external onlyGovernor {

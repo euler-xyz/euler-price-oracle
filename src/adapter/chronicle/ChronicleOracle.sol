@@ -7,8 +7,8 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ImmutableChronicleOracle is BaseOracle {
-    uint256 public immutable maxStaleness;
+contract ChronicleOracle is BaseOracle {
+    uint256 public maxStaleness;
     mapping(address base => mapping(address quote => ChronicleConfig)) public configs;
 
     struct ChronicleConfig {
@@ -16,22 +16,6 @@ contract ImmutableChronicleOracle is BaseOracle {
         uint8 baseDecimals;
         uint8 quoteDecimals;
         bool inverse;
-    }
-
-    constructor(uint256 _maxStaleness, address[] memory bases, address[] memory quotes, address[] memory feeds) {
-        maxStaleness = _maxStaleness;
-
-        if (bases.length != quotes.length || quotes.length != feeds.length) {
-            revert Errors.Arity3Mismatch(bases.length, quotes.length, feeds.length);
-        }
-
-        uint256 length = bases.length;
-        for (uint256 i = 0; i < length;) {
-            _initConfig(bases[i], quotes[i], feeds[i]);
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -55,7 +39,27 @@ contract ImmutableChronicleOracle is BaseOracle {
             ChronicleConfig({feed: feed, baseDecimals: quoteDecimals, quoteDecimals: baseDecimals, inverse: true});
     }
 
-    function _getConfigOrRevert(address base, address quote) internal view returns (ChronicleConfig memory) {
+    /// @inheritdoc BaseOracle
+    function _initializeOracle(bytes memory _data) internal override {
+        (uint256 _maxStaleness, address[] memory bases, address[] memory quotes, address[] memory feeds) =
+            abi.decode(_data, (uint256, address[], address[], address[]));
+
+        maxStaleness = _maxStaleness;
+
+        if (bases.length != quotes.length || quotes.length != feeds.length) {
+            revert Errors.Arity3Mismatch(bases.length, quotes.length, feeds.length);
+        }
+
+        uint256 length = bases.length;
+        for (uint256 i = 0; i < length;) {
+            _initConfig(bases[i], quotes[i], feeds[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _getConfigOrRevert(address base, address quote) private view returns (ChronicleConfig memory) {
         ChronicleConfig memory config = configs[base][quote];
         if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return config;

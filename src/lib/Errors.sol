@@ -5,7 +5,8 @@ pragma solidity 0.8.23;
 /// @notice Stores common errors in Oracles.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library Errors {
-    error Aggregator_InvalidAlgorithm();
+    error Aggregator_AlgorithmInvalid();
+    error Aggregator_OraclesEmpty();
     error Aggregator_QuorumNotReached(uint256 count, uint256 quorum);
     error Aggregator_QuorumTooLarge(uint256 quorum, uint256 maxQuorum);
     error Aggregator_QuorumZero();

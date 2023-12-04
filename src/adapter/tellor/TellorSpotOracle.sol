@@ -11,8 +11,8 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract TellorSpotOracle is BaseOracle, UsingTellor {
     /// @dev Tellor is an optimistic oracle so too recent values are not trusted.
     /// @custom:read https://tellor.io/best-practices-for-oracle-users-on-ethereum/
-    uint256 public immutable minStaleness;
-    uint256 public immutable maxStaleness;
+    uint256 public minStaleness;
+    uint256 public maxStaleness;
 
     struct TellorConfig {
         string asset;
@@ -31,23 +31,7 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         string denom;
     }
 
-    constructor(
-        address payable _tellorAddress,
-        uint256 _minStaleness,
-        uint256 _maxStaleness,
-        InitTellorConfig[] memory _configs
-    ) UsingTellor(_tellorAddress) {
-        minStaleness = _minStaleness;
-        maxStaleness = _maxStaleness;
-
-        uint256 length = _configs.length;
-        for (uint256 i = 0; i < length;) {
-            _initConfig(_configs[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
+    constructor(address payable _tellorAddress) UsingTellor(_tellorAddress) {}
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -60,6 +44,22 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
 
     function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.TellorSpotOracle(maxStaleness);
+    }
+
+    function _initializeOracle(bytes memory _data) internal override {
+        (uint256 _minStaleness, uint256 _maxStaleness, InitTellorConfig[] memory _configs) =
+            abi.decode(_data, (uint256, uint256, InitTellorConfig[]));
+
+        uint256 length = _configs.length;
+        for (uint256 i = 0; i < length;) {
+            _initConfig(_configs[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        minStaleness = _minStaleness;
+        maxStaleness = _maxStaleness;
     }
 
     function _initConfig(InitTellorConfig memory config) internal {

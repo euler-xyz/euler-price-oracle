@@ -20,17 +20,17 @@ contract GenericFactoryTest is Test {
         factory.setImplementation(address(oracleImpl));
 
         ConstantOracle2 deploymentUpgradeable = ConstantOracle2(factory.activate(true, base, quote));
-        // _verifyProxying(deploymentUpgradeable, base, quote);
+        _verifyProxying(deploymentUpgradeable, base, quote);
 
-        // ConstantOracle2 deploymentNonupgradeable = ConstantOracle2(factory.activate(false, base, quote));
-        // _verifyProxying(deploymentNonupgradeable, base, quote);
+        ConstantOracle2 deploymentNonupgradeable = ConstantOracle2(factory.activate(false, base, quote));
+        _verifyProxying(deploymentNonupgradeable, base, quote);
 
-        // ConstantOracle2Upgraded oracleImplUpgraded = new ConstantOracle2Upgraded();
-        // vm.prank(admin);
-        // factory.setImplementation(address(oracleImplUpgraded));
+        ConstantOracle2Upgraded oracleImplUpgraded = new ConstantOracle2Upgraded();
+        vm.prank(admin);
+        factory.setImplementation(address(oracleImplUpgraded));
 
-        // assertEq(deploymentUpgradeable.hey(), 2);
-        // assertEq(deploymentNonupgradeable.hey(), 1);
+        assertEq(deploymentUpgradeable.hey(), 2);
+        assertEq(deploymentNonupgradeable.hey(), 1);
     }
 
     // function test_nested() public {

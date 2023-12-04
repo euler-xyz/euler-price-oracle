@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {Ownable} from "@solady/auth/Ownable.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -19,7 +17,16 @@ contract GovernedUniswapV3Oracle is UniswapV3Oracle {
         address factoryPool = uniswapV3Factory.getPool(token0, token1, fee);
         if (factoryPool != pool) revert Errors.UniswapV3_PoolMismatch(pool, factoryPool);
 
-        _setConfig(token0, token1, pool, type(uint32).max, fee, twapWindow);
+        _setConfig(
+            UniswapV3Oracle.ConfigParams({
+                token0: token0,
+                token1: token1,
+                pool: pool,
+                validUntil: type(uint32).max,
+                fee: fee,
+                twapWindow: uint24(twapWindow)
+            })
+        );
     }
 
     function removeConfig(address pool) public onlyGovernor {

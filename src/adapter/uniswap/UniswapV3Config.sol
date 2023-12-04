@@ -72,6 +72,7 @@ library UniswapV3ConfigLib {
         return uint8((UniswapV3Config.unwrap(config) & TOKEN1_DECIMALS_MASK) >> TOKEN1_DECIMALS_OFFSET);
     }
 
+    /// @dev todo: remove this
     function __debug_print(UniswapV3Config config) internal pure {
         console2.logBytes32(bytes32(UniswapV3Config.unwrap(config)));
         console2.log("pool: %s", config.getPool());

@@ -13,14 +13,14 @@ contract ImmutableChainlinkOracle is ChainlinkOracle {
         address _feedRegistry,
         address _weth,
         bool _canIngestNewFeeds,
-        ChainlinkOracle.SetConfigParams[] memory _initialConfigs
+        ChainlinkOracle.ConfigParams[] memory _initialConfigs
     ) ChainlinkOracle(_feedRegistry, _weth) {
         canIngestNewFeeds = _canIngestNewFeeds;
 
         uint256 numConfigs = _initialConfigs.length;
         for (uint256 i = 0; i < numConfigs;) {
-            ChainlinkOracle.SetConfigParams memory params = _initialConfigs[i];
-            _setConfig(params.base, params.quote, params.feed, params.maxStaleness, params.maxDuration, params.inverse);
+            ChainlinkOracle.ConfigParams memory params = _initialConfigs[i];
+            _setConfig(params);
             unchecked {
                 ++i;
             }

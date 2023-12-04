@@ -9,7 +9,7 @@ import {Errors} from "src/lib/Errors.sol";
 
 abstract contract PythOracle is BaseOracle {
     IPyth public immutable pyth;
-    uint256 public immutable maxStaleness;
+    uint256 public maxStaleness;
 
     struct PythConfig {
         bytes32 feedId;
@@ -19,8 +19,21 @@ abstract contract PythOracle is BaseOracle {
     /// @dev all Pyth crypto feeds are USD-denominated
     mapping(address token => PythConfig) public configs;
 
-    constructor(address _pyth, uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds) {
+    constructor(address _pyth) {
         pyth = IPyth(_pyth);
+    }
+
+    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256);
+    function getQuotes(uint256 inAmount, address base, address quote)
+        external
+        view
+        virtual
+        returns (uint256, uint256);
+
+    function _initializeOracle(bytes memory _data) internal override {
+        (uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds) =
+            abi.decode(_data, (uint256, address[], bytes32[]));
+
         maxStaleness = _maxStaleness;
 
         if (tokens.length != feedIds.length) revert Errors.Arity2Mismatch(tokens.length, feedIds.length);
@@ -33,13 +46,6 @@ abstract contract PythOracle is BaseOracle {
             }
         }
     }
-
-    function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256);
-    function getQuotes(uint256 inAmount, address base, address quote)
-        external
-        view
-        virtual
-        returns (uint256, uint256);
 
     function _initConfig(address token, bytes32 feedId) internal {
         uint8 decimals = ERC20(token).decimals();

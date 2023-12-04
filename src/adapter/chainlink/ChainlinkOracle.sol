@@ -27,7 +27,7 @@ abstract contract ChainlinkOracle is BaseOracle {
         bool inverse;
     }
 
-    struct SetConfigParams {
+    struct ConfigParams {
         address base;
         address quote;
         address feed;
@@ -55,78 +55,44 @@ abstract contract ChainlinkOracle is BaseOracle {
         return (outAmount, outAmount);
     }
 
-    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        ChainlinkConfig memory config = _getConfig(base, quote);
-        bytes memory data;
-        if (config.feed == address(feedRegistry)) {
-            (address asset, address denom,) = _getAssetAndDenom(base, quote);
-            data = abi.encodeCall(FeedRegistryInterface.latestRoundData, (asset, denom));
-        } else {
-            data = abi.encodeCall(AggregatorV3Interface.latestRoundData, ());
+    function _initializeOracle(bytes memory _data) internal override {
+        ConfigParams[] memory params = abi.decode(_data, (ConfigParams[]));
+
+        uint256 length = params.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(params[i]);
+            unchecked {
+                ++i;
+            }
         }
-
-        (bool success, bytes memory returnData) = config.feed.staticcall(data);
-        if (!success) revert Errors.Chainlink_CallReverted(returnData);
-
-        (, int256 answer, uint256 startedAt, uint256 updatedAt,) =
-            abi.decode(returnData, (uint80, int256, uint256, uint256, uint80));
-
-        if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
-        if (updatedAt == 0) revert Errors.Chainlink_RoundIncomplete();
-
-        uint256 roundDuration = updatedAt - startedAt;
-        if (roundDuration > config.maxDuration) {
-            revert Errors.Chainlink_RoundTooLong(roundDuration, config.maxDuration);
-        }
-
-        uint256 staleness = block.timestamp - updatedAt;
-        if (staleness >= config.maxStaleness) {
-            revert Errors.EOracle_TooStale(staleness, config.maxStaleness);
-        }
-
-        uint256 unitPrice = uint256(answer);
-
-        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
     }
 
-    function _setConfig(
-        address base,
-        address quote,
-        address feed,
-        uint32 maxStaleness,
-        uint32 maxDuration,
-        bool inverse
-    ) internal returns (ChainlinkConfig memory) {
-        uint8 baseDecimals = ERC20(base).decimals();
-        uint8 quoteDecimals = ERC20(quote).decimals();
-        uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
+    function _setConfig(ConfigParams memory config) internal {
+        uint8 baseDecimals = ERC20(config.base).decimals();
+        uint8 quoteDecimals = ERC20(config.quote).decimals();
+        uint8 feedDecimals = AggregatorV3Interface(config.feed).decimals();
 
-        ChainlinkConfig memory config = ChainlinkConfig({
-            feed: feed,
-            maxStaleness: maxStaleness,
-            maxDuration: maxDuration,
+        configs[config.base][config.quote] = ChainlinkConfig({
+            feed: config.feed,
+            maxStaleness: config.maxStaleness,
+            maxDuration: config.maxDuration,
             baseDecimals: baseDecimals,
             quoteDecimals: quoteDecimals,
             feedDecimals: feedDecimals,
-            inverse: inverse
+            inverse: config.inverse
         });
-        configs[base][quote] = config;
 
-        ChainlinkConfig memory invConfig = ChainlinkConfig({
-            feed: feed,
-            maxStaleness: maxStaleness,
-            maxDuration: maxDuration,
+        configs[config.quote][config.base] = ChainlinkConfig({
+            feed: config.feed,
+            maxStaleness: config.maxStaleness,
+            maxDuration: config.maxDuration,
             baseDecimals: quoteDecimals,
             quoteDecimals: baseDecimals,
             feedDecimals: feedDecimals,
-            inverse: !inverse
+            inverse: !config.inverse
         });
-        configs[quote][base] = invConfig;
-        emit ConfigSet(base, quote, feed);
-        emit ConfigSet(quote, base, feed);
-
-        return config;
+        emit ConfigSet(config.base, config.quote, config.feed);
+        emit ConfigSet(config.quote, config.base, config.feed);
     }
 
     function _initConfig(address base, address quote) internal returns (ChainlinkConfig memory) {
@@ -164,6 +130,41 @@ abstract contract ChainlinkOracle is BaseOracle {
         emit ConfigSet(quote, base, address(feedRegistry));
 
         return config;
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
+        ChainlinkConfig memory config = _getConfig(base, quote);
+        bytes memory data;
+        if (config.feed == address(feedRegistry)) {
+            (address asset, address denom,) = _getAssetAndDenom(base, quote);
+            data = abi.encodeCall(FeedRegistryInterface.latestRoundData, (asset, denom));
+        } else {
+            data = abi.encodeCall(AggregatorV3Interface.latestRoundData, ());
+        }
+
+        (bool success, bytes memory returnData) = config.feed.staticcall(data);
+        if (!success) revert Errors.Chainlink_CallReverted(returnData);
+
+        (, int256 answer, uint256 startedAt, uint256 updatedAt,) =
+            abi.decode(returnData, (uint80, int256, uint256, uint256, uint80));
+
+        if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
+        if (updatedAt == 0) revert Errors.Chainlink_RoundIncomplete();
+
+        uint256 roundDuration = updatedAt - startedAt;
+        if (roundDuration > config.maxDuration) {
+            revert Errors.Chainlink_RoundTooLong(roundDuration, config.maxDuration);
+        }
+
+        uint256 staleness = block.timestamp - updatedAt;
+        if (staleness >= config.maxStaleness) {
+            revert Errors.EOracle_TooStale(staleness, config.maxStaleness);
+        }
+
+        uint256 unitPrice = uint256(answer);
+
+        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
+        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
     }
 
     function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {

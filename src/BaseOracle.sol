@@ -14,10 +14,12 @@ abstract contract BaseOracle is IEOracle {
 
     event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
-    function initialize(address _governor) external {
+    function initialize(address _governor, bytes memory _data) external {
         if (initialized) revert AlreadyInitialized();
         _setGovernor(_governor);
         initialized = true;
+
+        _initializeOracle(_data);
     }
 
     function transferGovernance(address newGovernor) external onlyGovernor {
@@ -35,6 +37,8 @@ abstract contract BaseOracle is IEOracle {
     function governed() external view returns (bool) {
         return initialized && governor != address(0);
     }
+
+    function _initializeOracle(bytes memory _data) internal virtual;
 
     function _setGovernor(address newGovernor) private {
         address oldGovernor = governor;

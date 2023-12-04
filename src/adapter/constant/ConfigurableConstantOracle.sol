@@ -7,22 +7,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConfigurableConstantOracle is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
-
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
-
-    constructor(address[] memory bases, address[] memory quotes, uint256[] memory rates) {
-        if (bases.length != quotes.length || quotes.length != rates.length) {
-            revert Errors.Arity3Mismatch(bases.length, quotes.length, rates.length);
-        }
-
-        uint256 length = bases.length;
-        for (uint256 i = 0; i < length;) {
-            _initConfig(bases[i], quotes[i], rates[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -35,6 +20,23 @@ contract ConfigurableConstantOracle is BaseOracle {
 
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.ConfigurableConstantOracle();
+    }
+
+    function _initializeOracle(bytes memory _data) internal override {
+        (address[] memory bases, address[] memory quotes, uint256[] memory rates) =
+            abi.decode(_data, (address[], address[], uint256[]));
+
+        if (bases.length != quotes.length || quotes.length != rates.length) {
+            revert Errors.Arity3Mismatch(bases.length, quotes.length, rates.length);
+        }
+
+        uint256 length = bases.length;
+        for (uint256 i = 0; i < length;) {
+            _initConfig(bases[i], quotes[i], rates[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function _initConfig(address base, address quote, uint256 rate) internal {

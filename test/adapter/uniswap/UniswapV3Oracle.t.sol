@@ -7,6 +7,7 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {UniswapV3OracleHarness} from "test/utils/UniswapV3OracleHarness.sol";
 import {MockERC20} from "test/utils/MockERC20.sol";
 import {UniswapV3Config, UniswapV3ConfigLib} from "src/adapter/uniswap/UniswapV3Config.sol";
+import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 
 contract UniswapV3OracleTest is Test {
     address constant UNISWAP_V3_FACTORY = address(0x3333);
@@ -44,7 +45,16 @@ contract UniswapV3OracleTest is Test {
 
         UniswapV3Config expectedConfig =
             UniswapV3ConfigLib.from(pool, validUntil, twapWindow, fee, token0Decimals, token1Decimals);
-        UniswapV3Config returnedConfig = oracle.setConfig(token0, token1, pool, validUntil, fee, twapWindow);
+        UniswapV3Config returnedConfig = oracle.setConfig(
+            UniswapV3Oracle.ConfigParams({
+                token0: token0,
+                token1: token1,
+                pool: pool,
+                validUntil: validUntil,
+                fee: fee,
+                twapWindow: twapWindow
+            })
+        );
         UniswapV3Config storedConfig = oracle.getConfig(token0, token1);
 
         assertEq(UniswapV3Config.unwrap(returnedConfig), UniswapV3Config.unwrap(expectedConfig));

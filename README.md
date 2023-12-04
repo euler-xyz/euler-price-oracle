@@ -61,6 +61,11 @@ function getQuote(uint256 inAmount, address base, address quote) external view r
 function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
 ```
 
+## Configuration
+- Common configuration flow (`_initializeOracle`, `_getConfig`, `_setConfig`)
+- Unified standard for configurable, upgradeable / immutable
+- Convention to populate inverse path in mappings upon configuration OR NOT ?
+
 ## Adapters
 An adapter is an EOracle that directly interfaces with an external oracle. It validates the received data and casts it to the shared interface. An adapter may connect to canonical oracle systems like Chainlink or query external DeFi contracts for exchange rates 
 (Uniswap V3, wstETH contract). An exception to the rule is the `ConstantOracle` which returns a hard-coded exchange rate but is still regarded as an adapter for consistency.
@@ -446,6 +451,9 @@ Every asset in Euler Oracles is represented by a 160-bit `address`. To avoid amb
 - MAY use the ISO 4217 "No currency" code (999) to denote unknown or non-ISO 4217 currencies. Operations involving such assets MUST revert.
 - MAY implement an extension to this standard by providing an alternative unambiguous, domain-separated, and observable standard of denomination.
 
+## Testing EOracles
+- common property test
+- common testing utils? 
 
 ## Composing EOracles
 A *configuration tree* is a tree of EOracles that defines a self-contained oracle configuration. Consumers only need to store the root node of the configuration tree. A call will resolve via a specific subtree of the configuration tree. Leaves are adapters, the contact point with external systems. They propagate quotes to the internal strategy nodes, which collapse multiple quotes into one and return it up the ancestry chain. The tree branches out when it contains a strategy that connects to multiple child EOracles. The resolution tree only defines the topology of the oracle configuration. The path taken by a specific call will depend on the logic inside strategies.

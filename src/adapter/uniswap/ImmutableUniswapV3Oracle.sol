@@ -41,7 +41,16 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
 
         uint32 validUntil = uint32(block.timestamp) + selectedTwapWindow / 4; // todo: this can be a bit more accurate
 
-        return _setConfig(token0, token1, selectedPool, validUntil, selectedFee, uint24(selectedTwapWindow));
+        return _setConfig(
+            UniswapV3Oracle.ConfigParams({
+                token0: token0,
+                token1: token1,
+                pool: selectedPool,
+                validUntil: validUntil,
+                fee: selectedFee,
+                twapWindow: uint24(selectedTwapWindow)
+            })
+        );
     }
 
     function description() external pure returns (OracleDescription.Description memory) {

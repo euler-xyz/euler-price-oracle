@@ -7,41 +7,18 @@ import {ICurveRegistry} from "src/adapter/curve/ICurveRegistry.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
-import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 
-contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
+contract CurveLPOracle is BaseOracle {
     ICurveRegistry public immutable metaRegistry;
     ICurveRegistry public immutable stableRegistry;
     IEOracle public immutable forwardOracle;
-    address public immutable lpToken;
-    address public immutable pool;
 
-    constructor(
-        address _metaRegistry,
-        address _stableRegistry,
-        address _forwardOracle,
-        address _lpToken,
-        address[] memory _poolTokens
-    ) ImmutableAddressArray(_poolTokens) {
-        metaRegistry = ICurveRegistry(_metaRegistry);
-        stableRegistry = ICurveRegistry(_stableRegistry);
-        forwardOracle = IEOracle(_forwardOracle);
-        lpToken = _lpToken;
-
-        address _pool = metaRegistry.get_pool_from_lp_token(lpToken);
-        if (_pool == address(0)) revert Errors.Curve_PoolNotFound(lpToken);
-        pool = _pool;
-
-        address[8] memory poolTokens = metaRegistry.get_coins(pool);
-
-        for (uint256 index = 0; index < 8;) {
-            address poolToken = poolTokens[index];
-            if (poolToken != _arrayGet(index)) break;
-            unchecked {
-                ++index;
-            }
-        }
+    struct CurveLPOracleConfig {
+        address pool;
+        address[] poolTokens;
     }
+
+    mapping(address lpToken => CurveLPOracleConfig) public configs;
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -61,20 +38,63 @@ contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
         return OracleDescription.CurveLPOracle();
     }
 
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != lpToken) revert Errors.EOracle_NotSupported(base, quote);
+    function _initializeOracle(bytes memory _data) internal override {
+        (address _forwardOracle, address[] memory _lpTokens) = abi.decode(_data, (address, address[]));
 
-        uint256[8] memory balances = metaRegistry.get_balances(pool);
+        uint256 length = _lpTokens.length;
+        for (uint256 i = 0; i < length;) {
+            address lpToken = _lpTokens[i];
+            address pool = metaRegistry.get_pool_from_lp_token(lpToken);
+            if (pool == address(0)) revert Errors.Curve_PoolNotFound(lpToken);
+
+            address[8] memory poolTokens = metaRegistry.get_coins(pool);
+            address[] memory poolTokensArr = new address[](8);
+
+            uint256 maxIndex;
+            for (uint256 j = 0; j < 8;) {
+                address poolToken = poolTokens[j];
+                if (poolToken == address(0)) {
+                    assembly {
+                        // update the length of `poolTokensArr`
+                        mstore(poolTokensArr, add(j, 1))
+                    }
+                    break;
+                }
+                poolTokensArr[j] = poolToken;
+                unchecked {
+                    ++j;
+                }
+            }
+
+            configs[lpToken] = CurveLPOracleConfig({pool: pool, poolTokens: poolTokensArr});
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        CurveLPOracleConfig memory config = configs[base];
+        if (config.pool == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        // TODO: inverse support
+
+        uint256[8] memory balances = metaRegistry.get_balances(config.pool);
 
         uint256 outAmountSum;
-        for (uint256 i = 0; i < cardinality; ++i) {
+        uint256 numPoolTokens = config.poolTokens.length;
+        for (uint256 i = 0; i < numPoolTokens;) {
             uint256 tokenInAmount = balances[i];
-            address poolToken = _arrayGet(i);
+            address poolToken = config.poolTokens[i];
             uint256 outAmount = forwardOracle.getQuote(tokenInAmount, poolToken, quote);
             outAmountSum += outAmount;
+
+            unchecked {
+                ++i;
+            }
         }
 
-        uint256 supply = ERC20(lpToken).totalSupply();
+        uint256 supply = ERC20(base).totalSupply();
 
         return inAmount * supply / outAmountSum;
     }
