@@ -44,6 +44,6 @@ contract YearnV2VaultOracle is BaseOracle {
             return inAmount * price / 10 ** yvTokenDecimals;
         }
 
-        revert Errors.PriceOracle_NotSupported(base, quote);
+        revert Errors.EOracle_NotSupported(base, quote);
     }
 }

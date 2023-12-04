@@ -1,80 +1,77 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-contract BeaconProxy {
+contract DynamicBeaconProxy {
     // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
-    bytes32 constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
-    // Beacon implementation() selector
-    bytes32 constant IMPLEMENTATION_SELECTOR = 0x5c60da1b00000000000000000000000000000000000000000000000000000000;
+    bytes32 constant _BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
 
-    address immutable beacon;
-    uint256 immutable metadataLength;
+    bytes32 private constant _GENESIS_EVENT_SIGNATURE =
+        0x6bf6eaff5e9af8fbccb949f4c38cc016936f8775363ccf4224db160365785d52;
 
     event Genesis();
 
-    constructor(bytes memory trailingData) {
-        emit Genesis();
-
-        // Beacon is always the proxy creator; store it in immutable
-        beacon = msg.sender;
-
-        // Store the beacon address in ERC-1967 slot for compatibility with block explorers
+    constructor(bytes memory trailingData) payable {
         assembly {
-            sstore(BEACON_SLOT, caller())
+            log1(0, 0, _GENESIS_EVENT_SIGNATURE)
+            sstore(_BEACON_SLOT, caller())
+
+            let runtimesize := 3
+            let tdsize := mload(trailingData)
+            let ptr
+
+            // copy runtime code to memory
+            // codecopy(ptr, 0x00, runtimesize)
+            mstore(0x00, 0x5f5ff30000000000000000000000000000000000000000000000000000000000)
+            // mstore(0x00, 0x6080604052386020808203600039600051602060608284030360003960005163)
+            // mstore(0x20, 0x5c60da1b6016526020600060046016845afa80603f573d6000803e3d6000fd5b)
+            // mstore(0x40, 0x60005136600080378384860336396000803686016000845af491503d6000803e)
+            // mstore(0x60, 0x816068573d6000fd5b3d6000f300000000000000000000000000000000000000)
+            ptr := add(ptr, runtimesize)
+
+            // store immutable beacon
+            mstore(ptr, caller())
+            ptr := add(ptr, 0x20)
+
+            // store immutable `trailingData`
+            codecopy(ptr, sub(codesize(), add(tdsize, 0x20)), codesize())
+            ptr := add(ptr, add(tdsize, 0x20))
+
+            // append `trailingData.length` for ERC-3448 compatibility
+            mstore(ptr, tdsize)
+            ptr := add(ptr, 0x20)
+
+            // return the runtime code + immutable metadata
+            let totalsize := add(add(runtimesize, tdsize), 0x60)
+            return(0, totalsize)
         }
-
-        // Append the size of the trailing data for ERC-3448 compatibility
-        trailingData = abi.encodePacked(trailingData, trailingData.length);
-
-        metadataLength = trailingData.length;
-
-        // Further pad length with uninitialised memory so the decode will succeed
-        assembly {
-
-            mstore(calldatasize(), add(mload(metadataLengthOffset), 0x20))
-            mstore(trailingData, 256)
-            return(0, 1)
-        }
-        (metadata0, metadata1, metadata2, metadata3, metadata4, metadata5, metadata6, metadata7) = abi.decode(trailingData, (bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32));
     }
 
-    fallback() external {
-        address beacon_ = beacon;
-        uint256 metadataLength_ = metadataLength;
-        bytes32 metadata0_ = metadata0;
-        bytes32 metadata1_ = metadata1;
-        bytes32 metadata2_ = metadata2;
-        bytes32 metadata3_ = metadata3;
-        bytes32 metadata4_ = metadata4;
-        bytes32 metadata5_ = metadata5;
-        bytes32 metadata6_ = metadata6;
-        bytes32 metadata7_ = metadata7;
+    fallback() external payable {
+        // assembly {
+        //     let size := codesize()
 
-        assembly {
-            // Fetch implementation address from the beacon
-            mstore(0, IMPLEMENTATION_SELECTOR)
-            let result := staticcall(gas(), beacon_, 0, 4, 0, 32)
-            if iszero(result) {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
-            }
-            let implementation := mload(0)
+        //     codecopy(0x00, sub(size, 0x20), 0x20)
+        //     let trailingDataLength := mload(0x00)
 
-            // delegatecall to the implementation
-            calldatacopy(0, 0, calldatasize())
-            mstore(calldatasize(), metadata0_)
-            mstore(add(32, calldatasize()), metadata1_)
-            mstore(add(64, calldatasize()), metadata2_)
-            mstore(add(96, calldatasize()), metadata3_)
-            mstore(add(128, calldatasize()), metadata4_)
-            mstore(add(160, calldatasize()), metadata5_)
-            mstore(add(192, calldatasize()), metadata6_)
-            mstore(add(224, calldatasize()), metadata7_)
-            result := delegatecall(gas(), implementation, 0, add(metadataLength_, calldatasize()), 0, 0)
-            returndatacopy(0, 0, returndatasize())
-            switch result
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
-        }
+        //     codecopy(0x00, sub(sub(size, trailingDataLength), 0x60), 0x20)
+        //     let beacon := mload(0x00)
+
+        //     mstore(0x00, 0x5c60da1b00000000000000000000000000000000000000000000000000000000) // mem[0x16:0x20] = sig:"implementation()"
+        //     let result := staticcall(gas(), beacon, 0, 4, 0, 32) // mem[0x00:0x20] = implementation
+        //     if iszero(result) {
+        //         returndatacopy(0x00, 0x00, returndatasize())
+        //         revert(0x00, returndatasize())
+        //     }
+        //     let implementation := mload(0x00)
+
+        //     // delegatecall to the implementation
+        //     calldatacopy(0x00, 0x00, calldatasize()) // mem[0x00:cds] = calldata
+        //     codecopy(calldatasize(), sub(size, trailingDataLength), trailingDataLength) // mem[cds:cds+trailingDataLength] = trailingData
+
+        //     result := delegatecall(gas(), implementation, 0, add(trailingDataLength, calldatasize()), 0, 0)
+        //     returndatacopy(0, 0, returndatasize())
+        //     if iszero(result) { revert(0, returndatasize()) }
+        //     return(0, returndatasize())
+        // }
     }
 }

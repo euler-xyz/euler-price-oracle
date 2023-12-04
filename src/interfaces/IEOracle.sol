@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-interface IPriceOracle {
+interface IEOracle {
     /// @notice Describes the oracle. Intended for off-chain introspection.
     /// @dev Integrators MUST NOT blindly trust the description as it can be easily spoofed.
     /// @dev Integrators SHOULD check the chain of trust in the  official Euler Oracle Factory.

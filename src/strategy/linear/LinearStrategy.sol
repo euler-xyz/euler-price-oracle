@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {BaseOracle} from "src/BaseOracle.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
@@ -16,12 +16,12 @@ contract LinearStrategy is BaseOracle, TryCallOracle, ImmutableAddressArray {
     /// @param _oracles The oracles to try in the given order.
     constructor(address[] memory _oracles) ImmutableAddressArray(_oracles) {}
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
+            IEOracle oracle = IEOracle(_arrayGet(i));
 
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
             if (success) return answer;
@@ -31,15 +31,15 @@ contract LinearStrategy is BaseOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert Errors.PriceOracle_NoAnswer();
+        revert Errors.EOracle_NoAnswer();
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
+            IEOracle oracle = IEOracle(_arrayGet(i));
 
             (bool success, uint256 bid, uint256 ask) = _tryGetQuotes(oracle, inAmount, base, quote);
             if (success) return (bid, ask);
@@ -49,10 +49,10 @@ contract LinearStrategy is BaseOracle, TryCallOracle, ImmutableAddressArray {
             }
         }
 
-        revert Errors.PriceOracle_NoAnswer();
+        revert Errors.EOracle_NoAnswer();
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.LinearStrategy();
     }

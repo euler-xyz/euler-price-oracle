@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import "forge-std/Test.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {TryCallOracleHarness} from "test/utils/TryCallOracleHarness.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 
 contract TryCallOracleTest is Test {
     TryCallOracleHarness private immutable harness;
@@ -13,14 +13,14 @@ contract TryCallOracleTest is Test {
         harness = new TryCallOracleHarness();
     }
 
-    function test_TryGetQuote_WhenNotIPriceOracle_ReturnsFalseAndZero(
+    function test_TryGetQuote_WhenNotIEOracle_ReturnsFalseAndZero(
         address oracle,
         uint256 inAmount,
         address base,
         address quote
     ) public {
         oracle = boundAddr(oracle);
-        (bool success, uint256 outAmount) = harness.tryGetQuote(IPriceOracle(oracle), inAmount, base, quote);
+        (bool success, uint256 outAmount) = harness.tryGetQuote(IEOracle(oracle), inAmount, base, quote);
 
         assertFalse(success);
         assertEq(outAmount, 0);
@@ -35,8 +35,8 @@ contract TryCallOracleTest is Test {
     ) public {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length != 32);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), returnData);
-        (bool success, uint256 outAmount) = harness.tryGetQuote(IPriceOracle(oracle), inAmount, base, quote);
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), returnData);
+        (bool success, uint256 outAmount) = harness.tryGetQuote(IEOracle(oracle), inAmount, base, quote);
         assertFalse(success);
         assertEq(outAmount, 0);
     }
@@ -50,8 +50,8 @@ contract TryCallOracleTest is Test {
     ) public {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length == 32);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), returnData);
-        (bool success, uint256 outAmount) = harness.tryGetQuote(IPriceOracle(oracle), inAmount, base, quote);
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), returnData);
+        (bool success, uint256 outAmount) = harness.tryGetQuote(IEOracle(oracle), inAmount, base, quote);
         assertTrue(success);
         assertEq(outAmount, abi.decode(returnData, (uint256)));
     }
@@ -64,13 +64,13 @@ contract TryCallOracleTest is Test {
         uint256 returnOutAmount
     ) public {
         oracle = boundAddr(oracle);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(returnOutAmount));
-        (bool success, uint256 outAmount) = harness.tryGetQuote(IPriceOracle(oracle), inAmount, base, quote);
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(returnOutAmount));
+        (bool success, uint256 outAmount) = harness.tryGetQuote(IEOracle(oracle), inAmount, base, quote);
         assertTrue(success);
         assertEq(outAmount, returnOutAmount);
     }
 
-    function test_TryGetQuotes_WhenNotIPriceOracle_ReturnsFalseAndZero(
+    function test_TryGetQuotes_WhenNotIEOracle_ReturnsFalseAndZero(
         address oracle,
         uint256 inAmount,
         address base,
@@ -78,7 +78,7 @@ contract TryCallOracleTest is Test {
     ) public {
         oracle = boundAddr(oracle);
         (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
-            harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
+            harness.tryGetQuotes(IEOracle(oracle), inAmount, base, quote);
 
         assertFalse(success);
         assertEq(bidOutAmount, 0);
@@ -94,9 +94,9 @@ contract TryCallOracleTest is Test {
     ) public {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length != 64);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), returnData);
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), returnData);
         (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
-            harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
+            harness.tryGetQuotes(IEOracle(oracle), inAmount, base, quote);
         assertFalse(success);
         assertEq(bidOutAmount, 0);
         assertEq(askOutAmount, 0);
@@ -111,9 +111,9 @@ contract TryCallOracleTest is Test {
     ) public {
         oracle = boundAddr(oracle);
         vm.assume(returnData.length == 64);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), returnData);
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), returnData);
         (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
-            harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
+            harness.tryGetQuotes(IEOracle(oracle), inAmount, base, quote);
         assertTrue(success);
         (uint256 resBidOut, uint256 resAskOut) = abi.decode(returnData, (uint256, uint256));
         assertEq(bidOutAmount, resBidOut);
@@ -129,11 +129,9 @@ contract TryCallOracleTest is Test {
         uint256 returnAskOut
     ) public {
         oracle = boundAddr(oracle);
-        vm.mockCall(
-            oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(returnBidOut, returnAskOut)
-        );
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), abi.encode(returnBidOut, returnAskOut));
         (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
-            harness.tryGetQuotes(IPriceOracle(oracle), inAmount, base, quote);
+            harness.tryGetQuotes(IEOracle(oracle), inAmount, base, quote);
         assertTrue(success);
         assertEq(bidOutAmount, returnBidOut);
         assertEq(askOutAmount, returnAskOut);

@@ -43,7 +43,8 @@ contract BeaconProxy {
         assembly {
             mstore(trailingData, 256)
         }
-        (metadata0, metadata1, metadata2, metadata3, metadata4, metadata5, metadata6, metadata7) = abi.decode(trailingData, (bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32));
+        (metadata0, metadata1, metadata2, metadata3, metadata4, metadata5, metadata6, metadata7) =
+            abi.decode(trailingData, (bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32, bytes32));
     }
 
     fallback() external {

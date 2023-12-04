@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 /// @author totomanov
-/// @notice Stores oracle descriptions for all `IPriceOracle` implementations.
+/// @notice Stores oracle descriptions for all `IEOracle` implementations.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library OracleDescription {
     function ConfigurableConstantOracle() internal pure returns (Description memory) {

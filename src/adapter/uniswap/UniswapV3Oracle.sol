@@ -33,9 +33,9 @@ abstract contract UniswapV3Oracle is BaseOracle {
         return configs[token0][token1];
     }
 
-    function _getOrRevertConfig(address base, address quote) internal view returns (UniswapV3Config) {
+    function _getConfigOrRevert(address base, address quote) internal view returns (UniswapV3Config) {
         UniswapV3Config config = _getConfig(base, quote);
-        if (config.isEmpty()) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (config.isEmpty()) revert Errors.EOracle_NotSupported(base, quote);
         if (config.getValidUntil() < block.timestamp) revert Errors.ConfigExpired(base, quote);
         return config;
     }
@@ -69,8 +69,8 @@ abstract contract UniswapV3Oracle is BaseOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (inAmount > type(uint128).max) revert Errors.PriceOracle_Overflow();
-        UniswapV3Config config = _getOrRevertConfig(base, quote);
+        if (inAmount > type(uint128).max) revert Errors.EOracle_Overflow();
+        UniswapV3Config config = _getConfigOrRevert(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());
         return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BeaconProxy} from "./BeaconProxy.sol";
+import {DynamicBeaconProxy as BeaconProxy} from "./DynamicBeaconProxy.sol";
+// import {BeaconProxy} from "./BeaconProxy.sol";
 import {MetaProxyFactory} from "./MetaProxyFactory.sol";
 
 interface IComponent {

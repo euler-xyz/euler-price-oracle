@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {BaseOracle} from "src/BaseOracle.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
@@ -31,15 +31,15 @@ contract ImmutableRouter is BaseOracle, ImmutableAddressArray {
         fallbackOracle = _fallbackOracle;
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Reverts if the quote asset is different from the one configured at deployment.
     function getQuote(uint256 inAmount, address base, address _quote) external view override returns (uint256) {
-        if (_quote != quote) revert Errors.PriceOracle_NotSupported(base, _quote);
+        if (_quote != quote) revert Errors.EOracle_NotSupported(base, _quote);
         address oracle = _getOracle(base);
-        return IPriceOracle(oracle).getQuote(inAmount, base, quote);
+        return IEOracle(oracle).getQuote(inAmount, base, quote);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Reverts if the quote asset is different from the one configured at deployment.
     function getQuotes(uint256 inAmount, address base, address _quote)
         external
@@ -47,9 +47,9 @@ contract ImmutableRouter is BaseOracle, ImmutableAddressArray {
         override
         returns (uint256, uint256)
     {
-        if (_quote != quote) revert Errors.PriceOracle_NotSupported(base, _quote);
+        if (_quote != quote) revert Errors.EOracle_NotSupported(base, _quote);
         address oracle = _getOracle(base);
-        return IPriceOracle(oracle).getQuotes(inAmount, base, quote);
+        return IEOracle(oracle).getQuotes(inAmount, base, quote);
     }
 
     /// @notice Get the corresponding oracle address for a given base
@@ -64,21 +64,21 @@ contract ImmutableRouter is BaseOracle, ImmutableAddressArray {
         uint256 index = _arrayFind(base);
         if (index == type(uint256).max) {
             if (fallbackOracle == address(0)) {
-                revert Errors.PriceOracle_NotSupported(base, quote);
+                revert Errors.EOracle_NotSupported(base, quote);
             }
             return fallbackOracle;
         }
         address oracle = _arrayGet(index + 1);
         if (oracle == address(0)) {
             if (fallbackOracle == address(0)) {
-                revert Errors.PriceOracle_NotSupported(base, quote);
+                revert Errors.EOracle_NotSupported(base, quote);
             }
             return fallbackOracle;
         }
         return oracle;
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.ImmutableRouter();
     }

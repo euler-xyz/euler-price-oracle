@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {BaseOracle} from "src/BaseOracle.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
@@ -24,20 +24,20 @@ abstract contract Aggregator is BaseOracle, TryCallOracle, ImmutableAddressArray
         quorum = _quorum;
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Constructs a success mask which is useful to determine the indices of failed oracles.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Constructs a success mask which is useful to determine the indices of failed oracles.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 answer = _getQuote(inAmount, base, quote);
         return (answer, answer);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     function description() external pure virtual returns (OracleDescription.Description memory);
 
     /// @dev Apply the aggregation algorithm.
@@ -49,7 +49,7 @@ abstract contract Aggregator is BaseOracle, TryCallOracle, ImmutableAddressArray
         PackedUint32Array successMask;
 
         for (uint256 i = 0; i < cardinality;) {
-            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
+            IEOracle oracle = IEOracle(_arrayGet(i));
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
 
             unchecked {

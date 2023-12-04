@@ -90,10 +90,10 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         bytes32 queryId = keccak256(abi.encode("SpotPrice", abi.encode(config.asset, config.denom)));
         uint256 maxTimestamp = block.timestamp - minStaleness;
         (bytes memory answer, uint256 updatedAt) = getDataBefore(queryId, maxTimestamp);
-        if (updatedAt == 0) revert Errors.PriceOracle_NoAnswer();
+        if (updatedAt == 0) revert Errors.EOracle_NoAnswer();
 
         uint256 staleness = block.timestamp - updatedAt;
-        if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
+        if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);
 
         uint256 price = abi.decode(answer, (uint256));
         if (price == 0) revert Errors.Tellor_InvalidPrice(price);

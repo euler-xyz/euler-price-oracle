@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
@@ -39,7 +39,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
             uint256 cooldown = _cooldowns.get(i);
             if (cooldown > block.timestamp) continue;
 
-            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
+            IEOracle oracle = IEOracle(_arrayGet(i));
 
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
             if (success) {
@@ -65,7 +65,7 @@ contract ConstantBackoffLinearStrategy is TryCallOracle, ImmutableAddressArray {
             uint256 cooldown = _cooldowns.get(i);
             if (cooldown > block.timestamp) continue;
 
-            IPriceOracle oracle = IPriceOracle(_arrayGet(i));
+            IEOracle oracle = IEOracle(_arrayGet(i));
 
             (bool success, uint256 bid, uint256 ask) = _tryGetQuotes(oracle, inAmount, base, quote);
             if (success) {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-abstract contract BaseOracle is IPriceOracle {
+abstract contract BaseOracle is IEOracle {
     address public governor;
     bool public initialized;
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 contract TryCallOracleHarness is TryCallOracle {
-    function tryGetQuote(IPriceOracle oracle, uint256 inAmount, address base, address quote)
+    function tryGetQuote(IEOracle oracle, uint256 inAmount, address base, address quote)
         external
         view
         returns (bool, /* success */ uint256 /* outAmount */ )
@@ -13,7 +13,7 @@ contract TryCallOracleHarness is TryCallOracle {
         return _tryGetQuote(oracle, inAmount, base, quote);
     }
 
-    function tryGetQuotes(IPriceOracle oracle, uint256 inAmount, address base, address quote)
+    function tryGetQuotes(IEOracle oracle, uint256 inAmount, address base, address quote)
         external
         view
         returns (bool, /* success */ uint256, /* askOutAmount */ uint256 /* askOutAmount */ )

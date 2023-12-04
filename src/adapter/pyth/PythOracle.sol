@@ -48,13 +48,13 @@ abstract contract PythOracle is BaseOracle {
 
     function _fetchPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert Errors.PriceOracle_NotSupported(token, address(0));
+        if (feedId == 0) revert Errors.EOracle_NotSupported(token, address(0));
         return pyth.getPriceNoOlderThan(feedId, maxStaleness);
     }
 
     function _fetchEMAPriceStruct(address token) internal view returns (PythStructs.Price memory) {
         bytes32 feedId = configs[token].feedId;
-        if (feedId == 0) revert Errors.PriceOracle_NotSupported(token, address(0));
+        if (feedId == 0) revert Errors.EOracle_NotSupported(token, address(0));
         return pyth.getEmaPriceNoOlderThan(feedId, maxStaleness);
     }
 

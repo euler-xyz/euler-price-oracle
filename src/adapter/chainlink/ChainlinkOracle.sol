@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {Denominations} from "@chainlink/Denominations.sol";
 import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseOracle} from "src/BaseOracle.sol";
+import {Denominations} from "src/lib/Denominations.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 abstract contract ChainlinkOracle is BaseOracle {
@@ -24,6 +24,15 @@ abstract contract ChainlinkOracle is BaseOracle {
         uint8 baseDecimals;
         uint8 quoteDecimals;
         uint8 feedDecimals;
+        bool inverse;
+    }
+
+    struct SetConfigParams {
+        address base;
+        address quote;
+        address feed;
+        uint32 maxStaleness;
+        uint32 maxDuration;
         bool inverse;
     }
 
@@ -46,11 +55,8 @@ abstract contract ChainlinkOracle is BaseOracle {
         return (outAmount, outAmount);
     }
 
-    function _getQuoteWithConfig(ChainlinkConfig memory config, uint256 inAmount, address base, address quote)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
+        ChainlinkConfig memory config = _getConfig(base, quote);
         bytes memory data;
         if (config.feed == address(feedRegistry)) {
             (address asset, address denom,) = _getAssetAndDenom(base, quote);
@@ -75,19 +81,13 @@ abstract contract ChainlinkOracle is BaseOracle {
 
         uint256 staleness = block.timestamp - updatedAt;
         if (staleness >= config.maxStaleness) {
-            revert Errors.PriceOracle_TooStale(staleness, config.maxStaleness);
+            revert Errors.EOracle_TooStale(staleness, config.maxStaleness);
         }
 
         uint256 unitPrice = uint256(answer);
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
-    }
-
-    function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {
-        ChainlinkConfig memory config = configs[base][quote];
-        if (config.feed == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
-        return config;
     }
 
     function _setConfig(
@@ -112,6 +112,20 @@ abstract contract ChainlinkOracle is BaseOracle {
             inverse: inverse
         });
         configs[base][quote] = config;
+
+        ChainlinkConfig memory invConfig = ChainlinkConfig({
+            feed: feed,
+            maxStaleness: maxStaleness,
+            maxDuration: maxDuration,
+            baseDecimals: quoteDecimals,
+            quoteDecimals: baseDecimals,
+            feedDecimals: feedDecimals,
+            inverse: !inverse
+        });
+        configs[quote][base] = invConfig;
+        emit ConfigSet(base, quote, feed);
+        emit ConfigSet(quote, base, feed);
+
         return config;
     }
 
@@ -147,24 +161,21 @@ abstract contract ChainlinkOracle is BaseOracle {
 
         configs[quote][base] = invConfig;
         emit ConfigSet(base, quote, address(feedRegistry));
+        emit ConfigSet(quote, base, address(feedRegistry));
 
         return config;
     }
 
-    function _getFeedDecimals(address asset, address denom) internal pure returns (uint8) {
-        if (denom != Denominations.ETH) revert Errors.PriceOracle_NotSupported(asset, denom);
-        return 18;
+    function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {
+        ChainlinkConfig memory config = configs[base][quote];
+        if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        return config;
     }
 
     function _getAssetAndDenom(address base, address quote) internal view returns (address, address, bool) {
         if (quote == weth) return (base, Denominations.ETH, false);
         if (base == weth) return (quote, Denominations.ETH, true);
 
-        revert Errors.PriceOracle_NotSupported(base, quote);
-    }
-
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        ChainlinkConfig memory config = _getConfig(base, quote);
-        return _getQuoteWithConfig(config, inAmount, base, quote);
+        revert Errors.EOracle_NotSupported(base, quote);
     }
 }

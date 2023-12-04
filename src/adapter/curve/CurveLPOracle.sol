@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseOracle} from "src/BaseOracle.sol";
 import {ICurveRegistry} from "src/adapter/curve/ICurveRegistry.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
@@ -12,7 +12,7 @@ import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
     ICurveRegistry public immutable metaRegistry;
     ICurveRegistry public immutable stableRegistry;
-    IPriceOracle public immutable forwardOracle;
+    IEOracle public immutable forwardOracle;
     address public immutable lpToken;
     address public immutable pool;
 
@@ -25,7 +25,7 @@ contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
     ) ImmutableAddressArray(_poolTokens) {
         metaRegistry = ICurveRegistry(_metaRegistry);
         stableRegistry = ICurveRegistry(_stableRegistry);
-        forwardOracle = IPriceOracle(_forwardOracle);
+        forwardOracle = IEOracle(_forwardOracle);
         lpToken = _lpToken;
 
         address _pool = metaRegistry.get_pool_from_lp_token(lpToken);
@@ -62,7 +62,7 @@ contract CurveLPOracle is BaseOracle, ImmutableAddressArray {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        if (base != lpToken) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (base != lpToken) revert Errors.EOracle_NotSupported(base, quote);
 
         uint256[8] memory balances = metaRegistry.get_balances(pool);
 

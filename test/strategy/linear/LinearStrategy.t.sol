@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {LinearStrategy} from "src/strategy/linear/LinearStrategy.sol";
 
@@ -38,7 +38,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuoteRevert(1);
         _mockGetQuoteRevert(2);
 
-        vm.expectRevert(Errors.PriceOracle_NoAnswer.selector);
+        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         strategy.getQuote(inAmount, base, quote);
     }
 
@@ -92,7 +92,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuotesRevert(1);
         _mockGetQuotesRevert(2);
 
-        vm.expectRevert(Errors.PriceOracle_NoAnswer.selector);
+        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         strategy.getQuotes(inAmount, base, quote);
     }
 
@@ -154,24 +154,22 @@ contract LinearStrategyTest is Test {
 
     function _mockGetQuoteRevert(uint256 index) private {
         address oracle = _nthOracle(index);
-        vm.mockCallRevert(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), "oops");
+        vm.mockCallRevert(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), "oops");
     }
 
     function _mockGetQuoteReturn(uint256 index, uint256 outAmount) private {
         address oracle = _nthOracle(index);
-        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(outAmount));
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(outAmount));
     }
 
     function _mockGetQuotesRevert(uint256 index) private {
         address oracle = _nthOracle(index);
-        vm.mockCallRevert(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), "oops");
+        vm.mockCallRevert(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), "oops");
     }
 
     function _mockGetQuotesReturn(uint256 index, uint256 bidOutAmount, uint256 askOutAmount) private {
         address oracle = _nthOracle(index);
-        vm.mockCall(
-            oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(bidOutAmount, askOutAmount)
-        );
+        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), abi.encode(bidOutAmount, askOutAmount));
     }
 
     function _nthOracle(uint256 index) private view returns (address) {

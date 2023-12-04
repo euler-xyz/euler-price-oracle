@@ -21,7 +21,7 @@ contract UniswapV3OracleTest is Test {
         assertTrue(config.isEmpty());
     }
 
-    function test_GetOrRevertConfig_InitallyReverts(address base, address quote) public {
+    function test_getConfigOrRevert_InitallyReverts(address base, address quote) public {
         vm.expectRevert();
         oracle.getOrRevertConfig(base, quote);
     }

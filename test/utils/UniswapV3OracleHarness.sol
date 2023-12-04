@@ -15,7 +15,7 @@ contract UniswapV3OracleHarness is UniswapV3Oracle {
     }
 
     function getOrRevertConfig(address base, address quote) external view returns (UniswapV3Config) {
-        return _getOrRevertConfig(base, quote);
+        return _getConfigOrRevert(base, quote);
     }
 
     function setConfig(address token0, address token1, address pool, uint32 validUntil, uint24 fee, uint24 twapWindow)

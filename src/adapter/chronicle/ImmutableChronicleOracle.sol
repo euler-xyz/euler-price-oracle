@@ -55,17 +55,17 @@ contract ImmutableChronicleOracle is BaseOracle {
             ChronicleConfig({feed: feed, baseDecimals: quoteDecimals, quoteDecimals: baseDecimals, inverse: true});
     }
 
-    function _getOrRevertConfig(address base, address quote) internal view returns (ChronicleConfig memory) {
+    function _getConfigOrRevert(address base, address quote) internal view returns (ChronicleConfig memory) {
         ChronicleConfig memory config = configs[base][quote];
-        if (config.feed == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return config;
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        ChronicleConfig memory config = _getOrRevertConfig(base, quote);
+        ChronicleConfig memory config = _getConfigOrRevert(base, quote);
 
         (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
-        if (age > maxStaleness) revert Errors.PriceOracle_TooStale(age, maxStaleness);
+        if (age > maxStaleness) revert Errors.EOracle_TooStale(age, maxStaleness);
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;

@@ -2,15 +2,15 @@
 pragma solidity 0.8.23;
 
 import {BaseOracle} from "src/BaseOracle.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @author totomanov
 /// @notice Oracle resolver for base-quote pairs.
 contract SimpleRouter is BaseOracle {
-    IPriceOracle public immutable fallbackOracle;
-    mapping(address base => mapping(address quote => IPriceOracle)) public oracles;
+    IEOracle public immutable fallbackOracle;
+    mapping(address base => mapping(address quote => IEOracle)) public oracles;
 
     /// @dev After construction paths are immutable.
     constructor(address[] memory _bases, address[] memory _quotes, address[] memory _oracles, address _fallbackOracle) {
@@ -23,26 +23,26 @@ contract SimpleRouter is BaseOracle {
             address base = _bases[i];
             address quote = _quotes[i];
             address oracle = _oracles[i];
-            oracles[base][quote] = IPriceOracle(oracle);
+            oracles[base][quote] = IEOracle(oracle);
 
             unchecked {
                 ++i;
             }
         }
-        fallbackOracle = IPriceOracle(_fallbackOracle);
+        fallbackOracle = IEOracle(_fallbackOracle);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
     /// or reverts if `fallbackOracle` is not set.
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
-        IPriceOracle oracle = oracles[base][quote];
+        IEOracle oracle = oracles[base][quote];
         if (address(oracle) == address(0)) oracle = fallbackOracle;
-        if (address(oracle) == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (address(oracle) == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return oracle.getQuote(inAmount, base, quote);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
     /// or reverts if `fallbackOracle` is not set.
     function getQuotes(uint256 inAmount, address base, address quote)
@@ -51,13 +51,13 @@ contract SimpleRouter is BaseOracle {
         override
         returns (uint256, uint256)
     {
-        IPriceOracle oracle = oracles[base][quote];
+        IEOracle oracle = oracles[base][quote];
         if (address(oracle) == address(0)) oracle = fallbackOracle;
-        if (address(oracle) == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (address(oracle) == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return oracle.getQuotes(inAmount, base, quote);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IEOracle
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter();
     }

@@ -42,14 +42,14 @@ contract ConfigurableConstantOracle is BaseOracle {
         configs[base][quote] = rate;
     }
 
-    function _getOrRevertConfig(address base, address quote) internal view returns (uint256) {
+    function _getConfigOrRevert(address base, address quote) internal view returns (uint256) {
         uint256 rate = configs[base][quote];
-        if (rate == 0) revert Errors.PriceOracle_NotSupported(base, quote);
+        if (rate == 0) revert Errors.EOracle_NotSupported(base, quote);
         return rate;
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        uint256 rate = _getOrRevertConfig(base, quote);
+        uint256 rate = _getConfigOrRevert(base, quote);
         return inAmount * rate / PRECISION;
     }
 }

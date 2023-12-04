@@ -20,10 +20,10 @@ library Errors {
     error ConfigExists(address base, address quote);
     error ConfigExpired(address base, address quote);
     error Curve_PoolNotFound(address lpToken);
-    error PriceOracle_NoAnswer();
-    error PriceOracle_NotSupported(address base, address quote);
-    error PriceOracle_Overflow();
-    error PriceOracle_TooStale(uint256 staleness, uint256 maxStaleness);
+    error EOracle_NoAnswer();
+    error EOracle_NotSupported(address base, address quote);
+    error EOracle_Overflow();
+    error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);
     error Pyth_InvalidConfidenceInterval(int64 price, uint64 conf);
     error Pyth_InvalidExponent(int32 expo);
     error Pyth_InvalidPrice(int64 price);

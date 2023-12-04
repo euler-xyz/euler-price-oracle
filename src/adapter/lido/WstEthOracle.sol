@@ -39,6 +39,6 @@ contract WstEthOracle is BaseOracle {
             return inAmount * rate / 1e18;
         }
 
-        revert Errors.PriceOracle_NotSupported(base, quote);
+        revert Errors.EOracle_NotSupported(base, quote);
     }
 }

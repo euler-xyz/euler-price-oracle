@@ -5,9 +5,30 @@ import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ImmutableChainlinkOracle is ChainlinkOracle {
-    constructor(address _feedRegistry, address _weth) ChainlinkOracle(_feedRegistry, _weth) {}
+    bool public immutable canIngestNewFeeds;
+
+    error NotSupported();
+
+    constructor(
+        address _feedRegistry,
+        address _weth,
+        bool _canIngestNewFeeds,
+        ChainlinkOracle.SetConfigParams[] memory _initialConfigs
+    ) ChainlinkOracle(_feedRegistry, _weth) {
+        canIngestNewFeeds = _canIngestNewFeeds;
+
+        uint256 numConfigs = _initialConfigs.length;
+        for (uint256 i = 0; i < numConfigs;) {
+            ChainlinkOracle.SetConfigParams memory params = _initialConfigs[i];
+            _setConfig(params.base, params.quote, params.feed, params.maxStaleness, params.maxDuration, params.inverse);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 
     function initConfig(address base, address quote) external {
+        if (!canIngestNewFeeds) revert NotSupported();
         _initConfig(base, quote);
     }
 

@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 /// @author totomanov
-/// @notice Common PriceOracle denominations for assets that are not tokens.
+/// @notice Common EOracle denominations for assets that are not tokens.
 /// @dev Currencies are represented by ISO 4217 numeric codes.
 /// Only the top 10 most traded currencies are listed here, as well as Gold (XAU), Silver (XAG), and No Currency (XXX).
 library Denominations {

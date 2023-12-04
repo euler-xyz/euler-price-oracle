@@ -11,7 +11,7 @@ contract ConstantOracle2 is BaseOracle {
 
     function initialize() external {}
 
-    function hey() external virtual pure returns (uint256) {
+    function hey() external pure virtual returns (uint256) {
         return 1;
     }
 
@@ -27,7 +27,7 @@ contract ConstantOracle2 is BaseOracle {
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.ConstantOracle();
     }
-    
+
     function UNPACK() internal pure returns (address base, address quote) {
         assembly {
             base := shr(96, calldataload(sub(calldatasize(), 72)))
@@ -37,13 +37,13 @@ contract ConstantOracle2 is BaseOracle {
 
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
         (address base, address quote) = UNPACK();
-        if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
         return _inAmount * rate / PRECISION;
     }
 }
 
 contract ConstantOracle2Upgraded is ConstantOracle2 {
-    function hey() external override pure returns (uint256) {
+    function hey() external pure override returns (uint256) {
         return 2;
     }
 }
