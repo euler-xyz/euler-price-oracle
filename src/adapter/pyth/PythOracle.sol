@@ -8,19 +8,31 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 abstract contract PythOracle is BaseOracle {
-    IPyth public immutable pyth;
-    uint256 public maxStaleness;
-
-    struct PythConfig {
+    struct Config {
         bytes32 feedId;
         uint8 decimals;
     }
 
-    /// @dev all Pyth crypto feeds are USD-denominated
-    mapping(address token => PythConfig) public configs;
+    struct ConfigParams {
+        bytes32 feedId;
+        address token;
+    }
 
-    constructor(address _pyth) {
+    IPyth public immutable pyth;
+    uint256 public maxStaleness;
+    mapping(address token => Config) public configs;
+
+    constructor(address _pyth, uint256 _maxStaleness, ConfigParams[] memory _initialConfigs) {
         pyth = IPyth(_pyth);
+        maxStaleness = _maxStaleness;
+
+        uint256 length = _initialConfigs.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(_initialConfigs[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256);
@@ -30,26 +42,9 @@ abstract contract PythOracle is BaseOracle {
         virtual
         returns (uint256, uint256);
 
-    function _initializeOracle(bytes memory _data) internal override {
-        (uint256 _maxStaleness, address[] memory tokens, bytes32[] memory feedIds) =
-            abi.decode(_data, (uint256, address[], bytes32[]));
-
-        maxStaleness = _maxStaleness;
-
-        if (tokens.length != feedIds.length) revert Errors.Arity2Mismatch(tokens.length, feedIds.length);
-        uint256 length = tokens.length;
-
-        for (uint256 i = 0; i < length;) {
-            _initConfig(tokens[i], feedIds[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function _initConfig(address token, bytes32 feedId) internal {
-        uint8 decimals = ERC20(token).decimals();
-        configs[token] = PythConfig(feedId, decimals);
+    function _setConfig(ConfigParams memory params) internal {
+        uint8 decimals = ERC20(params.token).decimals();
+        configs[params.token] = Config(params.feedId, decimals);
     }
 
     function _fetchPriceStruct(address token) internal view returns (PythStructs.Price memory) {

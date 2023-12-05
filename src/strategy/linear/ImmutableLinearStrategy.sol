@@ -52,8 +52,6 @@ contract ImmutableLinearStrategy is BaseOracle, TryCallOracle, ImmutableAddressA
         revert Errors.EOracle_NoAnswer();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {}
-
     /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.LinearStrategy();

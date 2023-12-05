@@ -12,6 +12,17 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 contract LinearStrategy is BaseOracle, TryCallOracle {
     address[] public oracles;
 
+    constructor(address[] memory _oracles) {
+        uint256 length = _oracles.length;
+        oracles = new address[](length);
+        for (uint256 i = 0; i < length;) {
+            oracles[i] = _oracles[i];
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     /// @inheritdoc IEOracle
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.
@@ -53,19 +64,5 @@ contract LinearStrategy is BaseOracle, TryCallOracle {
     /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.LinearStrategy();
-    }
-
-    /// @inheritdoc BaseOracle
-    function _initializeOracle(bytes memory _data) internal override {
-        address[] memory _oracles = abi.decode(_data, (address[]));
-
-        uint256 length = _oracles.length;
-        oracles = new address[](length);
-        for (uint256 i = 0; i < length;) {
-            oracles[i] = _oracles[i];
-            unchecked {
-                ++i;
-            }
-        }
     }
 }

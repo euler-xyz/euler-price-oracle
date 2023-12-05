@@ -5,6 +5,7 @@ import {UNISWAP_V3_FACTORY, USDC, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {ImmutableUniswapV3Oracle} from "src/adapter/uniswap/ImmutableUniswapV3Oracle.sol";
 import {UniswapV3Config} from "src/adapter/uniswap/UniswapV3Config.sol";
+import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 
 contract ImmutableUniswapV3OracleForkTest is ForkTest {
     ImmutableUniswapV3Oracle oracle;
@@ -12,7 +13,7 @@ contract ImmutableUniswapV3OracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        oracle = new ImmutableUniswapV3Oracle(UNISWAP_V3_FACTORY);
+        oracle = new ImmutableUniswapV3Oracle(UNISWAP_V3_FACTORY, new UniswapV3Oracle.ConfigParams[](0));
     }
 
     function test_UpdateConfig() public {

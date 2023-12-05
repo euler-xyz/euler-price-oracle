@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
 import {IPyth} from "@pyth-sdk-solidity/IPyth.sol";
 import {PYTH, PYTH_ETH_USD_FEED, PYTH_USDC_USD_FEED, USDC, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {ImmutablePythOracle} from "src/adapter/pyth/ImmutablePythOracle.sol";
+import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 
 contract ImmutablePythOracleForkTest is ForkTest {
     ImmutablePythOracle oracle;
@@ -13,16 +13,11 @@ contract ImmutablePythOracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        address[] memory tokens = new address[](2);
-        tokens[0] = USDC;
-        tokens[1] = WETH;
+        PythOracle.ConfigParams[] memory initialConfigs = new PythOracle.ConfigParams[](2);
+        initialConfigs[0] = PythOracle.ConfigParams(PYTH_USDC_USD_FEED, USDC);
+        initialConfigs[1] = PythOracle.ConfigParams(PYTH_ETH_USD_FEED, WETH);
 
-        bytes32[] memory feedIds = new bytes32[](2);
-        feedIds[0] = PYTH_USDC_USD_FEED;
-        feedIds[1] = PYTH_ETH_USD_FEED;
-
-        oracle = new ImmutablePythOracle(PYTH);
-        oracle.initialize(address(this), abi.encode(10000 days, tokens, feedIds));
+        oracle = new ImmutablePythOracle(PYTH, 10000 days, initialConfigs);
     }
 
     function test_GetQuote() public {

@@ -30,8 +30,6 @@ contract ImmutableConstantOracle is BaseOracle {
         return OracleDescription.ConstantOracle();
     }
 
-    function _initializeOracle(bytes memory) internal override {}
-
     function _getQuote(uint256 _inAmount, address _base, address _quote) private view returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
         return _inAmount * rate / PRECISION;

@@ -11,31 +11,27 @@ import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
 contract AggregatorTest is Test {
     function test_Initialize_RevertsWhen_OraclesArrayIsEmpty(uint256 quorum) public {
-        AggregatorHarness aggregator = new AggregatorHarness();
         vm.expectRevert(Errors.Aggregator_OraclesEmpty.selector);
-        aggregator.initialize(address(this), abi.encode(new address[](0), quorum));
+        new AggregatorHarness(new address[](0), quorum);
     }
 
     function test_Initialize_RevertsWhen_QuorumIsZero(address[] memory oracles) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
-        AggregatorHarness aggregator = new AggregatorHarness();
         vm.expectRevert(Errors.Aggregator_QuorumZero.selector);
-        aggregator.initialize(address(this), abi.encode(oracles, 0));
+        new AggregatorHarness(oracles, 0);
     }
 
     function test_Initialize_RevertsWhen_QuorumGtOraclesLength(address[] memory oracles, uint256 quorum) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
         quorum = bound(quorum, oracles.length + 1, type(uint256).max);
-        AggregatorHarness aggregator = new AggregatorHarness();
         vm.expectRevert(abi.encodeWithSelector(Errors.Aggregator_QuorumTooLarge.selector, quorum, oracles.length));
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        new AggregatorHarness(oracles, quorum);
     }
 
     function test_Initialize_Integrity(address[] memory oracles, uint256 quorum) public {
         vm.assume(oracles.length <= 8 && oracles.length > 0);
         quorum = bound(quorum, 1, oracles.length);
-        AggregatorHarness aggregator = new AggregatorHarness();
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
         assertEq(aggregator.quorum(), quorum);
     }
 
@@ -49,8 +45,7 @@ contract AggregatorTest is Test {
         vm.assume(numOracles <= 8 && numOracles > 0);
         quorum = bound(quorum, 1, numOracles);
         address[] memory oracles = makeAddrs(numOracles);
-        AggregatorHarness aggregator = new AggregatorHarness();
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < numOracles; ++i) {
             vm.mockCallRevert(oracles[i], abi.encodeWithSelector(IEOracle.getQuote.selector), "oops");
@@ -70,8 +65,7 @@ contract AggregatorTest is Test {
         vm.assume(numOracles <= 8 && numOracles > 0);
         quorum = bound(quorum, 1, numOracles);
         address[] memory oracles = makeAddrs(numOracles);
-        AggregatorHarness aggregator = new AggregatorHarness();
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum - 1; ++i) {
             vm.mockCall(oracles[i], abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(1));
@@ -91,8 +85,7 @@ contract AggregatorTest is Test {
         vm.assume(numOracles <= 8 && numOracles > 0);
         quorum = bound(quorum, 1, numOracles);
         address[] memory oracles = makeAddrs(numOracles);
-        AggregatorHarness aggregator = new AggregatorHarness();
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum; ++i) {
             vm.mockCall(oracles[i], abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(1));
@@ -115,8 +108,7 @@ contract AggregatorTest is Test {
         vm.assume(numOracles <= 8 && numOracles > 0);
         quorum = bound(quorum, 1, numOracles);
         address[] memory oracles = makeAddrs(numOracles);
-        AggregatorHarness aggregator = new AggregatorHarness();
-        aggregator.initialize(address(this), abi.encode(oracles, quorum));
+        AggregatorHarness aggregator = new AggregatorHarness(oracles, quorum);
 
         for (uint256 i = 0; i < quorum; ++i) {
             vm.mockCall(oracles[i], abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(1));

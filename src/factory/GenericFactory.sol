@@ -5,7 +5,7 @@ import {BeaconProxy} from "./BeaconProxy.sol";
 import {MetaProxyFactory} from "./MetaProxyFactory.sol";
 
 interface IComponent {
-    function initialize() external;
+    function initialize(address _governor) external;
 }
 
 abstract contract GenericFactory is MetaProxyFactory {
@@ -81,7 +81,7 @@ abstract contract GenericFactory is MetaProxyFactory {
             proxy = _metaProxyFromBytes(currentImplementation, trailingData);
         }
 
-        IComponent(proxy).initialize();
+        IComponent(proxy).initialize(msg.sender);
 
         proxyLookup[proxy] =
             ProxyConfig({upgradeable: upgradeable, implementation: currentImplementation, trailingData: trailingData});

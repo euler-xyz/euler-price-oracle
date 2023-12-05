@@ -2,10 +2,9 @@
 pragma solidity 0.8.23;
 
 import {IEOracle} from "src/interfaces/IEOracle.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ParentOracle {
-    function initialize() external {}
+    function initialize(address) external {}
 
     function scalar() public pure virtual returns (uint256) {
         return 3;
@@ -25,7 +24,7 @@ contract ParentOracle {
 }
 
 contract ParentOracle2 {
-    function initialize() external {}
+    function initialize(address) external {}
 
     function scalar() public pure virtual returns (uint256) {
         return 5;
@@ -45,7 +44,7 @@ contract ParentOracle2 {
 }
 
 contract ChildOracle {
-    function initialize() external {}
+    function initialize(address) external {}
 
     function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
         (address base, uint160 outAmount) = UNPACK();

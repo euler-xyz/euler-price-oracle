@@ -28,8 +28,6 @@ contract RethOracle is BaseOracle {
         return OracleDescription.RethOracle();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {}
-
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         if (base == reth && quote == weth) {
             return IReth(reth).getEthValue(inAmount);

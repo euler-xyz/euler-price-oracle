@@ -32,8 +32,7 @@ contract LinearStrategyTest is Test {
 
     function test_GetQuote_RevertsWhen_AllRevert(uint256 inAmount, address base, address quote) public {
         address[] memory oracles = _oracleArr(3);
-        LinearStrategy strategy = new LinearStrategy();
-        strategy.initialize(address(this), abi.encode(oracles));
+        LinearStrategy strategy = new LinearStrategy(oracles);
 
         _mockGetQuoteRevert(0);
         _mockGetQuoteRevert(1);
@@ -57,8 +56,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuoteReturn(2, outAmount);
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             _shuffleOracles(prng, oracles);
-            LinearStrategy strategy = new LinearStrategy();
-            strategy.initialize(address(this), abi.encode(oracles));
+            LinearStrategy strategy = new LinearStrategy(oracles);
 
             uint256 actualOutAmount = strategy.getQuote(inAmount, base, quote);
 
@@ -76,8 +74,7 @@ contract LinearStrategyTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             _shuffleOracles(prng, oracles);
-            LinearStrategy strategy = new LinearStrategy();
-            strategy.initialize(address(this), abi.encode(oracles));
+            LinearStrategy strategy = new LinearStrategy(oracles);
             _mockGetQuoteReturn(0, uint256(uint160(oracles[0])));
             _mockGetQuoteReturn(1, uint256(uint160(oracles[1])));
             _mockGetQuoteReturn(2, uint256(uint160(oracles[2])));
@@ -89,8 +86,7 @@ contract LinearStrategyTest is Test {
 
     function test_GetQuotes_RevertsWhen_AllRevert(uint256 inAmount, address base, address quote) public {
         address[] memory oracles = _oracleArr(3);
-        LinearStrategy strategy = new LinearStrategy();
-        strategy.initialize(address(this), abi.encode(oracles));
+        LinearStrategy strategy = new LinearStrategy(oracles);
 
         _mockGetQuotesRevert(0);
         _mockGetQuotesRevert(1);
@@ -115,8 +111,7 @@ contract LinearStrategyTest is Test {
         _mockGetQuotesReturn(2, bidOutAmount, askOutAmount);
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             _shuffleOracles(prng, oracles);
-            LinearStrategy strategy = new LinearStrategy();
-            strategy.initialize(address(this), abi.encode(oracles));
+            LinearStrategy strategy = new LinearStrategy(oracles);
 
             (uint256 actualBid, uint256 actualAsk) = strategy.getQuotes(inAmount, base, quote);
             assertEq(bidOutAmount, actualBid);
@@ -134,8 +129,7 @@ contract LinearStrategyTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             _shuffleOracles(prng, oracles);
-            LinearStrategy strategy = new LinearStrategy();
-            strategy.initialize(address(this), abi.encode(oracles));
+            LinearStrategy strategy = new LinearStrategy(oracles);
 
             _mockGetQuotesReturn(0, uint256(uint160(oracles[0])), uint256(uint160(oracles[0])) + 1);
             _mockGetQuotesReturn(1, uint256(uint160(oracles[1])), uint256(uint160(oracles[1])) + 1);

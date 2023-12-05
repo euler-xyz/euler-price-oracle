@@ -6,7 +6,9 @@ import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract UniswapV3OracleHarness is UniswapV3Oracle {
-    constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}
+    constructor(address _uniswapV3Factory, UniswapV3Oracle.ConfigParams[] memory _initialConfigs)
+        UniswapV3Oracle(_uniswapV3Factory, _initialConfigs)
+    {}
 
     function description() external view returns (OracleDescription.Description memory) {}
 

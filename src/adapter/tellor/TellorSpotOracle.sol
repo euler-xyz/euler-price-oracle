@@ -13,8 +13,9 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
     /// @custom:read https://tellor.io/best-practices-for-oracle-users-on-ethereum/
     uint256 public minStaleness;
     uint256 public maxStaleness;
+    mapping(address base => mapping(address quote => Config)) public configs;
 
-    struct TellorConfig {
+    struct Config {
         string asset;
         string denom;
         uint8 baseDecimals;
@@ -22,16 +23,30 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         bool inverse;
     }
 
-    mapping(address base => mapping(address quote => TellorConfig)) public configs;
-
-    struct InitTellorConfig {
+    struct ConfigParams {
         address base;
         address quote;
         string asset;
         string denom;
     }
 
-    constructor(address payable _tellorAddress) UsingTellor(_tellorAddress) {}
+    constructor(
+        address payable _tellorAddress,
+        uint256 _minStaleness,
+        uint256 _maxStaleness,
+        ConfigParams[] memory _initialConfigs
+    ) UsingTellor(_tellorAddress) {
+        uint256 length = _initialConfigs.length;
+        for (uint256 i = 0; i < length;) {
+            _initConfig(_initialConfigs[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        minStaleness = _minStaleness;
+        maxStaleness = _maxStaleness;
+    }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -46,27 +61,11 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         return OracleDescription.TellorSpotOracle(maxStaleness);
     }
 
-    function _initializeOracle(bytes memory _data) internal override {
-        (uint256 _minStaleness, uint256 _maxStaleness, InitTellorConfig[] memory _configs) =
-            abi.decode(_data, (uint256, uint256, InitTellorConfig[]));
-
-        uint256 length = _configs.length;
-        for (uint256 i = 0; i < length;) {
-            _initConfig(_configs[i]);
-            unchecked {
-                ++i;
-            }
-        }
-
-        minStaleness = _minStaleness;
-        maxStaleness = _maxStaleness;
-    }
-
-    function _initConfig(InitTellorConfig memory config) internal {
+    function _initConfig(ConfigParams memory config) internal {
         uint8 baseDecimals = ERC20(config.base).decimals();
         uint8 quoteDecimals = ERC20(config.quote).decimals();
 
-        configs[config.base][config.quote] = TellorConfig({
+        configs[config.base][config.quote] = Config({
             asset: config.asset,
             denom: config.denom,
             baseDecimals: baseDecimals,
@@ -74,7 +73,7 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
             inverse: false
         });
 
-        configs[config.quote][config.base] = TellorConfig({
+        configs[config.quote][config.base] = Config({
             asset: config.asset,
             denom: config.denom,
             baseDecimals: quoteDecimals,
@@ -84,7 +83,7 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        TellorConfig memory config = configs[base][quote];
+        Config memory config = configs[base][quote];
         if (bytes(config.asset).length == 0) revert Errors.ConfigDoesNotExist(base, quote);
 
         bytes32 queryId = keccak256(abi.encode("SpotPrice", abi.encode(config.asset, config.denom)));

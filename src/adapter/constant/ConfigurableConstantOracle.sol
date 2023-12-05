@@ -6,8 +6,24 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConfigurableConstantOracle is BaseOracle {
+    struct ConfigParams {
+        address base;
+        address quote;
+        uint256 rate;
+    }
+
     uint256 public constant PRECISION = 10 ** 27;
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
+
+    constructor(ConfigParams[] memory _initialConfigs) {
+        uint256 length = _initialConfigs.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(_initialConfigs[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -22,36 +38,13 @@ contract ConfigurableConstantOracle is BaseOracle {
         return OracleDescription.ConfigurableConstantOracle();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {
-        (address[] memory bases, address[] memory quotes, uint256[] memory rates) =
-            abi.decode(_data, (address[], address[], uint256[]));
-
-        if (bases.length != quotes.length || quotes.length != rates.length) {
-            revert Errors.Arity3Mismatch(bases.length, quotes.length, rates.length);
-        }
-
-        uint256 length = bases.length;
-        for (uint256 i = 0; i < length;) {
-            _initConfig(bases[i], quotes[i], rates[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    function _initConfig(address base, address quote, uint256 rate) internal {
-        if (configs[base][quote] != 0) revert Errors.ConfigExists(base, quote);
-        configs[base][quote] = rate;
-    }
-
-    function _getConfigOrRevert(address base, address quote) internal view returns (uint256) {
-        uint256 rate = configs[base][quote];
-        if (rate == 0) revert Errors.EOracle_NotSupported(base, quote);
-        return rate;
+    function _setConfig(ConfigParams memory params) internal {
+        configs[params.base][params.quote] = params.rate;
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        uint256 rate = _getConfigOrRevert(base, quote);
+        uint256 rate = configs[base][quote];
+        if (rate == 0) revert Errors.EOracle_NotSupported(base, quote);
         return inAmount * rate / PRECISION;
     }
 }

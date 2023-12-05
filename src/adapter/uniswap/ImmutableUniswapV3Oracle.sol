@@ -11,7 +11,9 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
     uint24 public constant DEFAULT_TWAP_WINDOW = 30 minutes;
 
-    constructor(address _uniswapV3Factory) UniswapV3Oracle(_uniswapV3Factory) {}
+    constructor(address _uniswapV3Factory, UniswapV3Oracle.ConfigParams[] memory _initialConfigs)
+        UniswapV3Oracle(_uniswapV3Factory, _initialConfigs)
+    {}
 
     function updateConfig(address base, address quote) external returns (UniswapV3Config) {
         (address token0, address token1) = _sortTokens(base, quote);

@@ -14,6 +14,22 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
     uint256 public quorum;
     address[] public oracles;
 
+    constructor(address[] memory _oracles, uint256 _quorum) {
+        uint256 cardinality = _oracles.length;
+        if (cardinality == 0) revert Errors.Aggregator_OraclesEmpty();
+        if (_quorum == 0) revert Errors.Aggregator_QuorumZero();
+        if (_quorum > cardinality) revert Errors.Aggregator_QuorumTooLarge(_quorum, cardinality);
+        quorum = _quorum;
+
+        oracles = new address[](cardinality);
+        for (uint256 i = 0; i < cardinality;) {
+            oracles[i] = _oracles[i];
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     /// @inheritdoc IEOracle
     /// @dev Constructs a success mask which is useful to determine the indices of failed oracles.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -29,25 +45,6 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
 
     /// @inheritdoc IEOracle
     function description() external pure virtual returns (OracleDescription.Description memory);
-
-    /// @inheritdoc BaseOracle
-    function _initializeOracle(bytes memory _data) internal virtual override {
-        (address[] memory _oracles, uint256 _quorum) = abi.decode(_data, (address[], uint256));
-
-        uint256 cardinality = _oracles.length;
-        if (cardinality == 0) revert Errors.Aggregator_OraclesEmpty();
-        if (_quorum == 0) revert Errors.Aggregator_QuorumZero();
-        if (_quorum > cardinality) revert Errors.Aggregator_QuorumTooLarge(_quorum, cardinality);
-        quorum = _quorum;
-
-        oracles = new address[](cardinality);
-        for (uint256 i = 0; i < cardinality;) {
-            oracles[i] = _oracles[i];
-            unchecked {
-                ++i;
-            }
-        }
-    }
 
     /// @dev Apply the aggregation algorithm.
     function _aggregateQuotes(uint256[] memory, PackedUint32Array) internal view virtual returns (uint256);

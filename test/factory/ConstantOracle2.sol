@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {console2} from "forge-std/console2.sol";
 import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
@@ -8,7 +9,12 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract ConstantOracle2 is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
     uint256 public constant rate = 10 ** 27;
-    uint256 public initializedValue = 0;
+    uint256 public immutable immutableValue;
+    uint256 public initializedValue;
+
+    constructor(uint256 _immutableValue) {
+        immutableValue = _immutableValue;
+    }
 
     function hey() external pure virtual returns (uint256) {
         return 1;
@@ -27,13 +33,9 @@ contract ConstantOracle2 is BaseOracle {
         return OracleDescription.ConstantOracle();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {
-        initializedValue = abi.decode(_data, (uint256));
-    }
-
     function UNPACK() internal pure returns (address base, address quote) {
         assembly {
-            base := shr(96, calldataload(sub(calldatasize(), 72)))
+            base := shr(96, calldataload(sub(calldatasize(), 84)))
             quote := shr(96, calldataload(sub(calldatasize(), 52)))
         }
     }
@@ -46,6 +48,8 @@ contract ConstantOracle2 is BaseOracle {
 }
 
 contract ConstantOracle2Upgraded is ConstantOracle2 {
+    constructor(uint256 _immutableValue) ConstantOracle2(_immutableValue) {}
+
     function hey() external pure override returns (uint256) {
         return 2;
     }

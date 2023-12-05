@@ -9,16 +9,37 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract CurveLPOracle is BaseOracle {
-    ICurveRegistry public immutable metaRegistry;
-    ICurveRegistry public immutable stableRegistry;
-    IEOracle public immutable forwardOracle;
-
-    struct CurveLPOracleConfig {
+    struct Config {
         address pool;
         address[] poolTokens;
     }
 
-    mapping(address lpToken => CurveLPOracleConfig) public configs;
+    ICurveRegistry public immutable metaRegistry;
+    ICurveRegistry public immutable stableRegistry;
+    IEOracle public immutable forwardOracle;
+
+    mapping(address lpToken => Config) public configs;
+
+    constructor(
+        address _metaRegistry,
+        address _stableRegistry,
+        address _forwardOracle,
+        address[] memory _initialLpTokens
+    ) {
+        metaRegistry = ICurveRegistry(_metaRegistry);
+        stableRegistry = ICurveRegistry(_stableRegistry);
+        forwardOracle = IEOracle(_forwardOracle);
+
+        uint256 length = _initialLpTokens.length;
+        for (uint256 i = 0; i < length;) {
+            address lpToken = _initialLpTokens[i];
+            _setConfig(lpToken);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         return _getQuote(inAmount, base, quote);
@@ -38,44 +59,34 @@ contract CurveLPOracle is BaseOracle {
         return OracleDescription.CurveLPOracle();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {
-        (address _forwardOracle, address[] memory _lpTokens) = abi.decode(_data, (address, address[]));
+    function _setConfig(address lpToken) private {
+        address pool = metaRegistry.get_pool_from_lp_token(lpToken);
+        if (pool == address(0)) revert Errors.Curve_PoolNotFound(lpToken);
 
-        uint256 length = _lpTokens.length;
-        for (uint256 i = 0; i < length;) {
-            address lpToken = _lpTokens[i];
-            address pool = metaRegistry.get_pool_from_lp_token(lpToken);
-            if (pool == address(0)) revert Errors.Curve_PoolNotFound(lpToken);
+        address[8] memory poolTokens = metaRegistry.get_coins(pool);
+        address[] memory poolTokensArr = new address[](8);
 
-            address[8] memory poolTokens = metaRegistry.get_coins(pool);
-            address[] memory poolTokensArr = new address[](8);
-
-            uint256 maxIndex;
-            for (uint256 j = 0; j < 8;) {
-                address poolToken = poolTokens[j];
-                if (poolToken == address(0)) {
-                    assembly {
-                        // update the length of `poolTokensArr`
-                        mstore(poolTokensArr, add(j, 1))
-                    }
-                    break;
+        uint256 maxIndex;
+        for (uint256 i = 0; i < 8;) {
+            address poolToken = poolTokens[i];
+            if (poolToken == address(0)) {
+                assembly {
+                    // update the length of `poolTokensArr`
+                    mstore(poolTokensArr, add(i, 1))
                 }
-                poolTokensArr[j] = poolToken;
-                unchecked {
-                    ++j;
-                }
+                break;
             }
-
-            configs[lpToken] = CurveLPOracleConfig({pool: pool, poolTokens: poolTokensArr});
-
+            poolTokensArr[i] = poolToken;
             unchecked {
                 ++i;
             }
         }
+
+        configs[lpToken] = Config(pool, poolTokensArr);
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        CurveLPOracleConfig memory config = configs[base];
+        Config memory config = configs[base];
         if (config.pool == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         // TODO: inverse support
 

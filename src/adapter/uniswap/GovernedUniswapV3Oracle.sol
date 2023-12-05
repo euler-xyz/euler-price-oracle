@@ -8,7 +8,9 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract GovernedUniswapV3Oracle is UniswapV3Oracle {
-    constructor(address _uniswapV3Factory, address _owner) UniswapV3Oracle(_uniswapV3Factory) {}
+    constructor(address _uniswapV3Factory, UniswapV3Oracle.ConfigParams[] memory _initialConfigs)
+        UniswapV3Oracle(_uniswapV3Factory, _initialConfigs)
+    {}
 
     function addConfig(address pool, uint24 twapWindow) public onlyGovernor {
         address token0 = IUniswapV3Pool(pool).token0();

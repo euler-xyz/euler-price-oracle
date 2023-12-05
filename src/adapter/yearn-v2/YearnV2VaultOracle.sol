@@ -16,6 +16,17 @@ contract YearnV2VaultOracle is BaseOracle {
 
     mapping(address yvToken => Config) public configs;
 
+    constructor(address[] memory _initialYvTokens) {
+        uint256 length = _initialYvTokens.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(_initialYvTokens[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
@@ -29,26 +40,13 @@ contract YearnV2VaultOracle is BaseOracle {
         return OracleDescription.YearnV2VaultOracle();
     }
 
-    function _initializeOracle(bytes memory _data) internal override {
-        address[] memory yvTokens = abi.decode(_data, (address[]));
+    function _setConfig(address yvToken) internal {
+        address underlying = IYearnV2Vault(yvToken).token();
+        uint8 yvTokenDecimals = ERC20(yvToken).decimals();
+        uint8 underlyingDecimals = ERC20(underlying).decimals();
 
-        uint256 length = yvTokens.length;
-        for (uint256 i = 0; i < length;) {
-            address yvToken = yvTokens[i];
-            address underlying = IYearnV2Vault(yvToken).token();
-            uint8 yvTokenDecimals = ERC20(yvToken).decimals();
-            uint8 underlyingDecimals = ERC20(underlying).decimals();
-
-            configs[yvToken] = Config({
-                underlying: underlying,
-                yvTokenDecimals: yvTokenDecimals,
-                underlyingDecimals: underlyingDecimals
-            });
-
-            unchecked {
-                ++i;
-            }
-        }
+        configs[yvToken] =
+            Config({underlying: underlying, yvTokenDecimals: yvTokenDecimals, underlyingDecimals: underlyingDecimals});
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {

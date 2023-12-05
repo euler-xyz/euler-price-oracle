@@ -4,19 +4,18 @@ pragma solidity 0.8.23;
 import {GenericFactory} from "./GenericFactory.sol";
 
 contract OracleFactory is GenericFactory {
-    struct OracleConfig {
-        address asset;
-        address riskManager;
-    }
-
     mapping(address oracle => OracleConfig) oracleLookup;
+
+    struct OracleConfig {
+        bool upgradeable;
+    }
 
     constructor(address admin) GenericFactory(admin) {}
 
-    function activate(bool upgradeable, address asset, address riskManager) external nonReentrant returns (address) {
-        address proxy = createProxy(upgradeable, abi.encodePacked(asset, riskManager));
+    function deploy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
+        address proxy = createProxy(upgradeable, trailingData);
 
-        oracleLookup[proxy] = OracleConfig({asset: asset, riskManager: riskManager});
+        oracleLookup[proxy] = OracleConfig({upgradeable: upgradeable});
 
         return proxy;
     }

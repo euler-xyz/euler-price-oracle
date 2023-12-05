@@ -36,9 +36,17 @@ abstract contract ChainlinkOracle is BaseOracle {
         bool inverse;
     }
 
-    constructor(address _feedRegistry, address _weth) {
+    constructor(address _feedRegistry, address _weth, ConfigParams[] memory _initialConfigs) {
         feedRegistry = FeedRegistryInterface(_feedRegistry);
         weth = _weth;
+
+        uint256 length = _initialConfigs.length;
+        for (uint256 i = 0; i < length;) {
+            _setConfig(_initialConfigs[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
@@ -53,18 +61,6 @@ abstract contract ChainlinkOracle is BaseOracle {
     {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
-    }
-
-    function _initializeOracle(bytes memory _data) internal override {
-        ConfigParams[] memory params = abi.decode(_data, (ConfigParams[]));
-
-        uint256 length = params.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(params[i]);
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     function _setConfig(ConfigParams memory config) internal {

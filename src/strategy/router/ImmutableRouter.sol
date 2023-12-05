@@ -82,7 +82,4 @@ contract ImmutableRouter is BaseOracle, ImmutableAddressArray {
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.ImmutableRouter();
     }
-
-    /// @inheritdoc BaseOracle
-    function _initializeOracle(bytes memory _data) internal override {}
 }

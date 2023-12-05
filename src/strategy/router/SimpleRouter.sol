@@ -9,8 +9,27 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @author totomanov
 /// @notice Oracle resolver for base-quote pairs.
 contract SimpleRouter is BaseOracle {
+    struct ConfigParams {
+        address base;
+        address quote;
+        address oracle;
+    }
+
     IEOracle public fallbackOracle;
     mapping(address base => mapping(address quote => IEOracle)) public oracles;
+
+    constructor(ConfigParams[] memory _initialConfigs, address _fallbackOracle) {
+        uint256 length = _initialConfigs.length;
+        for (uint256 i = 0; i < length;) {
+            ConfigParams memory params = _initialConfigs[i];
+            oracles[params.base][params.quote] = IEOracle(params.oracle);
+
+            unchecked {
+                ++i;
+            }
+        }
+        fallbackOracle = IEOracle(_fallbackOracle);
+    }
 
     /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
@@ -40,28 +59,5 @@ contract SimpleRouter is BaseOracle {
     /// @inheritdoc IEOracle
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter();
-    }
-
-    /// @inheritdoc BaseOracle
-    function _initializeOracle(bytes memory _data) internal override {
-        (address[] memory _bases, address[] memory _quotes, address[] memory _oracles, address _fallbackOracle) =
-            abi.decode(_data, (address[], address[], address[], address));
-
-        if (_bases.length != _quotes.length || _quotes.length != _oracles.length) {
-            revert Errors.Arity3Mismatch(_bases.length, _quotes.length, _oracles.length);
-        }
-
-        uint256 length = _bases.length;
-        for (uint256 i = 0; i < length;) {
-            address base = _bases[i];
-            address quote = _quotes[i];
-            address oracle = _oracles[i];
-            oracles[base][quote] = IEOracle(oracle);
-
-            unchecked {
-                ++i;
-            }
-        }
-        fallbackOracle = IEOracle(_fallbackOracle);
     }
 }
