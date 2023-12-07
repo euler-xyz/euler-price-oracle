@@ -40,13 +40,13 @@ contract ChainlinkOracleTest is Test {
     }
 
     function test_GovSetConfig_CallableByGovernor(FuzzableConfig memory c) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
     }
 
     function test_GovSetConfig_Integrity(FuzzableConfig memory c) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
 
@@ -92,7 +92,7 @@ contract ChainlinkOracleTest is Test {
     }
 
     function test_GovUnsetConfig_Integrity(FuzzableConfig memory c) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
@@ -142,7 +142,7 @@ contract ChainlinkOracleTest is Test {
     }
 
     function test_GovUnsetConfig_Integrity_Reverse(FuzzableConfig memory c) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
@@ -192,14 +192,14 @@ contract ChainlinkOracleTest is Test {
     }
 
     function test_GetQuote_RevertsWhen_NoConfig(FuzzableConfig memory c, uint256 inAmount) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
 
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.params.base, c.params.quote));
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
     function test_GetQuote_RevertsWhen_FeedRegistryReverts(FuzzableConfig memory c, uint256 inAmount) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
         c.params.feed = FEED_REGISTRY;
@@ -213,8 +213,8 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
-    function test_GetQuote_RevertsWhen_AggregatorV4Reverts(FuzzableConfig memory c, uint256 inAmount) public {
-        _prepareConfig(c);
+    function test_GetQuote_RevertsWhen_AggregatorV3Reverts(FuzzableConfig memory c, uint256 inAmount) public {
+        _prepareValidConfig(c);
         vm.assume(c.params.feed != FEED_REGISTRY);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
@@ -227,8 +227,100 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
+    function test_GetQuote_RevertsWhen_ZeroPrice(FuzzableConfig memory c, FuzzableRoundData memory d, uint256 inAmount)
+        public
+    {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        d.answer = 0;
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, 0));
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
+    function test_GetQuote_RevertsWhen_NegativePrice(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        int256 chainlinkAnswer
+    ) public {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        chainlinkAnswer = bound(chainlinkAnswer, type(int256).min, -1);
+        d.answer = chainlinkAnswer;
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
+    function test_GetQuote_RevertsWhen_RoundIncomplete(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount
+    ) public {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        d.updatedAt = 0;
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_RoundIncomplete.selector));
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
+    function test_GetQuote_RevertsWhen_RoundIncomplete(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount
+    ) public {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        d.updatedAt = 0;
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_RoundIncomplete.selector));
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
     function test_GetQuote_Integrity_CallFeedRegistry(FuzzableConfig memory c, uint256 inAmount) public {
-        _prepareConfig(c);
+        _prepareValidConfig(c);
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
         c.params.feed = FEED_REGISTRY;
         vm.mockCall(FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals));
@@ -245,7 +337,7 @@ contract ChainlinkOracleTest is Test {
         uint256 res = oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
-    function _prepareConfig(FuzzableConfig memory c) private {
+    function _prepareValidConfig(FuzzableConfig memory c) private {
         c.params.base = boundAddr(c.params.base);
         c.params.quote = boundAddr(c.params.quote);
         c.params.feed = boundAddr(c.params.feed);
@@ -267,5 +359,9 @@ contract ChainlinkOracleTest is Test {
         uint256 startedAt;
         uint256 updatedAt;
         uint80 answeredInRound;
+    }
+
+    function _prepareValidRoundData(FuzzableRoundData memory d) private {
+        d.answer = bound(d.answer, 1, int256(type(int128).max));
     }
 }
