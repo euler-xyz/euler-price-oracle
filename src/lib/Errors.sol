@@ -17,6 +17,7 @@ library Errors {
     error Chainlink_InvalidAnswer(int256 answer);
     error Chainlink_RoundIncomplete();
     error Chainlink_RoundTooLong(uint256 duration, uint256 maxDuration);
+    error Chronicle_InvalidPrice(uint256 price);
     error ConfigDoesNotExist(address base, address quote);
     error ConfigExists(address base, address quote);
     error ConfigExpired(address base, address quote);

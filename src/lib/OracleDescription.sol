@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 /// @notice Stores oracle descriptions for all `IEOracle` implementations.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library OracleDescription {
-    function ConfigurableConstantOracle() internal pure returns (Description memory) {
+    function ConstantOracle() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.SPOT,
             authority: Authority.IMMUTABLE,
@@ -27,19 +27,6 @@ library OracleDescription {
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
             name: "Linear",
-            children: new address[](0)
-        });
-    }
-
-    function ConstantOracle() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Constant",
             children: new address[](0)
         });
     }

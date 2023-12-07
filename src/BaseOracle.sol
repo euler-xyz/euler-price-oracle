@@ -9,10 +9,6 @@ abstract contract BaseOracle is IEOracle, IFactoryInitializable {
     address public governor;
     bool public initialized;
 
-    error AlreadyInitialized();
-    error CallerNotGovernor();
-    error CannotInitializeToZeroAddress();
-
     event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
     function initialize(address _governor) external {

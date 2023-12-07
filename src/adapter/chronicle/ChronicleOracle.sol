@@ -28,14 +28,13 @@ contract ChronicleOracle is BaseOracle {
         maxStaleness = _maxStaleness;
     }
 
-    function govSetConfig(ConfigParams[] memory params) external onlyGovernor {
-        uint256 length = params.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(params[i]);
-            unchecked {
-                ++i;
-            }
-        }
+    function govSetConfig(ConfigParams memory params) external onlyGovernor {
+        _setConfig(params);
+    }
+
+    function govUnsetConfig(address base, address quote) external onlyGovernor {
+        delete configs[base][quote];
+        delete configs[quote][base];
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -56,8 +55,6 @@ contract ChronicleOracle is BaseOracle {
         address quote = params.quote;
         address feed = params.feed;
 
-        if (configs[base][quote].feed != address(0)) revert Errors.ConfigExists(base, quote);
-
         uint8 baseDecimals = ERC20(base).decimals();
         uint8 quoteDecimals = ERC20(quote).decimals();
         configs[base][quote] =
@@ -72,6 +69,7 @@ contract ChronicleOracle is BaseOracle {
         if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
 
         (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
+        if (unitPrice == 0) revert Errors.Chronicle_InvalidPrice(unitPrice);
         if (age > maxStaleness) revert Errors.EOracle_TooStale(age, maxStaleness);
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;

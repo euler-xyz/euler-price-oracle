@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";

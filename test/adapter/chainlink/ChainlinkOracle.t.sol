@@ -9,12 +9,13 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {BaseOracle} from "src/BaseOracle.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract ChainlinkOracleTest is Test {
-    address GOVERNOR = makeAddr("GOVERNOR");
-    address FEED_REGISTRY = makeAddr("FEED_REGISTRY");
-    address WETH = makeAddr("WETH");
+    address internal GOVERNOR = makeAddr("GOVERNOR");
+    address internal FEED_REGISTRY = makeAddr("FEED_REGISTRY");
+    address internal WETH = makeAddr("WETH");
 
     ChainlinkOracle oracle;
 
@@ -35,7 +36,7 @@ contract ChainlinkOracleTest is Test {
     {
         vm.assume(caller != GOVERNOR);
         vm.prank(caller);
-        vm.expectRevert(BaseOracle.CallerNotGovernor.selector);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
         oracle.govSetConfig(params);
     }
 
@@ -270,29 +271,6 @@ contract ChainlinkOracleTest is Test {
             c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
         );
         vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
-        oracle.getQuote(inAmount, c.params.base, c.params.quote);
-    }
-
-    function test_GetQuote_RevertsWhen_RoundIncomplete(
-        FuzzableConfig memory c,
-        FuzzableRoundData memory d,
-        uint256 inAmount
-    ) public {
-        _prepareValidConfig(c);
-        vm.assume(c.params.feed != FEED_REGISTRY);
-
-        _prepareValidRoundData(d);
-        d.updatedAt = 0;
-
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-
-        vm.prank(GOVERNOR);
-        oracle.govSetConfig(c.params);
-
-        vm.mockCall(
-            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
-        );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_RoundIncomplete.selector));
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 

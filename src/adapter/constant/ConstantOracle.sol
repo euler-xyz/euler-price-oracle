@@ -5,7 +5,7 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConfigurableConstantOracle is BaseOracle {
+contract ConstantOracle is BaseOracle {
     struct ConfigParams {
         address base;
         address quote;
@@ -39,7 +39,7 @@ contract ConfigurableConstantOracle is BaseOracle {
     }
 
     function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.ConfigurableConstantOracle();
+        return OracleDescription.ConstantOracle();
     }
 
     function _setConfig(ConfigParams memory params) internal {

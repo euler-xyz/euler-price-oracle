@@ -15,8 +15,8 @@ contract SimpleRouter is BaseOracle {
         address oracle;
     }
 
-    IEOracle public fallbackOracle;
-    mapping(address base => mapping(address quote => IEOracle)) public oracles;
+    address public fallbackOracle;
+    mapping(address base => mapping(address quote => address)) public oracles;
 
     constructor(ConfigParams[] memory _initialConfigs, address _fallbackOracle) {
         uint256 length = _initialConfigs.length;
@@ -27,7 +27,7 @@ contract SimpleRouter is BaseOracle {
                 ++i;
             }
         }
-        fallbackOracle = IEOracle(_fallbackOracle);
+        fallbackOracle = _fallbackOracle;
     }
 
     function govSetConfig(ConfigParams memory params) external onlyGovernor {
@@ -39,17 +39,17 @@ contract SimpleRouter is BaseOracle {
     }
 
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
-        fallbackOracle = IEOracle(_fallbackOracle);
+        fallbackOracle = _fallbackOracle;
     }
 
     /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
     /// or reverts if `fallbackOracle` is not set.
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
-        IEOracle oracle = oracles[base][quote];
-        if (address(oracle) == address(0)) oracle = fallbackOracle;
-        if (address(oracle) == address(0)) revert Errors.EOracle_NotSupported(base, quote);
-        return oracle.getQuote(inAmount, base, quote);
+        address oracle = oracles[base][quote];
+        if (oracle == address(0)) oracle = fallbackOracle;
+        if (oracle == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        return IEOracle(oracle).getQuote(inAmount, base, quote);
     }
 
     /// @inheritdoc IEOracle
@@ -61,10 +61,10 @@ contract SimpleRouter is BaseOracle {
         override
         returns (uint256, uint256)
     {
-        IEOracle oracle = oracles[base][quote];
-        if (address(oracle) == address(0)) oracle = fallbackOracle;
-        if (address(oracle) == address(0)) revert Errors.EOracle_NotSupported(base, quote);
-        return oracle.getQuotes(inAmount, base, quote);
+        address oracle = oracles[base][quote];
+        if (oracle == address(0)) oracle = fallbackOracle;
+        if (oracle == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        return IEOracle(oracle).getQuotes(inAmount, base, quote);
     }
 
     /// @inheritdoc IEOracle
@@ -73,6 +73,6 @@ contract SimpleRouter is BaseOracle {
     }
 
     function _setConfig(ConfigParams memory params) private {
-        oracles[params.base][params.quote] = IEOracle(params.oracle);
+        oracles[params.base][params.quote] = params.oracle;
     }
 }
