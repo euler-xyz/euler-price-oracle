@@ -9,7 +9,7 @@ import {Denominations} from "src/lib/Denominations.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-abstract contract ChainlinkOracle is BaseOracle {
+contract ChainlinkOracle is BaseOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
     uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
