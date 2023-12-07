@@ -14,12 +14,12 @@ contract ChainlinkOracle is BaseOracle {
     uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
     address public immutable weth;
-    mapping(address base => mapping(address quote => ChainlinkConfig)) public configs;
+    mapping(address base => mapping(address quote => Config)) public configs;
 
     event ConfigSet(address indexed base, address indexed quote, address indexed feed);
     event ConfigUnset(address indexed base, address indexed quote);
 
-    struct ChainlinkConfig {
+    struct Config {
         address feed;
         uint32 maxStaleness;
         uint32 maxDuration;
@@ -86,7 +86,7 @@ contract ChainlinkOracle is BaseOracle {
         uint8 quoteDecimals = ERC20(config.quote).decimals();
         uint8 feedDecimals = AggregatorV3Interface(config.feed).decimals();
 
-        configs[config.base][config.quote] = ChainlinkConfig({
+        configs[config.base][config.quote] = Config({
             feed: config.feed,
             maxStaleness: config.maxStaleness,
             maxDuration: config.maxDuration,
@@ -96,7 +96,7 @@ contract ChainlinkOracle is BaseOracle {
             inverse: config.inverse
         });
 
-        configs[config.quote][config.base] = ChainlinkConfig({
+        configs[config.quote][config.base] = Config({
             feed: config.feed,
             maxStaleness: config.maxStaleness,
             maxDuration: config.maxDuration,
@@ -109,34 +109,34 @@ contract ChainlinkOracle is BaseOracle {
         emit ConfigSet(config.quote, config.base, config.feed);
     }
 
-    function _initConfig(address base, address quote) internal returns (ChainlinkConfig memory) {
-        (address asset, address denom, bool inverse) = _getAssetAndDenom(base, quote);
+    function _initConfig(address base, address quote) internal returns (Config memory) {
+        (address asset, address denom) = _getAssetAndDenom(base, quote);
         address feed = address(feedRegistry.getFeed(asset, denom));
 
         uint8 baseDecimals = ERC20(base).decimals();
         uint8 quoteDecimals = ERC20(quote).decimals();
         uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
 
-        ChainlinkConfig memory config = ChainlinkConfig({
+        Config memory config = Config({
             feed: address(feedRegistry),
             maxStaleness: DEFAULT_MAX_STALENESS,
             maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: baseDecimals,
             quoteDecimals: quoteDecimals,
             feedDecimals: feedDecimals,
-            inverse: inverse
+            inverse: false
         });
 
         configs[base][quote] = config;
 
-        ChainlinkConfig memory invConfig = ChainlinkConfig({
+        Config memory invConfig = Config({
             feed: address(feedRegistry),
             maxStaleness: DEFAULT_MAX_STALENESS,
             maxDuration: DEFAULT_MAX_ROUND_DURATION,
             baseDecimals: quoteDecimals,
             quoteDecimals: baseDecimals,
             feedDecimals: feedDecimals,
-            inverse: !inverse
+            inverse: true
         });
 
         configs[quote][base] = invConfig;
@@ -147,10 +147,10 @@ contract ChainlinkOracle is BaseOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        ChainlinkConfig memory config = _getConfig(base, quote);
+        Config memory config = _getConfigOrRevert(base, quote);
         bytes memory data;
         if (config.feed == address(feedRegistry)) {
-            (address asset, address denom,) = _getAssetAndDenom(base, quote);
+            (address asset, address denom) = _getAssetAndDenom(base, quote);
             data = abi.encodeCall(FeedRegistryInterface.latestRoundData, (asset, denom));
         } else {
             data = abi.encodeCall(AggregatorV3Interface.latestRoundData, ());
@@ -171,7 +171,7 @@ contract ChainlinkOracle is BaseOracle {
         }
 
         uint256 staleness = block.timestamp - updatedAt;
-        if (staleness >= config.maxStaleness) {
+        if (staleness > config.maxStaleness) {
             revert Errors.EOracle_TooStale(staleness, config.maxStaleness);
         }
 
@@ -181,16 +181,15 @@ contract ChainlinkOracle is BaseOracle {
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
     }
 
-    function _getConfig(address base, address quote) internal view returns (ChainlinkConfig memory) {
-        ChainlinkConfig memory config = configs[base][quote];
+    function _getConfigOrRevert(address base, address quote) internal view returns (Config memory) {
+        Config memory config = configs[base][quote];
         if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return config;
     }
 
-    function _getAssetAndDenom(address base, address quote) internal view returns (address, address, bool) {
-        if (quote == weth) return (base, Denominations.ETH, false);
-        if (base == weth) return (quote, Denominations.ETH, true);
-
-        revert Errors.EOracle_NotSupported(base, quote);
+    function _getAssetAndDenom(address base, address quote) internal view returns (address, address) {
+        base = base == weth ? Denominations.ETH : base;
+        quote = quote == weth ? Denominations.ETH : quote;
+        return (base, quote);
     }
 }
