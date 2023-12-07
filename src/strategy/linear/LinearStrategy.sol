@@ -23,6 +23,21 @@ contract LinearStrategy is BaseOracle, TryCallOracle {
         }
     }
 
+    function govSetConfig(address[] memory _oracles) external onlyGovernor {
+        uint256 prevLength = oracles.length;
+        uint256 nextLength = _oracles.length;
+
+        for (uint256 i = 0; i < nextLength; ++i) {
+            oracles[i] = _oracles[i];
+        }
+
+        if (nextLength < prevLength) {
+            for (uint256 i = nextLength; i < prevLength; ++i) {
+                delete oracles[i];
+            }
+        }
+    }
+
     /// @inheritdoc IEOracle
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.

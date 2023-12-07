@@ -24,16 +24,18 @@ contract ChronicleOracle is BaseOracle {
     uint256 public immutable maxStaleness;
     mapping(address base => mapping(address quote => Config)) public configs;
 
-    constructor(uint256 _maxStaleness, ConfigParams[] memory _initialConfigs) {
-        uint256 length = _initialConfigs.length;
+    constructor(uint256 _maxStaleness) {
+        maxStaleness = _maxStaleness;
+    }
+
+    function govSetConfig(ConfigParams[] memory params) external onlyGovernor {
+        uint256 length = params.length;
         for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
+            _setConfig(params[i]);
             unchecked {
                 ++i;
             }
         }
-
-        maxStaleness = _maxStaleness;
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -43,6 +45,10 @@ contract ChronicleOracle is BaseOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external view returns (OracleDescription.Description memory) {
+        return OracleDescription.ImmutableChronicleOracle(maxStaleness);
     }
 
     function _setConfig(ConfigParams memory params) internal {
@@ -61,23 +67,14 @@ contract ChronicleOracle is BaseOracle {
             Config({feed: feed, baseDecimals: quoteDecimals, quoteDecimals: baseDecimals, inverse: true});
     }
 
-    function _getConfigOrRevert(address base, address quote) private view returns (Config memory) {
+    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         Config memory config = configs[base][quote];
         if (config.feed == address(0)) revert Errors.EOracle_NotSupported(base, quote);
-        return config;
-    }
-
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        Config memory config = _getConfigOrRevert(base, quote);
 
         (uint256 unitPrice, uint256 age) = IChronicle(config.feed).readWithAge();
         if (age > maxStaleness) revert Errors.EOracle_TooStale(age, maxStaleness);
 
         if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
         else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
-    }
-
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.ImmutableChronicleOracle(maxStaleness);
     }
 }

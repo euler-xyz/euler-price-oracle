@@ -126,7 +126,7 @@ library OracleDescription {
         });
     }
 
-    function ImmutablePythOracle(uint256 maxStaleness) internal pure returns (Description memory) {
+    function PythOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.SPOT,
             authority: Authority.IMMUTABLE,
@@ -139,7 +139,7 @@ library OracleDescription {
         });
     }
 
-    function ImmutablePythEMAOracle(uint256 maxStaleness) internal pure returns (Description memory) {
+    function PythEMAOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.EMA,
             authority: Authority.IMMUTABLE,

@@ -38,7 +38,7 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
     ) UsingTellor(_tellorAddress) {
         uint256 length = _initialConfigs.length;
         for (uint256 i = 0; i < length;) {
-            _initConfig(_initialConfigs[i]);
+            _setConfig(_initialConfigs[i]);
             unchecked {
                 ++i;
             }
@@ -46,6 +46,15 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
 
         minStaleness = _minStaleness;
         maxStaleness = _maxStaleness;
+    }
+
+    function govSetConfig(ConfigParams memory config) external onlyGovernor {
+        _setConfig(config);
+    }
+
+    function govUnsetConfig(address base, address quote) external onlyGovernor {
+        delete configs[base][quote];
+        delete configs[quote][base];
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
@@ -61,7 +70,7 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         return OracleDescription.TellorSpotOracle(maxStaleness);
     }
 
-    function _initConfig(ConfigParams memory config) internal {
+    function _setConfig(ConfigParams memory config) internal {
         uint8 baseDecimals = ERC20(config.base).decimals();
         uint8 quoteDecimals = ERC20(config.quote).decimals();
 

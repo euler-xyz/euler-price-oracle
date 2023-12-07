@@ -41,6 +41,14 @@ contract CurveLPOracle is BaseOracle {
         }
     }
 
+    function govSetConfig(address lpToken) external onlyGovernor {
+        _setConfig(lpToken);
+    }
+
+    function govUnsetConfig(address lpToken) external onlyGovernor {
+        delete configs[lpToken];
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }

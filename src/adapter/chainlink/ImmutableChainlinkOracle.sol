@@ -23,7 +23,7 @@ contract ImmutableChainlinkOracle is ChainlinkOracle {
         _initConfig(base, quote);
     }
 
-    function description() external pure returns (OracleDescription.Description memory) {
+    function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.ImmutableChainlinkOracle(uint256(DEFAULT_MAX_STALENESS));
     }
 }

@@ -21,13 +21,24 @@ contract SimpleRouter is BaseOracle {
     constructor(ConfigParams[] memory _initialConfigs, address _fallbackOracle) {
         uint256 length = _initialConfigs.length;
         for (uint256 i = 0; i < length;) {
-            ConfigParams memory params = _initialConfigs[i];
-            oracles[params.base][params.quote] = IEOracle(params.oracle);
+            _setConfig(_initialConfigs[i]);
 
             unchecked {
                 ++i;
             }
         }
+        fallbackOracle = IEOracle(_fallbackOracle);
+    }
+
+    function govSetConfig(ConfigParams memory params) external onlyGovernor {
+        _setConfig(params);
+    }
+
+    function govUnsetConfig(address base, address quote) external onlyGovernor {
+        delete oracles[base][quote];
+    }
+
+    function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
         fallbackOracle = IEOracle(_fallbackOracle);
     }
 
@@ -59,5 +70,9 @@ contract SimpleRouter is BaseOracle {
     /// @inheritdoc IEOracle
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter();
+    }
+
+    function _setConfig(ConfigParams memory params) private {
+        oracles[params.base][params.quote] = IEOracle(params.oracle);
     }
 }

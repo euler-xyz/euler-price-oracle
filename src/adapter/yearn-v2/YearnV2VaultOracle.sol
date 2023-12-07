@@ -27,6 +27,14 @@ contract YearnV2VaultOracle is BaseOracle {
         }
     }
 
+    function govSetConfig(address yvToken) external onlyGovernor {
+        _setConfig(yvToken);
+    }
+
+    function govUnsetConfig(address yvToken) external onlyGovernor {
+        delete configs[yvToken];
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }

@@ -20,6 +20,14 @@ contract CTokenV2Oracle is BaseOracle {
         }
     }
 
+    function govSetConfig(address cToken) external onlyGovernor {
+        cTokens[cToken] = ICTokenV2(cToken).underlying();
+    }
+
+    function govUnsetConfig(address cToken) external onlyGovernor {
+        delete cTokens[cToken];
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }

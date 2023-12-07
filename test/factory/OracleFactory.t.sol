@@ -35,13 +35,11 @@ contract GenericFactoryTest is Test {
         ConstantOracle2 deploymentUpgradeable = ConstantOracle2(factory.deploy(true, trailingData));
         assertEq(deploymentUpgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentUpgradeable.immutableValue(), 777);
-        assertEq(deploymentUpgradeable.initializedValue(), 2817);
         assertEq(deploymentUpgradeable.hey(), 1);
 
         ConstantOracle2 deploymentNonupgradeable = ConstantOracle2(factory.deploy(false, trailingData));
         assertEq(deploymentNonupgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentNonupgradeable.immutableValue(), 777);
-        assertEq(deploymentNonupgradeable.initializedValue(), 2817);
         assertEq(deploymentNonupgradeable.hey(), 1);
 
         ConstantOracle2Upgraded oracleImplUpgraded = new ConstantOracle2Upgraded(778);
@@ -50,12 +48,10 @@ contract GenericFactoryTest is Test {
 
         assertEq(deploymentUpgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentUpgradeable.immutableValue(), 778);
-        assertEq(deploymentUpgradeable.initializedValue(), 2817);
         assertEq(deploymentUpgradeable.hey(), 2);
 
         assertEq(deploymentNonupgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentNonupgradeable.immutableValue(), 777);
-        assertEq(deploymentNonupgradeable.initializedValue(), 2817);
         assertEq(deploymentNonupgradeable.hey(), 1);
     }
 

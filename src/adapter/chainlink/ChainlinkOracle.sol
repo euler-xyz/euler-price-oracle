@@ -7,6 +7,7 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseOracle} from "src/BaseOracle.sol";
 import {Denominations} from "src/lib/Denominations.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 abstract contract ChainlinkOracle is BaseOracle {
     uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
@@ -16,6 +17,7 @@ abstract contract ChainlinkOracle is BaseOracle {
     mapping(address base => mapping(address quote => ChainlinkConfig)) public configs;
 
     event ConfigSet(address indexed base, address indexed quote, address indexed feed);
+    event ConfigUnset(address indexed base, address indexed quote);
 
     struct ChainlinkConfig {
         address feed;
@@ -49,6 +51,18 @@ abstract contract ChainlinkOracle is BaseOracle {
         }
     }
 
+    function govSetConfig(ChainlinkOracle.ConfigParams memory params) external onlyGovernor {
+        _setConfig(params);
+    }
+
+    function govUnsetConfig(address base, address quote) external onlyGovernor {
+        delete configs[base][quote];
+        delete configs[quote][base];
+
+        emit ConfigUnset(base, quote);
+        emit ConfigUnset(quote, base);
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
@@ -61,6 +75,10 @@ abstract contract ChainlinkOracle is BaseOracle {
     {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external view virtual returns (OracleDescription.Description memory) {
+        return OracleDescription.GovernedChainlinkOracle(uint256(DEFAULT_MAX_STALENESS), governor);
     }
 
     function _setConfig(ConfigParams memory config) internal {

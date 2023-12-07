@@ -25,6 +25,10 @@ contract ConfigurableConstantOracle is BaseOracle {
         }
     }
 
+    function govSetConfig(ConfigParams memory params) external onlyGovernor {
+        _setConfig(params);
+    }
+
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
