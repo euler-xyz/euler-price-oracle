@@ -2,22 +2,11 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ConstantOracle2, ConstantOracle2Upgraded} from "test/factory/ConstantOracle2.sol";
-import {ParentOracle, ParentOracle2, ChildOracle} from "test/factory/NestedOracle.sol";
+import {ConstantOracle2, ConstantOracle2Upgraded} from "test/unit/factory/ConstantOracle2.sol";
+import {ParentOracle, ParentOracle2, ChildOracle} from "test/unit/factory/NestedOracle.sol";
 import {OracleFactory} from "src/factory/OracleFactory.sol";
 
-/// @dev Data locations
-/// - creation-time immutables and logic is not handled by the factory per se,
-/// rather they can be changed when deploying an upgraded implementation: needs `upgradeable=true`
-/// Store data that is unlikely to change e.g. weth address, univ3 factory.
-/// Cheaper runtime gas than `trailingData` since it is stored in contract code and also handled by optimizer.
-/// - `trailingData` - this is the "immutable" metadata passed by concatenating it to calldata
-/// Store data that is unlikely to change e.g. weth address, univ3 factory.
-/// Slightly more expensive runtime than
-/// - `initData` - bytes passed to `initialize`
-/// Store data that is unlikely to change e.g. weth address, univ3 factory.
-/// Slightly more expensive runtime than
-contract GenericFactoryTest is Test {
+contract OracleFactoryTest is Test {
     function test_deployAndUpgrade() public {
         address admin = address(0x10000);
         address base = address(0x10001);
