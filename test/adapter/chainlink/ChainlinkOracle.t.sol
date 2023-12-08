@@ -27,7 +27,7 @@ contract ChainlinkOracleTest is Test {
     }
 
     function setUp() public {
-        oracle = new ChainlinkOracle(FEED_REGISTRY, WETH, new ChainlinkOracle.ConfigParams[](0));
+        oracle = new ChainlinkOracle(FEED_REGISTRY, WETH);
         oracle.initialize(GOVERNOR);
     }
 
@@ -339,7 +339,7 @@ contract ChainlinkOracleTest is Test {
         uint80 answeredInRound;
     }
 
-    function _prepareValidRoundData(FuzzableRoundData memory d) private {
+    function _prepareValidRoundData(FuzzableRoundData memory d) private view {
         d.answer = bound(d.answer, 1, int256(type(int128).max));
     }
 }

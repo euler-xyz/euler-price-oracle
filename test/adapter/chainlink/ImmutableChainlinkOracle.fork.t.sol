@@ -12,7 +12,7 @@ contract ImmutableChainlinkOracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        oracle = new ImmutableChainlinkOracle(FEED_REGISTRY, WETH, true, new ChainlinkOracle.ConfigParams[](0));
+        oracle = new ImmutableChainlinkOracle(FEED_REGISTRY, WETH, true);
     }
 
     function test_GetQuote_SameDecimals() public {

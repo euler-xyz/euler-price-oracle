@@ -13,11 +13,10 @@ contract PythOracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        BasePythOracle.ConfigParams[] memory initialConfigs = new BasePythOracle.ConfigParams[](2);
-        initialConfigs[0] = BasePythOracle.ConfigParams(PYTH_USDC_USD_FEED, USDC);
-        initialConfigs[1] = BasePythOracle.ConfigParams(PYTH_ETH_USD_FEED, WETH);
-
-        oracle = new PythOracle(PYTH, 10000 days, initialConfigs);
+        oracle = new PythOracle(PYTH, 10000 days);
+        oracle.initialize(address(this));
+        oracle.govSetConfig(BasePythOracle.ConfigParams(PYTH_USDC_USD_FEED, USDC));
+        oracle.govSetConfig(BasePythOracle.ConfigParams(PYTH_ETH_USD_FEED, WETH));
     }
 
     function test_GetQuote() public {

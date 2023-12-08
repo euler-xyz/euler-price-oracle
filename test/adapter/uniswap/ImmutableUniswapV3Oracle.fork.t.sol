@@ -13,7 +13,7 @@ contract ImmutableUniswapV3OracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        oracle = new ImmutableUniswapV3Oracle(UNISWAP_V3_FACTORY, new UniswapV3Oracle.ConfigParams[](0));
+        oracle = new ImmutableUniswapV3Oracle(UNISWAP_V3_FACTORY);
     }
 
     function test_UpdateConfig() public {

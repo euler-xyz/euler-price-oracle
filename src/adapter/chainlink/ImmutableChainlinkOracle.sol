@@ -9,12 +9,7 @@ contract ImmutableChainlinkOracle is ChainlinkOracle {
 
     error NotSupported();
 
-    constructor(
-        address _feedRegistry,
-        address _weth,
-        bool _canIngestNewFeeds,
-        ChainlinkOracle.ConfigParams[] memory _initialConfigs
-    ) ChainlinkOracle(_feedRegistry, _weth, _initialConfigs) {
+    constructor(address _feedRegistry, address _weth, bool _canIngestNewFeeds) ChainlinkOracle(_feedRegistry, _weth) {
         canIngestNewFeeds = _canIngestNewFeeds;
     }
 

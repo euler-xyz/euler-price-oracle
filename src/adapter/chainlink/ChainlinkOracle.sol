@@ -38,17 +38,9 @@ contract ChainlinkOracle is BaseOracle {
         bool inverse;
     }
 
-    constructor(address _feedRegistry, address _weth, ConfigParams[] memory _initialConfigs) {
+    constructor(address _feedRegistry, address _weth) {
         feedRegistry = FeedRegistryInterface(_feedRegistry);
         weth = _weth;
-
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     function govSetConfig(ChainlinkOracle.ConfigParams memory params) external onlyGovernor {

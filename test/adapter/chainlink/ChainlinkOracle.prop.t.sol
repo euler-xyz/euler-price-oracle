@@ -10,6 +10,6 @@ contract ChainlinkOracle_PropTest is EOraclePropTest {
     address WETH = makeAddr("WETH");
 
     function _deployOracle() internal override returns (address) {
-        return address(new ChainlinkOracle(FEED_REGISTRY, WETH, new ChainlinkOracle.ConfigParams[](0)));
+        return address(new ChainlinkOracle(FEED_REGISTRY, WETH));
     }
 }

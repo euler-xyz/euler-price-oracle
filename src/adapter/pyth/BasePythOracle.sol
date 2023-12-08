@@ -22,17 +22,9 @@ abstract contract BasePythOracle is BaseOracle {
     uint256 public maxStaleness;
     mapping(address token => Config) public configs;
 
-    constructor(address _pyth, uint256 _maxStaleness, ConfigParams[] memory _initialConfigs) {
+    constructor(address _pyth, uint256 _maxStaleness) {
         pyth = IPyth(_pyth);
         maxStaleness = _maxStaleness;
-
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     function govSetConfig(ConfigParams memory params) external onlyGovernor {

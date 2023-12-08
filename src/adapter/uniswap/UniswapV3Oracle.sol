@@ -24,15 +24,8 @@ abstract contract UniswapV3Oracle is BaseOracle {
 
     event ConfigSet(address indexed token0, address indexed token1, address indexed pool, uint24 twapWindow);
 
-    constructor(address _uniswapV3Factory, ConfigParams[] memory _initialConfigs) {
+    constructor(address _uniswapV3Factory) {
         uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {

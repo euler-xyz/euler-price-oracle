@@ -15,16 +15,6 @@ contract ConstantOracle is BaseOracle {
     uint256 public constant PRECISION = 10 ** 27;
     mapping(address base => mapping(address quote => uint256 rate)) public configs;
 
-    constructor(ConfigParams[] memory _initialConfigs) {
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function govSetConfig(ConfigParams memory params) external onlyGovernor {
         _setConfig(params);
     }

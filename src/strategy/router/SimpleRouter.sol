@@ -18,15 +18,7 @@ contract SimpleRouter is BaseOracle {
     address public fallbackOracle;
     mapping(address base => mapping(address quote => address)) public oracles;
 
-    constructor(ConfigParams[] memory _initialConfigs, address _fallbackOracle) {
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-
-            unchecked {
-                ++i;
-            }
-        }
+    constructor(address _fallbackOracle) {
         fallbackOracle = _fallbackOracle;
     }
 

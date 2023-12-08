@@ -14,7 +14,7 @@ contract UniswapV3OracleTest is Test {
     UniswapV3OracleHarness oracle;
 
     function setUp() public {
-        oracle = new UniswapV3OracleHarness(UNISWAP_V3_FACTORY, new UniswapV3Oracle.ConfigParams[](0));
+        oracle = new UniswapV3OracleHarness(UNISWAP_V3_FACTORY);
     }
 
     function test_GetConfig_InitallyEmpty(address base, address quote) public {

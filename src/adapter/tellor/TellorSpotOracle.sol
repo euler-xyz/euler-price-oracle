@@ -30,20 +30,9 @@ contract TellorSpotOracle is BaseOracle, UsingTellor {
         string denom;
     }
 
-    constructor(
-        address payable _tellorAddress,
-        uint256 _minStaleness,
-        uint256 _maxStaleness,
-        ConfigParams[] memory _initialConfigs
-    ) UsingTellor(_tellorAddress) {
-        uint256 length = _initialConfigs.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialConfigs[i]);
-            unchecked {
-                ++i;
-            }
-        }
-
+    constructor(address payable _tellorAddress, uint256 _minStaleness, uint256 _maxStaleness)
+        UsingTellor(_tellorAddress)
+    {
         minStaleness = _minStaleness;
         maxStaleness = _maxStaleness;
     }

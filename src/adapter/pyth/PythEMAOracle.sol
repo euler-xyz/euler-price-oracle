@@ -8,9 +8,7 @@ import {BasePythOracle} from "src/adapter/pyth/BasePythOracle.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract PythEMAOracle is BasePythOracle {
-    constructor(address _pyth, uint256 _maxStaleness, ConfigParams[] memory _initialConfigs)
-        BasePythOracle(_pyth, _maxStaleness, _initialConfigs)
-    {}
+    constructor(address _pyth, uint256 _maxStaleness) BasePythOracle(_pyth, _maxStaleness) {}
 
     function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
         PythStructs.Price memory baseStruct = _fetchEMAPriceStruct(base);
