@@ -16,17 +16,6 @@ contract YearnV2VaultOracle is BaseOracle {
 
     mapping(address yvToken => Config) public configs;
 
-    constructor(address[] memory _initialYvTokens) {
-        uint256 length = _initialYvTokens.length;
-        for (uint256 i = 0; i < length;) {
-            _setConfig(_initialYvTokens[i]);
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function govSetConfig(address yvToken) external onlyGovernor {
         _setConfig(yvToken);
     }

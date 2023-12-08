@@ -9,17 +9,6 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract CTokenV2Oracle is BaseOracle {
     mapping(address cToken => address underlying) public cTokens;
 
-    constructor(address[] memory _cTokens) {
-        uint256 length = _cTokens.length;
-        for (uint256 i = 0; i < length;) {
-            address cToken = _cTokens[i];
-            cTokens[cToken] = ICTokenV2(cToken).underlying();
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function govSetConfig(address cToken) external onlyGovernor {
         cTokens[cToken] = ICTokenV2(cToken).underlying();
     }
