@@ -6,9 +6,8 @@ import {ConstantOracle} from "src/adapter/constant/ConstantOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 
 contract ConstantOracleEchidnaTest {
-    address internal constant GOVERNOR = address(0x10000);
+    address internal constant GOVERNOR = address(0xb055);
     ConstantOracle internal oracle;
-    uint256 internal zooz;
 
     struct Cache {
         bool success;
@@ -17,22 +16,9 @@ contract ConstantOracleEchidnaTest {
 
     mapping(bytes4 => Cache) internal cache;
 
-    struct QuoteArgs {
-        uint256 inAmount;
-        address base;
-        address quote;
-        uint256 delta;
-    }
-
-    QuoteArgs internal quoteArgs;
-
     constructor() {
         oracle = new ConstantOracle();
         oracle.initialize(GOVERNOR);
-    }
-
-    function setRandomArgs(uint256 inAmount, address base, address quote, uint256 delta) external {
-        quoteArgs = QuoteArgs(inAmount, base, quote, delta);
     }
 
     function govSetConfig(ConstantOracle.ConfigParams memory params) external {

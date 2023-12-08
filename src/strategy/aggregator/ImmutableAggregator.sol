@@ -11,7 +11,7 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 /// @author totomanov
 /// @notice Reduce an array of quotes by applying a statistical function.
-abstract contract Aggregator is BaseOracle, TryCallOracle, ImmutableAddressArray {
+abstract contract ImmutableAggregator is BaseOracle, TryCallOracle, ImmutableAddressArray {
     uint256 public immutable quorum;
 
     /// @param _oracles The list of oracles to call simultaneously.

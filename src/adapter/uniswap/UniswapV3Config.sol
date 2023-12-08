@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
-
 type UniswapV3Config is uint256;
 
 using UniswapV3ConfigLib for UniswapV3Config global;
@@ -15,7 +13,6 @@ library UniswapV3ConfigLib {
     uint256 internal constant TOKEN0_DECIMALS_MASK = 0x00FF000000000000000000000000000000000000000000000000000000000000;
     uint256 internal constant TOKEN1_DECIMALS_MASK = 0xFF00000000000000000000000000000000000000000000000000000000000000;
 
-    uint256 internal constant POOL_OFFSET = 0;
     uint256 internal constant VALID_UNTIL_OFFSET = 160;
     uint256 internal constant TWAP_WINDOW_OFFSET = 192;
     uint256 internal constant FEE_OFFSET = 216;
@@ -70,16 +67,5 @@ library UniswapV3ConfigLib {
 
     function getToken1Decimals(UniswapV3Config config) internal pure returns (uint8) {
         return uint8((UniswapV3Config.unwrap(config) & TOKEN1_DECIMALS_MASK) >> TOKEN1_DECIMALS_OFFSET);
-    }
-
-    /// @dev todo: remove this
-    function __debug_print(UniswapV3Config config) internal pure {
-        console2.logBytes32(bytes32(UniswapV3Config.unwrap(config)));
-        console2.log("pool: %s", config.getPool());
-        console2.log("validUntil: %s", config.getValidUntil());
-        console2.log("twapWindow: %s", config.getTwapWindow());
-        console2.log("fee: %s", config.getFee());
-        console2.log("token0Decimals: %s", config.getToken0Decimals());
-        console2.log("token1Decimals: %s", config.getToken1Decimals());
     }
 }
