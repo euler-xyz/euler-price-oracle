@@ -32,7 +32,6 @@ contract UniswapV3ConfigTest is Test {
     function test_Token1Decimals() public {
         UniswapV3Config config = UniswapV3ConfigLib.from(address(0), 0, 0, 0, 0, 18);
 
-        config.__debug_print();
         assertEq(config.getToken1Decimals(), 18);
     }
 }
