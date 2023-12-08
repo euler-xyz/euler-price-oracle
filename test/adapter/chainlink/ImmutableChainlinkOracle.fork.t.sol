@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {FEED_REGISTRY, LDO, USDT, WETH} from "test/utils/EthereumAddresses.sol";
+import {CHAINLINK_FEED_REGISTRY, LDO, USDT, WETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {ImmutableChainlinkOracle} from "src/adapter/chainlink/ImmutableChainlinkOracle.sol";
@@ -12,7 +12,7 @@ contract ImmutableChainlinkOracleForkTest is ForkTest {
     function setUp() public {
         _setUpFork();
 
-        oracle = new ImmutableChainlinkOracle(FEED_REGISTRY, WETH, true);
+        oracle = new ImmutableChainlinkOracle(CHAINLINK_FEED_REGISTRY, WETH, true);
     }
 
     function test_GetQuote_SameDecimals() public {

@@ -14,7 +14,7 @@ import {Errors} from "src/lib/Errors.sol";
 
 contract ChainlinkOracleTest is Test {
     address internal GOVERNOR = makeAddr("GOVERNOR");
-    address internal FEED_REGISTRY = makeAddr("FEED_REGISTRY");
+    address internal CHAINLINK_FEED_REGISTRY = makeAddr("CHAINLINK_FEED_REGISTRY");
     address internal WETH = makeAddr("WETH");
 
     ChainlinkOracle oracle;
@@ -27,7 +27,7 @@ contract ChainlinkOracleTest is Test {
     }
 
     function setUp() public {
-        oracle = new ChainlinkOracle(FEED_REGISTRY, WETH);
+        oracle = new ChainlinkOracle(CHAINLINK_FEED_REGISTRY, WETH);
         oracle.initialize(GOVERNOR);
     }
 
@@ -203,20 +203,24 @@ contract ChainlinkOracleTest is Test {
         _prepareValidConfig(c);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-        c.params.feed = FEED_REGISTRY;
-        vm.mockCall(FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals));
+        c.params.feed = CHAINLINK_FEED_REGISTRY;
+        vm.mockCall(
+            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
+        );
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
 
-        vm.mockCallRevert(FEED_REGISTRY, abi.encodeWithSelector(FeedRegistryInterface.latestRoundData.selector), "oops");
+        vm.mockCallRevert(
+            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(FeedRegistryInterface.latestRoundData.selector), "oops"
+        );
         vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_CallReverted.selector, "oops"));
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
     function test_GetQuote_RevertsWhen_AggregatorV3Reverts(FuzzableConfig memory c, uint256 inAmount) public {
         _prepareValidConfig(c);
-        vm.assume(c.params.feed != FEED_REGISTRY);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
 
@@ -232,7 +236,7 @@ contract ChainlinkOracleTest is Test {
         public
     {
         _prepareValidConfig(c);
-        vm.assume(c.params.feed != FEED_REGISTRY);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
 
         _prepareValidRoundData(d);
         d.answer = 0;
@@ -256,7 +260,7 @@ contract ChainlinkOracleTest is Test {
         int256 chainlinkAnswer
     ) public {
         _prepareValidConfig(c);
-        vm.assume(c.params.feed != FEED_REGISTRY);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
 
         _prepareValidRoundData(d);
         chainlinkAnswer = bound(chainlinkAnswer, type(int256).min, -1);
@@ -280,7 +284,7 @@ contract ChainlinkOracleTest is Test {
         uint256 inAmount
     ) public {
         _prepareValidConfig(c);
-        vm.assume(c.params.feed != FEED_REGISTRY);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
 
         _prepareValidRoundData(d);
         d.updatedAt = 0;
@@ -300,15 +304,17 @@ contract ChainlinkOracleTest is Test {
     function test_GetQuote_Integrity_CallFeedRegistry(FuzzableConfig memory c, uint256 inAmount) public {
         _prepareValidConfig(c);
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-        c.params.feed = FEED_REGISTRY;
-        vm.mockCall(FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals));
+        c.params.feed = CHAINLINK_FEED_REGISTRY;
+        vm.mockCall(
+            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
+        );
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
 
         vm.warp(8);
         vm.mockCall(
-            FEED_REGISTRY,
+            CHAINLINK_FEED_REGISTRY,
             abi.encodeWithSelector(FeedRegistryInterface.latestRoundData.selector, c.params.base, c.params.quote),
             abi.encode(uint80(0), int256(1), uint256(8), uint256(8), uint80(0))
         );

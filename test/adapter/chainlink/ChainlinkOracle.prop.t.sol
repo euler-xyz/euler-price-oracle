@@ -6,10 +6,10 @@ import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
 contract ChainlinkOracle_PropTest is EOraclePropTest {
     address GOVERNOR = makeAddr("GOVERNOR");
-    address FEED_REGISTRY = makeAddr("FEED_REGISTRY");
+    address CHAINLINK_FEED_REGISTRY = makeAddr("CHAINLINK_FEED_REGISTRY");
     address WETH = makeAddr("WETH");
 
     function _deployOracle() internal override returns (address) {
-        return address(new ChainlinkOracle(FEED_REGISTRY, WETH));
+        return address(new ChainlinkOracle(CHAINLINK_FEED_REGISTRY, WETH));
     }
 }
