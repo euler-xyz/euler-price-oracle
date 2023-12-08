@@ -36,9 +36,12 @@ contract ConstantOracle is BaseOracle {
         configs[params.base][params.quote] = params.rate;
     }
 
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
         uint256 rate = configs[base][quote];
         if (rate == 0) revert Errors.EOracle_NotSupported(base, quote);
-        return inAmount * rate / PRECISION;
+        uint256 outAmount = inAmount * rate / PRECISION;
+        if (outAmount == 0) revert Errors.EOracle_NoAnswer();
+
+        return outAmount;
     }
 }

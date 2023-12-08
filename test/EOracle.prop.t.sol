@@ -7,6 +7,13 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 
 contract EOracleHandler is Test {
+    struct ReturnItem {
+        bool hasReturned;
+        bytes value;
+    }
+
+    mapping(bytes4 => ReturnItem) public returnCache;
+
     address public oracle;
     address internal agent;
     address internal overriddenAgent;
@@ -47,8 +54,32 @@ contract EOracleHandler is Test {
         return BaseOracle(oracle).governed();
     }
 
+    function getQuote(uint256 agentSeed, uint256 inAmount, address base, address quote)
+        external
+        useAgent(agentSeed)
+        returns (uint256)
+    {
+        uint256 outAmount = IEOracle(oracle).getQuote(inAmount, base, quote);
+        _cacheReturn(abi.encode(outAmount));
+        return outAmount;
+    }
+
+    function getQuotes(uint256 agentSeed, uint256 inAmount, address base, address quote)
+        external
+        useAgent(agentSeed)
+        returns (uint256, uint256)
+    {
+        (uint256 bid, uint256 ask) = IEOracle(oracle).getQuotes(inAmount, base, quote);
+        _cacheReturn(abi.encode(bid, ask));
+        return (bid, ask);
+    }
+
     function setNextAgent(address nextAgent) external {
         overriddenAgent = nextAgent;
+    }
+
+    function _cacheReturn(bytes memory data) internal {
+        returnCache[msg.sig] = ReturnItem(true, data);
     }
 
     function _agents() internal view returns (address[] memory) {
@@ -84,6 +115,8 @@ abstract contract EOraclePropTest is Test {
     function setUp() public {
         handler = new EOracleHandler(_deployOracle());
         oracle = handler.oracle();
+
+        targetContract(address(handler));
     }
 
     function invariantProp_Initialize_Integrity() public {
@@ -113,6 +146,25 @@ abstract contract EOraclePropTest is Test {
         BaseOracle(oracle).transferGovernance(newGovernor);
 
         assertEq(BaseOracle(oracle).governor(), newGovernor);
+    }
+
+    function invariantProp_GetQuote_NeverReturnsZero() public {
+        (bool hasReturned, bytes memory value) = handler.returnCache(IEOracle.getQuote.selector);
+
+        if (hasReturned) {
+            uint256 outAmount = abi.decode(value, (uint256));
+            assertEq(outAmount, 0);
+        }
+    }
+
+    function invariantProp_GetQuotes_NeverReturnsZero() public {
+        (bool hasReturned, bytes memory value) = handler.returnCache(IEOracle.getQuotes.selector);
+
+        if (hasReturned) {
+            (uint256 bid, uint256 ask) = abi.decode(value, (uint256, uint256));
+            assertGt(bid, 0);
+            assertGt(ask, 0);
+        }
     }
 
     function _deployOracle() internal virtual returns (address);

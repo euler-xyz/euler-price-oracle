@@ -9,5 +9,12 @@ no_match_contract = "Fork" # fork tests skipped for easy dev
 
 [fuzz]
 runs = 1_000
+max_test_rejects = 100_000
+
+[invariant]
+runs = 2_000
+depth = 10
+dictionary_weight = 80
+fail_on_revert = false
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

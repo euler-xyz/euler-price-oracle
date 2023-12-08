@@ -107,10 +107,12 @@ contract TryCallOracleTest is Test {
         uint256 inAmount,
         address base,
         address quote,
-        bytes memory returnData
+        uint256 bid,
+        uint256 ask
     ) public {
         oracle = boundAddr(oracle);
-        vm.assume(returnData.length == 64);
+
+        bytes memory returnData = abi.encode(bid, ask);
         vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), returnData);
         (bool success, uint256 bidOutAmount, uint256 askOutAmount) =
             harness.tryGetQuotes(IEOracle(oracle), inAmount, base, quote);
