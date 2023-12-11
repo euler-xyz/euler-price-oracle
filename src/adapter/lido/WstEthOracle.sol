@@ -29,16 +29,18 @@ contract WstEthOracle is BaseOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        uint256 rate;
         if (base == stEth && quote == wstEth) {
-            uint256 rate = IWstEth(wstEth).tokensPerStEth();
-            return inAmount * rate / 1e18;
+            rate = IWstEth(wstEth).tokensPerStEth();
+        } else if (base == wstEth && quote == stEth) {
+            rate = IWstEth(wstEth).stEthPerToken();
+        } else {
+            revert Errors.EOracle_NotSupported(base, quote);
         }
 
-        if (base == wstEth && quote == stEth) {
-            uint256 rate = IWstEth(wstEth).stEthPerToken();
-            return inAmount * rate / 1e18;
-        }
+        uint256 outAmount = inAmount * rate / 1e18;
+        if (outAmount == 0) revert Errors.EOracle_NoAnswer();
 
-        revert Errors.EOracle_NotSupported(base, quote);
+        return outAmount;
     }
 }

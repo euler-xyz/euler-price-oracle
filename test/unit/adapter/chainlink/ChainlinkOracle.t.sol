@@ -6,9 +6,7 @@ import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface
 import {FeedRegistryInterface} from "@chainlink/interfaces/FeedRegistryInterface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
-import {BaseOracle} from "src/BaseOracle.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
 
