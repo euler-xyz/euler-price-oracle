@@ -5,7 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {GovernedUniswapV3Oracle} from "src/adapter/uniswap/GovernedUniswapV3Oracle.sol";
 import {OracleFactory} from "src/factory/OracleFactory.sol";
-import {ImmutableLinearStrategy} from "src/strategy/linear/ImmutableLinearStrategy.sol";
+import {LinearStrategy} from "src/strategy/linear/LinearStrategy.sol";
 import {
     CHAINLINK_FEED_REGISTRY,
     CHAINLINK_USDC_ETH_FEED,
@@ -33,11 +33,9 @@ contract DeployScript is Script {
 
         // Deploy Linear strategy (try chainlink, fall back to univ3)
         OracleFactory linearFactory = new OracleFactory(address(this));
-        ImmutableLinearStrategy linearImpl = new ImmutableLinearStrategy();
+        LinearStrategy linearImpl = new LinearStrategy();
         linearFactory.setImplementation(address(linearImpl));
-        ImmutableLinearStrategy linearStrategy = ImmutableLinearStrategy(
-            linearFactory.deploy(true, abi.encodePacked(address(chainlinkOracle), address(univ3Oracle)))
-        );
+        LinearStrategy linearStrategy = LinearStrategy(linearFactory.deploy(true, ""));
 
         chainlinkOracle.govSetConfig(
             ChainlinkOracle.ConfigParams({

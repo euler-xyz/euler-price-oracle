@@ -12,21 +12,11 @@ import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 contract LinearStrategy is BaseOracle, TryCallOracle {
     address[] public oracles;
 
-    constructor(address[] memory _oracles) {
-        uint256 length = _oracles.length;
-        oracles = new address[](length);
-        for (uint256 i = 0; i < length;) {
-            oracles[i] = _oracles[i];
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function govSetConfig(address[] memory _oracles) external onlyGovernor {
         uint256 prevLength = oracles.length;
         uint256 nextLength = _oracles.length;
 
+        oracles = new address[](nextLength);
         for (uint256 i = 0; i < nextLength; ++i) {
             oracles[i] = _oracles[i];
         }

@@ -30,7 +30,7 @@ contract ConstantOracle2 is BaseOracle {
     }
 
     function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.ConstantOracle();
+        return OracleDescription.WstEthOracle();
     }
 
     function UNPACK() internal pure returns (address base, address quote) {

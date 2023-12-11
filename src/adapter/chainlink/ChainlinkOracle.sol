@@ -70,7 +70,7 @@ contract ChainlinkOracle is BaseOracle {
     }
 
     function description() external view virtual returns (OracleDescription.Description memory) {
-        return OracleDescription.GovernedChainlinkOracle(uint256(DEFAULT_MAX_STALENESS), governor);
+        return OracleDescription.ChainlinkOracle(uint256(DEFAULT_MAX_STALENESS), governor);
     }
 
     function _setConfig(ConfigParams memory config) internal {

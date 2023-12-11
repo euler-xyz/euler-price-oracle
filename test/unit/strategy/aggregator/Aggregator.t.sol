@@ -6,7 +6,6 @@ import {AggregatorHarness} from "test/utils/AggregatorHarness.sol";
 import {boundAddr, boundAddrs, makeAddrs} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {ImmutableAddressArray} from "src/lib/ImmutableAddressArray.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
 contract AggregatorTest is Test {

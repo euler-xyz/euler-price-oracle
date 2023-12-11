@@ -5,63 +5,7 @@ pragma solidity 0.8.23;
 /// @notice Stores oracle descriptions for all `IEOracle` implementations.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library OracleDescription {
-    function ConstantOracle() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Constant",
-            children: new address[](0)
-        });
-    }
-
-    function ConstantBackoffLinearStrategy() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.OTHER,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Linear",
-            children: new address[](0)
-        });
-    }
-
-    function CTokenV2Oracle() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Compound V2",
-            children: new address[](0)
-        });
-    }
-
-    function CurveLPOracle() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Curve LP Token",
-            children: new address[](0)
-        });
-    }
-
-    function GovernedChainlinkOracle(uint256 maxStaleness, address governor)
-        internal
-        pure
-        returns (Description memory)
-    {
+    function ChainlinkOracle(uint256 maxStaleness, address governor) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.VWAP,
             authority: Authority.GOVERNED,
@@ -83,71 +27,6 @@ library OracleDescription {
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
             name: "Uniswap V3",
-            children: new address[](0)
-        });
-    }
-
-    function ImmutableChainlinkOracle(uint256 maxStaleness) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.VWAP,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
-            name: "Chainlink",
-            children: new address[](0)
-        });
-    }
-
-    function ImmutableChronicleOracle(uint256 maxStaleness) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.MEDIAN,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.SUBSCRIPTION,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
-            name: "Chronicle",
-            children: new address[](0)
-        });
-    }
-
-    function PythOracle(uint256 maxStaleness) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
-            name: "Pyth",
-            children: new address[](0)
-        });
-    }
-
-    function PythEMAOracle(uint256 maxStaleness) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.EMA,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
-            name: "Pyth",
-            children: new address[](0)
-        });
-    }
-
-    function ImmutableRouter() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Router",
             children: new address[](0)
         });
     }
@@ -213,45 +92,6 @@ library OracleDescription {
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
             name: "Reth",
-            children: new address[](0)
-        });
-    }
-
-    function TellorSpotOracle(uint256 maxStaleness) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
-            name: "Tellor",
-            children: new address[](0)
-        });
-    }
-
-    function YearnV2VaultOracle() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Yearn V2 Vault",
-            children: new address[](0)
-        });
-    }
-
-    function WeightedAggregator() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.AGGREGATE_WEIGHTED,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Weighted)",
             children: new address[](0)
         });
     }

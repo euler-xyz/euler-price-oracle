@@ -1,3 +1,0 @@
-ImmutableAddressArrayTest:test_Constructor_Integrity(address[]) (runs: 256, μ: 216344, ~: 215606)
-ImmutableAddressArrayTest:test_Constructor_RevertsWhen_Empty() (gas: 36337)
-ImmutableAddressArrayTest:test_Constructor_RevertsWhen_TooLarge(address[]) (runs: 256, μ: 90616, ~: 90016)

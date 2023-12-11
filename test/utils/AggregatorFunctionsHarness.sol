@@ -20,12 +20,4 @@ contract AggregatorFunctionsHarness {
     function min(uint256[] memory quotes, PackedUint32Array mask) external pure returns (uint256) {
         return AggregatorFunctions.min(quotes, mask);
     }
-
-    function weightedMean(uint256[] memory quotes, PackedUint32Array weights, PackedUint32Array mask)
-        internal
-        pure
-        returns (uint256)
-    {
-        return AggregatorFunctions.weightedMean(quotes, weights, mask);
-    }
 }
