@@ -1,8 +1,6 @@
 
 @chainlink/=lib/chainlink/contracts/src/v0.8/
+@euler-factory=lib/euler-factory/src/
+@solady/=lib/solady/src/
 @uniswap/v3-core/=lib/v3-core/
 @uniswap/v3-periphery/=lib/v3-periphery/
-@solady/=lib/solady/src/
-@pyth-sdk-solidity/=lib/pyth-sdk-solidity/
-@chronicle-std/=lib/chronicle-std/src/
-@tellor/=lib/usingtellor/contracts/

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {GenericFactory} from "./GenericFactory.sol";
+import {GenericFactory} from "@euler-factory/GenericFactory.sol";
 
 contract OracleFactory is GenericFactory {
     mapping(address oracle => OracleConfig) oracleLookup;
