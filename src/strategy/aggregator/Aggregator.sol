@@ -5,7 +5,6 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
-import {PackedUint32Array, PackedUint32ArrayLib} from "src/lib/PackedUint32Array.sol";
 import {TryCallOracle} from "src/strategy/TryCallOracle.sol";
 
 /// @author totomanov
@@ -31,13 +30,11 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
     }
 
     /// @inheritdoc IEOracle
-    /// @dev Constructs a success mask which is useful to determine the indices of failed oracles.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
 
     /// @inheritdoc IEOracle
-    /// @dev Constructs a success mask which is useful to determine the indices of failed oracles.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 answer = _getQuote(inAmount, base, quote);
         return (answer, answer);
@@ -47,13 +44,12 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
     function description() external pure virtual returns (OracleDescription.Description memory);
 
     /// @dev Apply the aggregation algorithm.
-    function _aggregateQuotes(uint256[] memory, PackedUint32Array) internal view virtual returns (uint256);
+    function _aggregateQuotes(uint256[] memory) internal view virtual returns (uint256);
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         uint256 cardinality = oracles.length;
         uint256[] memory answers = new uint256[](cardinality);
         uint256 numAnswers;
-        PackedUint32Array successMask;
 
         for (uint256 i = 0; i < cardinality;) {
             IEOracle oracle = IEOracle(oracles[i]);
@@ -61,7 +57,6 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
 
             unchecked {
                 if (success) {
-                    successMask = successMask.set(i, PackedUint32ArrayLib.MAX_VALUE);
                     answers[numAnswers] = answer;
                     ++numAnswers;
                 }
@@ -78,6 +73,6 @@ abstract contract Aggregator is BaseOracle, TryCallOracle {
         }
 
         // custom aggregation logic here
-        return _aggregateQuotes(answers, successMask);
+        return _aggregateQuotes(answers);
     }
 }

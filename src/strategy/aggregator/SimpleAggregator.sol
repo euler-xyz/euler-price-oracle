@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
-import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 import {AggregatorFunctions} from "src/strategy/aggregator/AggregatorFunctions.sol";
 
@@ -38,7 +37,7 @@ contract SimpleAggregator is Aggregator {
     }
 
     /// @dev Internal function pointer to the selected function in the AggregatorFunctions library.
-    function(uint256[] memory, PackedUint32Array) view returns (uint256) internal algorithm;
+    function(uint256[] memory) view returns (uint256) internal algorithm;
 
     /// @inheritdoc Aggregator
     function description() external pure override returns (OracleDescription.Description memory) {
@@ -46,12 +45,7 @@ contract SimpleAggregator is Aggregator {
     }
 
     /// @inheritdoc Aggregator
-    function _aggregateQuotes(uint256[] memory quotes, PackedUint32Array mask)
-        internal
-        view
-        override
-        returns (uint256)
-    {
-        return algorithm(quotes, mask);
+    function _aggregateQuotes(uint256[] memory quotes) internal view override returns (uint256) {
+        return algorithm(quotes);
     }
 }

@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {SimpleAggregatorHarness} from "test/utils/SimpleAggregatorHarness.sol";
-import {PackedUint32Array} from "src/lib/PackedUint32Array.sol";
 import {SimpleAggregator} from "src/strategy/aggregator/SimpleAggregator.sol";
 
 contract SimpleAggregatorTest is Test {
@@ -23,7 +22,7 @@ contract SimpleAggregatorTest is Test {
         minHarness = new SimpleAggregatorHarness(oracles, 1, SimpleAggregator.Algorithm.MIN);
     }
 
-    function test_Max_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {
+    function test_Max_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
         quotes[1] = 1;
@@ -31,12 +30,12 @@ contract SimpleAggregatorTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = maxHarness.aggregateQuotes(quotes, mask);
+            uint256 result = maxHarness.aggregateQuotes(quotes);
             assertEq(result, 2);
         }
     }
 
-    function test_Mean_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {
+    function test_Mean_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
         quotes[1] = 1;
@@ -44,12 +43,12 @@ contract SimpleAggregatorTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = meanHarness.aggregateQuotes(quotes, mask);
+            uint256 result = meanHarness.aggregateQuotes(quotes);
             assertEq(result, 1);
         }
     }
 
-    function test_Median_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {
+    function test_Median_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
         quotes[1] = 1;
@@ -57,12 +56,12 @@ contract SimpleAggregatorTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = medianHarness.aggregateQuotes(quotes, mask);
+            uint256 result = medianHarness.aggregateQuotes(quotes);
             assertEq(result, 1);
         }
     }
 
-    function test_Min_Concrete(LibPRNG.PRNG memory prng, PackedUint32Array mask) public {
+    function test_Min_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
         quotes[1] = 1;
@@ -70,19 +69,19 @@ contract SimpleAggregatorTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = minHarness.aggregateQuotes(quotes, mask);
+            uint256 result = minHarness.aggregateQuotes(quotes);
             assertEq(result, 0);
         }
     }
 
-    function test_StatisticalIntegrity(uint256[] memory quotes, PackedUint32Array mask) public {
+    function test_StatisticalIntegrity(uint256[] memory quotes) public {
         vm.assume(quotes.length != 0);
         _noSumOverflow(quotes);
 
-        uint256 min = minHarness.aggregateQuotes(quotes, mask);
-        uint256 mean = meanHarness.aggregateQuotes(quotes, mask);
-        uint256 median = medianHarness.aggregateQuotes(quotes, mask);
-        uint256 max = maxHarness.aggregateQuotes(quotes, mask);
+        uint256 min = minHarness.aggregateQuotes(quotes);
+        uint256 mean = meanHarness.aggregateQuotes(quotes);
+        uint256 median = medianHarness.aggregateQuotes(quotes);
+        uint256 max = maxHarness.aggregateQuotes(quotes);
         assertLe(min, max, "min <= max");
         assertLe(min, mean, "min <= mean");
         assertLe(min, median, "min <= median");
@@ -90,23 +89,21 @@ contract SimpleAggregatorTest is Test {
         assertLe(median, max, "median <= max");
     }
 
-    function test_StableUnderPermutation(uint256[] memory quotes, LibPRNG.PRNG memory prng, PackedUint32Array mask)
-        public
-    {
+    function test_StableUnderPermutation(uint256[] memory quotes, LibPRNG.PRNG memory prng) public {
         vm.assume(quotes.length != 0);
         _noSumOverflow(quotes);
 
-        uint256 min = minHarness.aggregateQuotes(quotes, mask);
-        uint256 mean = meanHarness.aggregateQuotes(quotes, mask);
-        uint256 median = medianHarness.aggregateQuotes(quotes, mask);
-        uint256 max = maxHarness.aggregateQuotes(quotes, mask);
+        uint256 min = minHarness.aggregateQuotes(quotes);
+        uint256 mean = meanHarness.aggregateQuotes(quotes);
+        uint256 median = medianHarness.aggregateQuotes(quotes);
+        uint256 max = maxHarness.aggregateQuotes(quotes);
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 _min = minHarness.aggregateQuotes(quotes, mask);
-            uint256 _mean = meanHarness.aggregateQuotes(quotes, mask);
-            uint256 _median = medianHarness.aggregateQuotes(quotes, mask);
-            uint256 _max = maxHarness.aggregateQuotes(quotes, mask);
+            uint256 _min = minHarness.aggregateQuotes(quotes);
+            uint256 _mean = meanHarness.aggregateQuotes(quotes);
+            uint256 _median = medianHarness.aggregateQuotes(quotes);
+            uint256 _max = maxHarness.aggregateQuotes(quotes);
 
             assertLe(min, _min);
             assertLe(mean, _mean);
