@@ -9,12 +9,6 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @author totomanov
 /// @notice Oracle resolver for base-quote pairs.
 contract SimpleRouter is BaseOracle {
-    struct ConfigParams {
-        address base;
-        address quote;
-        address oracle;
-    }
-
     address public fallbackOracle;
     mapping(address base => mapping(address quote => address)) public oracles;
 
@@ -22,8 +16,8 @@ contract SimpleRouter is BaseOracle {
         fallbackOracle = _fallbackOracle;
     }
 
-    function govSetConfig(ConfigParams memory params) external onlyGovernor {
-        _setConfig(params);
+    function govSetConfig(address base, address quote, address oracle) external onlyGovernor {
+        oracles[base][quote] = oracle;
     }
 
     function govUnsetConfig(address base, address quote) external onlyGovernor {
@@ -62,9 +56,5 @@ contract SimpleRouter is BaseOracle {
     /// @inheritdoc IEOracle
     function description() external pure override returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter();
-    }
-
-    function _setConfig(ConfigParams memory params) private {
-        oracles[params.base][params.quote] = params.oracle;
     }
 }

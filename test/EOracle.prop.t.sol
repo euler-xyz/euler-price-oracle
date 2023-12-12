@@ -106,6 +106,9 @@ contract EOracleHandler is Test {
         vm.stopPrank();
         overriddenAgent = address(0);
     }
+
+    /// @dev Exclude from coverage report
+    function test() public {}
 }
 
 abstract contract EOraclePropTest is Test {
@@ -168,4 +171,7 @@ abstract contract EOraclePropTest is Test {
     }
 
     function _deployOracle() internal virtual returns (address);
+
+    /// @dev Exclude from coverage report
+    function test() public {}
 }
