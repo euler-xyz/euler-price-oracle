@@ -21,3 +21,9 @@ md-toc
 
 # Echidna
 crytic-export
+
+# Coverage
+coverage-report
+lcov.info
+
+.DS_Store

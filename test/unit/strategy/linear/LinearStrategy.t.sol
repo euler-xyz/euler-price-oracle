@@ -29,6 +29,8 @@ contract LinearStrategyTest is Test {
         oracle7 = makeAddr("oracle7");
     }
 
+    function test_GovSetConfig_RevertsWhen_NotGovernor(address[] memory _oracles) public {}
+
     function test_GetQuote_RevertsWhen_AllRevert(uint256 inAmount, address base, address quote) public {
         address[] memory oracles = _oracleArr(3);
         LinearStrategy strategy = new LinearStrategy();

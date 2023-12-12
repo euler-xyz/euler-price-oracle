@@ -32,8 +32,8 @@ contract LinearStrategy is BaseOracle, TryCallOracle {
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        uint256 cardinality = oracles.length;
-        for (uint256 i = 0; i < cardinality;) {
+        uint256 numOracles = oracles.length;
+        for (uint256 i = 0; i < numOracles;) {
             IEOracle oracle = IEOracle(oracles[i]);
 
             (bool success, uint256 answer) = _tryGetQuote(oracle, inAmount, base, quote);
@@ -51,8 +51,8 @@ contract LinearStrategy is BaseOracle, TryCallOracle {
     /// @dev Reverts if the list of oracles is exhausted without a successful answer.
     /// @return The first successful quote.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 cardinality = oracles.length;
-        for (uint256 i = 0; i < cardinality;) {
+        uint256 numOracles = oracles.length;
+        for (uint256 i = 0; i < numOracles;) {
             IEOracle oracle = IEOracle(oracles[i]);
 
             (bool success, uint256 bid, uint256 ask) = _tryGetQuotes(oracle, inAmount, base, quote);
