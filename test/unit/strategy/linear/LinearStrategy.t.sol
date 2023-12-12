@@ -4,10 +4,12 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {LinearStrategy} from "src/strategy/linear/LinearStrategy.sol";
 
 contract LinearStrategyTest is Test {
+    address private GOVERNOR = makeAddr("GOVERNOR");
     uint256 private constant SHUFFLE_ITERATIONS = 10;
     address private immutable oracle0;
     address private immutable oracle1;
@@ -29,7 +31,65 @@ contract LinearStrategyTest is Test {
         oracle7 = makeAddr("oracle7");
     }
 
-    function test_GovSetConfig_RevertsWhen_NotGovernor(address[] memory _oracles) public {}
+    function test_GovSetConfig_RevertsWhen_CallerNotGovernor(address[] memory oracles, address caller) public {
+        vm.assume(caller != GOVERNOR);
+
+        LinearStrategy strategy = new LinearStrategy();
+        strategy.initialize(GOVERNOR);
+
+        vm.prank(caller);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        strategy.govSetConfig(oracles);
+    }
+
+    function test_GovSetConfig_Integrity_FirstSet(address[] memory oracles) public {
+        LinearStrategy strategy = new LinearStrategy();
+        strategy.initialize(GOVERNOR);
+
+        vm.prank(GOVERNOR);
+        strategy.govSetConfig(oracles);
+
+        for (uint256 i = 0; i < oracles.length; ++i) {
+            address storedOracle = strategy.oracles(i);
+            assertEq(storedOracle, oracles[i]);
+        }
+    }
+
+    function test_GovSetConfig_Integrity_IncreaseSize(address[] memory oraclesA, address[] memory oraclesB) public {
+        vm.assume(oraclesA.length > 0);
+        vm.assume(oraclesB.length > oraclesA.length);
+        LinearStrategy strategy = new LinearStrategy();
+        strategy.initialize(GOVERNOR);
+
+        vm.prank(GOVERNOR);
+        strategy.govSetConfig(oraclesA);
+
+        vm.prank(GOVERNOR);
+        strategy.govSetConfig(oraclesB);
+
+        for (uint256 i = 0; i < oraclesB.length; ++i) {
+            address storedOracle = strategy.oracles(i);
+            assertEq(storedOracle, oraclesB[i]);
+        }
+    }
+
+    function test_GovSetConfig_Integrity_DecreaseSize(address[] memory oraclesA, address[] memory oraclesB) public {
+        vm.assume(oraclesB.length > 0);
+        vm.assume(oraclesB.length < oraclesA.length);
+        LinearStrategy strategy = new LinearStrategy();
+        strategy.initialize(GOVERNOR);
+
+        vm.prank(GOVERNOR);
+        strategy.govSetConfig(oraclesA);
+
+        vm.prank(GOVERNOR);
+        strategy.govSetConfig(oraclesB);
+
+        for (uint256 i = 0; i < oraclesB.length; ++i) {
+            address storedOracle = strategy.oracles(i);
+            assertEq(storedOracle, oraclesB[i]);
+        }
+    }
 
     function test_GetQuote_RevertsWhen_AllRevert(uint256 inAmount, address base, address quote) public {
         address[] memory oracles = _oracleArr(3);

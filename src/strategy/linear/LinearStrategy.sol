@@ -16,14 +16,27 @@ contract LinearStrategy is BaseOracle, TryCallOracle {
         uint256 prevLength = oracles.length;
         uint256 nextLength = _oracles.length;
 
-        oracles = new address[](nextLength);
-        for (uint256 i = 0; i < nextLength; ++i) {
+        assembly ("memory-safe") {
+            sstore(oracles.slot, nextLength)
+        }
+
+        for (uint256 i = 0; i < nextLength;) {
             oracles[i] = _oracles[i];
+
+            unchecked {
+                ++i;
+            }
         }
 
         if (nextLength < prevLength) {
-            for (uint256 i = nextLength; i < prevLength; ++i) {
-                delete oracles[i];
+            for (uint256 i = nextLength; i < prevLength;) {
+                assembly {
+                    sstore(add(oracles.slot, i), 0)
+                }
+
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
