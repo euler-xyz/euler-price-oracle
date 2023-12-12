@@ -38,6 +38,7 @@ abstract contract UniswapV3Oracle is BaseOracle {
     }
 
     function _setConfig(ConfigParams memory params) internal returns (UniswapV3Config) {
+        if (params.twapWindow == 0) revert Errors.UniswapV3_InvalidTwapWindow(params.twapWindow);
         uint8 token0Decimals = ERC20(params.token0).decimals();
         uint8 token1Decimals = ERC20(params.token1).decimals();
 

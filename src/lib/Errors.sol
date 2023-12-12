@@ -31,6 +31,7 @@ library Errors {
     error Pyth_InvalidPrice(int64 price);
     error Router_MalformedPairs(uint256 length);
     error Tellor_InvalidPrice(uint256 price);
+    error UniswapV3_InvalidTwapWindow(uint24 twapWindow);
     error UniswapV3_PoolMismatch(address configPool, address factoryPool);
     error UniswapV3_RoundTooLong(address base, address quote);
 }

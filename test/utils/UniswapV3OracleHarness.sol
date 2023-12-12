@@ -14,7 +14,7 @@ contract UniswapV3OracleHarness is UniswapV3Oracle {
         return _getConfig(base, quote);
     }
 
-    function getOrRevertConfig(address base, address quote) external view returns (UniswapV3Config) {
+    function getConfigOrRevert(address base, address quote) external view returns (UniswapV3Config) {
         return _getConfigOrRevert(base, quote);
     }
 
@@ -24,6 +24,10 @@ contract UniswapV3OracleHarness is UniswapV3Oracle {
 
     function setConfig(address token0, address token1, UniswapV3Config config) external {
         configs[token0][token1] = config;
+    }
+
+    function computePoolAddress(address base, address quote, uint24 fee) external view returns (address) {
+        return _computePoolAddress(base, quote, fee);
     }
 
     function sortTokens(address tokenA, address tokenB) external pure returns (address, address) {
