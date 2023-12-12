@@ -101,43 +101,6 @@ contract ChainlinkOracle is BaseOracle {
         emit ConfigSet(config.quote, config.base, config.feed);
     }
 
-    function _initConfig(address base, address quote) internal returns (Config memory) {
-        (address asset, address denom) = _getAssetAndDenom(base, quote);
-        address feed = address(feedRegistry.getFeed(asset, denom));
-
-        uint8 baseDecimals = ERC20(base).decimals();
-        uint8 quoteDecimals = ERC20(quote).decimals();
-        uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
-
-        Config memory config = Config({
-            feed: address(feedRegistry),
-            maxStaleness: DEFAULT_MAX_STALENESS,
-            maxDuration: DEFAULT_MAX_ROUND_DURATION,
-            baseDecimals: baseDecimals,
-            quoteDecimals: quoteDecimals,
-            feedDecimals: feedDecimals,
-            inverse: false
-        });
-
-        configs[base][quote] = config;
-
-        Config memory invConfig = Config({
-            feed: address(feedRegistry),
-            maxStaleness: DEFAULT_MAX_STALENESS,
-            maxDuration: DEFAULT_MAX_ROUND_DURATION,
-            baseDecimals: quoteDecimals,
-            quoteDecimals: baseDecimals,
-            feedDecimals: feedDecimals,
-            inverse: true
-        });
-
-        configs[quote][base] = invConfig;
-        emit ConfigSet(base, quote, address(feedRegistry));
-        emit ConfigSet(quote, base, address(feedRegistry));
-
-        return config;
-    }
-
     function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
         Config memory config = _getConfigOrRevert(base, quote);
         bytes memory data;

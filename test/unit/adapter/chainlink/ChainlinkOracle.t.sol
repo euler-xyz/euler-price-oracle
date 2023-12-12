@@ -299,6 +299,61 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
+    function test_GetQuote_RevertsWhen_RoundTooLong(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount
+    ) public {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        vm.assume(d.updatedAt > d.startedAt && d.updatedAt - d.startedAt > c.params.maxDuration);
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.Chainlink_RoundTooLong.selector, d.updatedAt - d.startedAt, c.params.maxDuration
+            )
+        );
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
+    function todo_GetQuote_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
+        _prepareValidConfig(c);
+        vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
+
+        _prepareValidRoundData(d);
+        vm.assume(d.updatedAt > 0);
+        vm.assume(timestamp > d.updatedAt && timestamp - d.updatedAt > c.params.maxStaleness);
+
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.warp(timestamp);
+        vm.mockCall(
+            c.params.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d)
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - d.updatedAt, c.params.maxStaleness)
+        );
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
+    }
+
     function test_GetQuote_Integrity_CallFeedRegistry(FuzzableConfig memory c, uint256 inAmount) public {
         _prepareValidConfig(c);
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
