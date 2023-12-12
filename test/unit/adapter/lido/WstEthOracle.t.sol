@@ -7,9 +7,9 @@ import {WstEthOracle} from "src/adapter/lido/WstEthOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract WstEthOracleTest is Test {
-    address internal constant GOVERNOR = makeAddr("GOVERNOR");
-    address internal constant STETH = makeAddr("STETH");
-    address internal constant WSTETH = makeAddr("WSTETH");
+    address internal GOVERNOR = makeAddr("GOVERNOR");
+    address internal STETH = makeAddr("STETH");
+    address internal WSTETH = makeAddr("WSTETH");
 
     WstEthOracle oracle;
 
@@ -106,7 +106,7 @@ contract WstEthOracleTest is Test {
         assertEq(outAmount, expectedOutAmount);
     }
 
-    function test_GetQuote_WstEth_SttEth_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuote_WstEth_StEth_Integrity(uint256 inAmount, uint256 rate) public {
         inAmount = bound(inAmount, 1, type(uint128).max);
         rate = bound(rate, 1, type(uint128).max);
         uint256 expectedOutAmount = (inAmount * rate) / 1e18;

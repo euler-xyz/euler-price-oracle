@@ -29,14 +29,16 @@ contract RethOracle is BaseOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+        uint256 outAmount;
         if (base == reth && quote == weth) {
-            return IReth(reth).getEthValue(inAmount);
+            outAmount = IReth(reth).getEthValue(inAmount);
+        } else if (base == weth && quote == reth) {
+            outAmount = IReth(reth).getRethValue(inAmount);
+        } else {
+            revert Errors.EOracle_NotSupported(base, quote);
         }
 
-        if (base == weth && quote == reth) {
-            return IReth(reth).getRethValue(inAmount);
-        }
-
-        revert Errors.EOracle_NotSupported(base, quote);
+        if (outAmount == 0) revert Errors.EOracle_NoAnswer();
+        return outAmount;
     }
 }
