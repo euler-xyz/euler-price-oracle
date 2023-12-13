@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {EOraclePropTest} from "test/EOracle.prop.t.sol";
+import {EOraclePropTest} from "test/prop/EOracle.prop.t.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
 contract ChainlinkOracle_PropTest is EOraclePropTest {
