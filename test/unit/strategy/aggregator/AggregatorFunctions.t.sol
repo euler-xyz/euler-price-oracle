@@ -17,8 +17,8 @@ contract AggregatorFunctionsTest is Test {
     function test_Max_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 1;
-        quotes[2] = 2;
+        quotes[1] = 2;
+        quotes[2] = 1;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
@@ -41,8 +41,8 @@ contract AggregatorFunctionsTest is Test {
     function test_Mean_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 1;
-        quotes[2] = 2;
+        quotes[1] = 2;
+        quotes[2] = 1;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
@@ -54,8 +54,8 @@ contract AggregatorFunctionsTest is Test {
     function test_Median_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 1;
-        quotes[2] = 2;
+        quotes[1] = 2;
+        quotes[2] = 1;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
@@ -67,8 +67,8 @@ contract AggregatorFunctionsTest is Test {
     function test_Min_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 1;
-        quotes[2] = 2;
+        quotes[1] = 2;
+        quotes[2] = 1;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);

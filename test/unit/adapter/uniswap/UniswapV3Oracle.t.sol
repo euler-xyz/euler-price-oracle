@@ -22,7 +22,7 @@ contract UniswapV3OracleTest is Test {
         assertEq(address(oracle.uniswapV3Factory()), UNISWAP_V3_FACTORY);
     }
 
-    function test_GetQuote_RevertsWhenInAmountGtUint128(
+    function test_GetQuote_GetQuotes_RevertsWhen_InAmountGtUint128(
         UniswapV3Oracle.ConfigParams memory params,
         uint256 inAmount,
         uint256 timestamp,
@@ -46,6 +46,20 @@ contract UniswapV3OracleTest is Test {
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
         oracle.getQuote(inAmount, params.token0, params.token1);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
+        oracle.getQuotes(inAmount, params.token0, params.token1);
+    }
+
+    function test_GetQuote_GetQuotes_RevertsWhen_NoConfig(UniswapV3Oracle.ConfigParams memory params, uint256 inAmount)
+        public
+    {
+        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, params.token0, params.token1));
+        oracle.getQuote(inAmount, params.token0, params.token1);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, params.token0, params.token1));
+        oracle.getQuotes(inAmount, params.token0, params.token1);
     }
 
     function test_GetConfig_InitallyEmpty(address base, address quote) public {
@@ -150,6 +164,36 @@ contract UniswapV3OracleTest is Test {
         assertEq(storedConfig.getTwapWindow(), twapWindow);
         assertEq(storedConfig.getToken0Decimals(), ERC20(token0).decimals());
         assertEq(storedConfig.getToken1Decimals(), ERC20(token1).decimals());
+    }
+
+    function test_SetConfig_RevertsWhen_ZeroTwapWindow(
+        address pool,
+        uint32 validUntil,
+        uint24 fee,
+        uint24 twapWindow,
+        address token0,
+        address token1,
+        uint8 token0Decimals,
+        uint8 token1Decimals
+    ) public {
+        token0 = boundAddr(token0);
+        token1 = boundAddr(token1);
+        vm.assume(token0 < token1);
+        vm.mockCall(token0, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(token0Decimals));
+        vm.mockCall(token1, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(token1Decimals));
+        twapWindow = 0;
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_InvalidTwapWindow.selector, twapWindow));
+        oracle.setConfig(
+            UniswapV3Oracle.ConfigParams({
+                token0: token0,
+                token1: token1,
+                pool: pool,
+                validUntil: validUntil,
+                fee: fee,
+                twapWindow: twapWindow
+            })
+        );
     }
 
     function test_ComputePoolAddress_InvariantOnOrder(address tokenA, address tokenB, uint24 fee) public {

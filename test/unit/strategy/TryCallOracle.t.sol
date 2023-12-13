@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {TryCallOracleHarness} from "test/utils/TryCallOracleHarness.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 contract ForkTest is Test {
     uint256 constant ETHEREUM_FORK_BLOCK = 18515555;

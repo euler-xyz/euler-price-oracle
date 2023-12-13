@@ -37,7 +37,7 @@ contract ImmutableUniswapV3Oracle is UniswapV3Oracle {
             }
         }
 
-        if (selectedPool == address(0)) revert Errors.UniswapV3_RoundTooLong(base, quote);
+        if (selectedPool == address(0)) revert Errors.UniswapV3_NoPool(base, quote);
 
         uint32 validUntil = uint32(block.timestamp) + selectedTwapWindow / 4; // todo: this can be a bit more accurate
 

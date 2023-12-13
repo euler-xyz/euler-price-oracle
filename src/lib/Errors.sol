@@ -33,5 +33,5 @@ library Errors {
     error Tellor_InvalidPrice(uint256 price);
     error UniswapV3_InvalidTwapWindow(uint24 twapWindow);
     error UniswapV3_PoolMismatch(address configPool, address factoryPool);
-    error UniswapV3_RoundTooLong(address base, address quote);
+    error UniswapV3_NoPool(address base, address quote);
 }
