@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 interface IFactoryInitializable {
     error AlreadyInitialized();
     error CallerNotGovernor();
-    error CannotInitializeToZeroAddress();
 
     event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
