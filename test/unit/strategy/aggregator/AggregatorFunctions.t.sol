@@ -8,21 +8,21 @@ import {Aggregator} from "src/strategy/aggregator/Aggregator.sol";
 
 contract AggregatorFunctionsTest is Test {
     uint256 private constant SHUFFLE_ITERATIONS = 10;
-    AggregatorFunctionsHarness private immutable algorithms;
+    AggregatorFunctionsHarness private immutable functions;
 
     constructor() {
-        algorithms = new AggregatorFunctionsHarness();
+        functions = new AggregatorFunctionsHarness();
     }
 
     function test_Max_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 2;
-        quotes[2] = 1;
+        quotes[1] = 1;
+        quotes[2] = 2;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.max(quotes);
+            uint256 result = functions.max(quotes);
             assertEq(result, 2);
         }
     }
@@ -33,7 +33,7 @@ contract AggregatorFunctionsTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.max(quotes);
+            uint256 result = functions.max(quotes);
             assertGe(result, quotes[k]);
         }
     }
@@ -41,12 +41,12 @@ contract AggregatorFunctionsTest is Test {
     function test_Mean_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 2;
-        quotes[2] = 1;
+        quotes[1] = 1;
+        quotes[2] = 2;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.mean(quotes);
+            uint256 result = functions.mean(quotes);
             assertEq(result, 1);
         }
     }
@@ -54,12 +54,12 @@ contract AggregatorFunctionsTest is Test {
     function test_Median_Concrete(LibPRNG.PRNG memory prng) public {
         uint256[] memory quotes = new uint256[](3);
         quotes[0] = 0;
-        quotes[1] = 2;
-        quotes[2] = 1;
+        quotes[1] = 1;
+        quotes[2] = 2;
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.median(quotes);
+            uint256 result = functions.median(quotes);
             assertEq(result, 1);
         }
     }
@@ -72,7 +72,7 @@ contract AggregatorFunctionsTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.min(quotes);
+            uint256 result = functions.min(quotes);
             assertEq(result, 0);
         }
     }
@@ -83,7 +83,7 @@ contract AggregatorFunctionsTest is Test {
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 result = algorithms.min(quotes);
+            uint256 result = functions.min(quotes);
             assertLe(result, quotes[k]);
         }
     }
@@ -92,10 +92,10 @@ contract AggregatorFunctionsTest is Test {
         vm.assume(quotes.length != 0);
         _noSumOverflow(quotes);
 
-        uint256 min = algorithms.min(quotes);
-        uint256 mean = algorithms.mean(quotes);
-        uint256 median = algorithms.median(quotes);
-        uint256 max = algorithms.max(quotes);
+        uint256 min = functions.min(quotes);
+        uint256 mean = functions.mean(quotes);
+        uint256 median = functions.median(quotes);
+        uint256 max = functions.max(quotes);
         assertLe(min, max, "min <= max");
         assertLe(min, mean, "min <= mean");
         assertLe(min, median, "min <= median");
@@ -107,17 +107,17 @@ contract AggregatorFunctionsTest is Test {
         vm.assume(quotes.length != 0);
         _noSumOverflow(quotes);
 
-        uint256 min = algorithms.min(quotes);
-        uint256 mean = algorithms.mean(quotes);
-        uint256 median = algorithms.median(quotes);
-        uint256 max = algorithms.max(quotes);
+        uint256 min = functions.min(quotes);
+        uint256 mean = functions.mean(quotes);
+        uint256 median = functions.median(quotes);
+        uint256 max = functions.max(quotes);
 
         for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
             LibPRNG.shuffle(prng, quotes);
-            uint256 _min = algorithms.min(quotes);
-            uint256 _mean = algorithms.mean(quotes);
-            uint256 _median = algorithms.median(quotes);
-            uint256 _max = algorithms.max(quotes);
+            uint256 _min = functions.min(quotes);
+            uint256 _mean = functions.mean(quotes);
+            uint256 _median = functions.median(quotes);
+            uint256 _max = functions.max(quotes);
 
             assertLe(min, _min);
             assertLe(mean, _mean);

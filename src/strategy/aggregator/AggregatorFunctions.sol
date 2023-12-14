@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {LibSort} from "@solady/utils/LibSort.sol";
 
 /// @author totomanov
-/// @notice Statistical algorithms for oracle aggregators.
+/// @notice Statistical functions for oracle aggregators.
 /// @dev All functions take an array of quotes.
-/// Algorithms MUST NOT revert unless due to numerical over/underflow.
-/// Algorithms MUST assume that `quotes` is non-empty and has no more than 8 elements.
-/// Algorithms MAY define additional parameters such as weights.
+/// Functions MUST NOT revert unless due to numerical over/underflow.
 library AggregatorFunctions {
     /// @dev Return the largest value from the list.
     function max(uint256[] memory quotes) internal pure returns (uint256) {
@@ -51,7 +48,7 @@ library AggregatorFunctions {
         if (length % 2 == 1) {
             return quotes[midpoint];
         } else {
-            return FixedPointMathLib.avg(quotes[midpoint], quotes[midpoint - 1]);
+            return (quotes[midpoint] + quotes[midpoint - 1]) / 2;
         }
     }
 

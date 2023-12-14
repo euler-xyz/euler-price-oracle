@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {EOraclePropTest} from "test/prop/EOracle.prop.t.sol";
+import {EOracleGovPropTest} from "test/prop/EOracleGov.prop.t.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
-contract ChainlinkOracle_PropTest is EOraclePropTest {
+contract ChainlinkOracleGov_PropTest is EOracleGovPropTest {
     address GOVERNOR = makeAddr("GOVERNOR");
     address CHAINLINK_FEED_REGISTRY = makeAddr("CHAINLINK_FEED_REGISTRY");
     address WETH = makeAddr("WETH");

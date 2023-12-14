@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {BaseOracle} from "src/BaseOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 
 contract EOracleHandler is Test {
     struct ReturnItem {
@@ -26,31 +26,31 @@ contract EOracleHandler is Test {
     }
 
     function initialize(address _governor, uint256 agentSeed) external useAgent(agentSeed) {
-        BaseOracle(oracle).initialize(_governor);
+        IFactoryInitializable(oracle).initialize(_governor);
     }
 
     function transferGovernance(address newGovernor, uint256 agentSeed) external useAgent(agentSeed) {
-        BaseOracle(oracle).transferGovernance(newGovernor);
+        IFactoryInitializable(oracle).transferGovernance(newGovernor);
     }
 
     function renounceGovernance(uint256 agentSeed) external useAgent(agentSeed) {
-        BaseOracle(oracle).renounceGovernance();
+        IFactoryInitializable(oracle).renounceGovernance();
     }
 
     function governor(uint256 agentSeed) external useAgent(agentSeed) returns (address) {
-        return BaseOracle(oracle).governor();
+        return IFactoryInitializable(oracle).governor();
     }
 
     function initialized(uint256 agentSeed) external useAgent(agentSeed) returns (bool) {
-        return BaseOracle(oracle).initialized();
+        return IFactoryInitializable(oracle).initialized();
     }
 
     function finalized(uint256 agentSeed) external useAgent(agentSeed) returns (bool) {
-        return BaseOracle(oracle).finalized();
+        return IFactoryInitializable(oracle).finalized();
     }
 
     function governed(uint256 agentSeed) external useAgent(agentSeed) returns (bool) {
-        return BaseOracle(oracle).governed();
+        return IFactoryInitializable(oracle).governed();
     }
 
     function getQuote(uint256 agentSeed, uint256 inAmount, address base, address quote)
@@ -85,7 +85,7 @@ contract EOracleHandler is Test {
         address[] memory a = new address[](6);
         a[0] = oracle;
         a[1] = deployer;
-        a[2] = BaseOracle(oracle).governor();
+        a[2] = IFactoryInitializable(oracle).governor();
         a[3] = ALICE;
         a[4] = BOB;
         a[5] = CHARLIE;

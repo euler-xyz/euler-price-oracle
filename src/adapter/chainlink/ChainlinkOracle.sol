@@ -56,8 +56,7 @@ contract ChainlinkOracle is BaseOracle {
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view virtual returns (uint256) {
-        // return _getQuote(inAmount, base, quote);
-        return 0;
+        return _getQuote(inAmount, base, quote);
     }
 
     function getQuotes(uint256 inAmount, address base, address quote)

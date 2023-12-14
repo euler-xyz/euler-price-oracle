@@ -6,30 +6,28 @@ import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 abstract contract BaseOracle is IEOracle, IFactoryInitializable {
-    address public governor;
-    bool public initialized;
+    address public override governor;
+    bool public override initialized;
 
-    event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
-
-    function initialize(address _governor) external {
+    function initialize(address _governor) external override {
         if (initialized) revert AlreadyInitialized();
         initialized = true;
         _setGovernor(_governor);
     }
 
-    function transferGovernance(address newGovernor) external onlyGovernor {
+    function transferGovernance(address newGovernor) external override onlyGovernor {
         _setGovernor(newGovernor);
     }
 
-    function renounceGovernance() external onlyGovernor {
+    function renounceGovernance() external override onlyGovernor {
         _setGovernor(address(0));
     }
 
-    function finalized() external view returns (bool) {
+    function finalized() external view override returns (bool) {
         return initialized && governor == address(0);
     }
 
-    function governed() external view returns (bool) {
+    function governed() external view override returns (bool) {
         return initialized && governor != address(0);
     }
 

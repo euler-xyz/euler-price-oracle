@@ -13,7 +13,7 @@ runs = 1_000
 max_test_rejects = 100_000
 
 [invariant]
-runs = 2_000
+runs = 10_000
 depth = 10
 dictionary_weight = 80
 fail_on_revert = false
