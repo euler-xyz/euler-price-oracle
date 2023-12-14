@@ -8,4 +8,10 @@ contract LinearStrategyGov_PropTest is EOracleGovPropTest {
     function _deployOracle() internal override returns (address) {
         return address(new LinearStrategy());
     }
+
+    function _govMethods() internal pure override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = LinearStrategy.govSetConfig.selector;
+        return selectors;
+    }
 }

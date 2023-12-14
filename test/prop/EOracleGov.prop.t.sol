@@ -11,7 +11,7 @@ abstract contract EOracleGovPropTest is Test {
         oracle = IFactoryInitializable(_deployOracle());
     }
 
-    function invariantProp_Initialize_Integrity() public {
+    function statefulFuzz_Initialize_Integrity() public {
         address _governor = makeAddr("governor");
         bool _initialized = oracle.initialized();
 
@@ -24,7 +24,7 @@ abstract contract EOracleGovPropTest is Test {
         }
     }
 
-    function invariantProp_TransferGovernance_AccessControl() public {
+    function statefulFuzz_TransferGovernance_AccessControl() public {
         address newGovernor = makeAddr("newGovernor");
 
         address currentGovernor = oracle.governor();
@@ -37,7 +37,7 @@ abstract contract EOracleGovPropTest is Test {
         }
     }
 
-    function invariantProp_TransferGovernance_Integrity() public {
+    function statefulFuzz_TransferGovernance_Integrity() public {
         address newGovernor = makeAddr("newGovernor");
 
         vm.prank(oracle.governor());
@@ -45,20 +45,20 @@ abstract contract EOracleGovPropTest is Test {
         assertEq(oracle.governor(), newGovernor);
     }
 
-    function invariantProp_OnlyGovernorCanRenounceGovernance() public {
+    function statefulFuzz_RenounceGovernance_AccessControl() public {
         vm.prank(oracle.governor());
         oracle.renounceGovernance();
 
         assertEq(oracle.governor(), address(0));
     }
 
-    function invariantProp_RenounceGovernance_Integrity() public {
+    function statefulFuzz_RenounceGovernance_Integrity() public {
         vm.prank(oracle.governor());
         oracle.renounceGovernance();
         assertEq(oracle.governor(), address(0));
     }
 
-    function invariantProp_CannotBeBothFinalizedAndGoverned() public {
+    function statefulFuzz_CannotBeBothFinalizedAndGoverned() public {
         bool _finalized = oracle.finalized();
         bool _governed = oracle.governed();
 
@@ -66,4 +66,8 @@ abstract contract EOracleGovPropTest is Test {
     }
 
     function _deployOracle() internal virtual returns (address);
+
+    function _govMethods() internal pure virtual returns (bytes4[] memory) {
+        return new bytes4[](0);
+    }
 }
