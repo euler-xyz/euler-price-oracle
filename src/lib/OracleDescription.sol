@@ -53,6 +53,18 @@ library OracleDescription {
         });
     }
 
+    function RedstoneCoreOracle(address governor) internal pure returns (Description memory) {
+        return Description({
+            algorithm: Algorithm.MEDIAN,
+            authority: Authority.GOVERNED,
+            paymentModel: PaymentModel.PER_REQUEST,
+            requestModel: RequestModel.PULL,
+            variant: Variant.ADAPTER,
+            configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
+            name: "Linear"
+        });
+    }
+
     function SimpleAggregator() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.AGGREGATE_MAX,

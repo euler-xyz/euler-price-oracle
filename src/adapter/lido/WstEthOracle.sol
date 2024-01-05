@@ -14,7 +14,6 @@ contract WstEthOracle is BaseOracle {
     /// @dev The address of Lido wrapped staked Ether.
     address public immutable wstEth;
 
-    /// @
     constructor(address _stEth, address _wstEth) {
         stEth = _stEth;
         wstEth = _wstEth;
