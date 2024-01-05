@@ -26,7 +26,6 @@ abstract contract EOracleGovPropTest is Test {
 
     function statefulFuzz_TransferGovernance_AccessControl() public {
         address newGovernor = makeAddr("newGovernor");
-
         address currentGovernor = oracle.governor();
         if (msg.sender != currentGovernor) {
             vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);

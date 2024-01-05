@@ -10,8 +10,6 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ChainlinkOracle is BaseOracle {
-    uint32 public constant DEFAULT_MAX_ROUND_DURATION = 1 hours;
-    uint32 public constant DEFAULT_MAX_STALENESS = 1 days;
     FeedRegistryInterface public immutable feedRegistry;
     address public immutable weth;
     mapping(address base => mapping(address quote => Config)) public configs;
@@ -70,7 +68,7 @@ contract ChainlinkOracle is BaseOracle {
     }
 
     function description() external view virtual returns (OracleDescription.Description memory) {
-        return OracleDescription.ChainlinkOracle(uint256(DEFAULT_MAX_STALENESS), governor);
+        return OracleDescription.ChainlinkOracle(0, governor);
     }
 
     function _setConfig(ConfigParams memory config) internal {
@@ -97,6 +95,7 @@ contract ChainlinkOracle is BaseOracle {
             feedDecimals: feedDecimals,
             inverse: !config.inverse
         });
+
         emit ConfigSet(config.base, config.quote, config.feed);
         emit ConfigSet(config.quote, config.base, config.feed);
     }
