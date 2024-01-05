@@ -12,11 +12,4 @@ contract ChainlinkOracleGov_PropTest is EOracleGovPropTest {
     function _deployOracle() internal override returns (address) {
         return address(new ChainlinkOracle(CHAINLINK_FEED_REGISTRY, WETH));
     }
-
-    function _govMethods() internal pure override returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](2);
-        selectors[0] = ChainlinkOracle.govSetConfig.selector;
-        selectors[1] = ChainlinkOracle.govUnsetConfig.selector;
-        return selectors;
-    }
 }

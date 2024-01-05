@@ -2,10 +2,10 @@
 pragma solidity 0.8.23;
 
 import {EOracleGovPropTest} from "test/prop/EOracleGov.prop.t.sol";
-import {LinearStrategy} from "src/strategy/linear/LinearStrategy.sol";
+import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
-contract LinearStrategyGov_PropTest is EOracleGovPropTest {
+contract RedstoneCoreOracleGov_PropTest is EOracleGovPropTest {
     function _deployOracle() internal override returns (address) {
-        return address(new LinearStrategy());
+        return address(new RedstoneCoreOracle());
     }
 }

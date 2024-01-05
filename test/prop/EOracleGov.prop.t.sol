@@ -27,13 +27,11 @@ abstract contract EOracleGovPropTest is Test {
     function statefulFuzz_TransferGovernance_AccessControl() public {
         address newGovernor = makeAddr("newGovernor");
         address currentGovernor = oracle.governor();
-        if (msg.sender != currentGovernor) {
-            vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
-            oracle.transferGovernance(newGovernor);
-        } else {
-            oracle.transferGovernance(newGovernor);
-            assertEq(oracle.governor(), newGovernor);
-        }
+
+        if (!oracle.initialized()) return;
+        excludeSender(currentGovernor);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        oracle.transferGovernance(newGovernor);
     }
 
     function statefulFuzz_TransferGovernance_Integrity() public {
@@ -45,10 +43,12 @@ abstract contract EOracleGovPropTest is Test {
     }
 
     function statefulFuzz_RenounceGovernance_AccessControl() public {
-        vm.prank(oracle.governor());
-        oracle.renounceGovernance();
+        address currentGovernor = oracle.governor();
 
-        assertEq(oracle.governor(), address(0));
+        if (!oracle.initialized()) return;
+        excludeSender(currentGovernor);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        oracle.renounceGovernance();
     }
 
     function statefulFuzz_RenounceGovernance_Integrity() public {
@@ -65,8 +65,4 @@ abstract contract EOracleGovPropTest is Test {
     }
 
     function _deployOracle() internal virtual returns (address);
-
-    function _govMethods() internal pure virtual returns (bytes4[] memory) {
-        return new bytes4[](0);
-    }
 }

@@ -10,12 +10,4 @@ contract SimpleRouterGov_PropTest is EOracleGovPropTest {
     function _deployOracle() internal override returns (address) {
         return address(new SimpleRouter(FALLBACK));
     }
-
-    function _govMethods() internal pure override returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](3);
-        selectors[0] = SimpleRouter.govSetConfig.selector;
-        selectors[1] = SimpleRouter.govUnsetConfig.selector;
-        selectors[2] = SimpleRouter.govSetFallbackOracle.selector;
-        return selectors;
-    }
 }
