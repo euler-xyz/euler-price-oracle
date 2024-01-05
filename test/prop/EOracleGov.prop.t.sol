@@ -24,14 +24,18 @@ abstract contract EOracleGovPropTest is Test {
         }
     }
 
-    function statefulFuzz_TransferGovernance_AccessControl() public {
-        address newGovernor = makeAddr("newGovernor");
-        address currentGovernor = oracle.governor();
+    function test_TransferGovernance_AccessControl(address caller, address governor, address newGovernor) public {
+        oracle.initialize(governor);
 
-        if (!oracle.initialized()) return;
-        excludeSender(currentGovernor);
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
-        oracle.transferGovernance(newGovernor);
+        if (caller == governor) {
+            vm.prank(caller);
+            oracle.transferGovernance(newGovernor);
+            assertEq(oracle.governor(), newGovernor);
+        } else {
+            vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+            vm.prank(caller);
+            oracle.transferGovernance(newGovernor);
+        }
     }
 
     function statefulFuzz_TransferGovernance_Integrity() public {
@@ -42,13 +46,18 @@ abstract contract EOracleGovPropTest is Test {
         assertEq(oracle.governor(), newGovernor);
     }
 
-    function statefulFuzz_RenounceGovernance_AccessControl() public {
-        address currentGovernor = oracle.governor();
+    function test_RenounceGovernance_AccessControl(address caller, address governor) public {
+        oracle.initialize(governor);
 
-        if (!oracle.initialized()) return;
-        excludeSender(currentGovernor);
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
-        oracle.renounceGovernance();
+        if (caller == governor) {
+            vm.prank(caller);
+            oracle.renounceGovernance();
+            assertEq(oracle.governor(), address(0));
+        } else {
+            vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+            vm.prank(caller);
+            oracle.renounceGovernance();
+        }
     }
 
     function statefulFuzz_RenounceGovernance_Integrity() public {
@@ -60,7 +69,6 @@ abstract contract EOracleGovPropTest is Test {
     function statefulFuzz_CannotBeBothFinalizedAndGoverned() public {
         bool _finalized = oracle.finalized();
         bool _governed = oracle.governed();
-
         assertFalse(_finalized && _governed);
     }
 
