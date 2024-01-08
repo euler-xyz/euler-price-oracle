@@ -22,5 +22,6 @@ crytic-export
 # Coverage
 coverage-report
 lcov.info
+forge-pruned-lcov.info
 
 .DS_Store

@@ -374,6 +374,38 @@ contract ChainlinkOracleTest is Test {
         uint256 res = oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
+    function test_GetQuotes_RevertsWhen_NoConfig(FuzzableConfig memory c, uint256 inAmount) public {
+        _prepareValidConfig(c);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.params.base, c.params.quote));
+        oracle.getQuotes(inAmount, c.params.base, c.params.quote);
+    }
+
+    function test_GetQuotes_Integrity(FuzzableConfig memory c, uint256 inAmount) public {
+        _prepareValidConfig(c);
+        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        c.params.feed = CHAINLINK_FEED_REGISTRY;
+        vm.mockCall(
+            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
+        );
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(c.params);
+
+        vm.warp(8);
+        vm.mockCall(
+            CHAINLINK_FEED_REGISTRY,
+            abi.encodeWithSelector(FeedRegistryInterface.latestRoundData.selector, c.params.base, c.params.quote),
+            abi.encode(uint80(0), int256(1), uint256(8), uint256(8), uint80(0))
+        );
+        uint256 outAmount = oracle.getQuote(inAmount, c.params.base, c.params.quote);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.params.base, c.params.quote);
+
+        assertEq(outAmount, bidOutAmount);
+        assertEq(bidOutAmount, askOutAmount);
+        assertEq(askOutAmount, outAmount);
+    }
+
     function _prepareValidConfig(FuzzableConfig memory c) private {
         c.params.base = boundAddr(c.params.base);
         c.params.quote = boundAddr(c.params.quote);
