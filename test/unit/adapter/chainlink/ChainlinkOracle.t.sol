@@ -21,7 +21,6 @@ contract ChainlinkOracleTest is Test {
         ChainlinkOracle.ConfigParams params;
         uint8 baseDecimals;
         uint8 quoteDecimals;
-        uint8 feedDecimals;
     }
 
     function setUp() public {
@@ -56,7 +55,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.base, c.params.quote);
 
@@ -65,7 +63,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, c.params.maxDuration);
             assertEq(baseDecimals, c.baseDecimals);
             assertEq(quoteDecimals, c.quoteDecimals);
-            assertEq(feedDecimals, c.feedDecimals);
             assertEq(inverse, c.params.inverse);
         }
 
@@ -76,7 +73,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.quote, c.params.base);
 
@@ -85,7 +81,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, c.params.maxDuration);
             assertEq(baseDecimals, c.quoteDecimals);
             assertEq(quoteDecimals, c.baseDecimals);
-            assertEq(feedDecimals, c.feedDecimals);
             assertEq(inverse, !c.params.inverse);
         }
     }
@@ -106,7 +101,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.base, c.params.quote);
 
@@ -115,7 +109,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, 0);
             assertEq(baseDecimals, 0);
             assertEq(quoteDecimals, 0);
-            assertEq(feedDecimals, 0);
             assertEq(inverse, false);
         }
 
@@ -126,7 +119,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.quote, c.params.base);
 
@@ -135,7 +127,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, 0);
             assertEq(baseDecimals, 0);
             assertEq(quoteDecimals, 0);
-            assertEq(feedDecimals, 0);
             assertEq(inverse, false);
         }
     }
@@ -156,7 +147,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.base, c.params.quote);
 
@@ -165,7 +155,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, 0);
             assertEq(baseDecimals, 0);
             assertEq(quoteDecimals, 0);
-            assertEq(feedDecimals, 0);
             assertEq(inverse, false);
         }
 
@@ -176,7 +165,6 @@ contract ChainlinkOracleTest is Test {
                 uint32 maxDuration,
                 uint8 baseDecimals,
                 uint8 quoteDecimals,
-                uint8 feedDecimals,
                 bool inverse
             ) = oracle.configs(c.params.quote, c.params.base);
 
@@ -185,7 +173,6 @@ contract ChainlinkOracleTest is Test {
             assertEq(maxDuration, 0);
             assertEq(baseDecimals, 0);
             assertEq(quoteDecimals, 0);
-            assertEq(feedDecimals, 0);
             assertEq(inverse, false);
         }
     }
@@ -202,9 +189,6 @@ contract ChainlinkOracleTest is Test {
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
         c.params.feed = CHAINLINK_FEED_REGISTRY;
-        vm.mockCall(
-            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
-        );
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
@@ -358,9 +342,6 @@ contract ChainlinkOracleTest is Test {
         _prepareValidConfig(c);
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
         c.params.feed = CHAINLINK_FEED_REGISTRY;
-        vm.mockCall(
-            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
-        );
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
@@ -385,9 +366,6 @@ contract ChainlinkOracleTest is Test {
         _prepareValidConfig(c);
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
         c.params.feed = CHAINLINK_FEED_REGISTRY;
-        vm.mockCall(
-            CHAINLINK_FEED_REGISTRY, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals)
-        );
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(c.params);
@@ -415,11 +393,9 @@ contract ChainlinkOracleTest is Test {
 
         c.baseDecimals = uint8(bound(c.baseDecimals, 0, 24));
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
-        c.feedDecimals = uint8(bound(c.feedDecimals, 0, 24));
 
         vm.mockCall(c.params.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.params.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
-        vm.mockCall(c.params.feed, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.feedDecimals));
     }
 
     struct FuzzableRoundData {

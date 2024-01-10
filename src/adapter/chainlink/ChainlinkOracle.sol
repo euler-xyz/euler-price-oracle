@@ -9,9 +9,17 @@ import {Denominations} from "src/lib/Denominations.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @author totomanov
+/// @notice Adapter for Chainlink Push Oracles.
 contract ChainlinkOracle is BaseOracle {
+    /// @dev The address of the Chainlink Feed Registry.
+    /// 0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf on Ethereum Mainnet.
     FeedRegistryInterface public immutable feedRegistry;
+    /// @dev The address of Wrapped Ether.
     address public immutable weth;
+    /// @dev Oracle configurations for a given base/quote pair.
+    /// This mapping is populated symmetrically. When setting base/quote, 
+    /// the inverse path quote/base is also populated.
     mapping(address base => mapping(address quote => Config)) public configs;
 
     event ConfigSet(address indexed base, address indexed quote, address indexed feed);
@@ -23,7 +31,6 @@ contract ChainlinkOracle is BaseOracle {
         uint32 maxDuration;
         uint8 baseDecimals;
         uint8 quoteDecimals;
-        uint8 feedDecimals;
         bool inverse;
     }
 
@@ -74,7 +81,6 @@ contract ChainlinkOracle is BaseOracle {
     function _setConfig(ConfigParams memory config) internal {
         uint8 baseDecimals = ERC20(config.base).decimals();
         uint8 quoteDecimals = ERC20(config.quote).decimals();
-        uint8 feedDecimals = AggregatorV3Interface(config.feed).decimals();
 
         configs[config.base][config.quote] = Config({
             feed: config.feed,
@@ -82,7 +88,6 @@ contract ChainlinkOracle is BaseOracle {
             maxDuration: config.maxDuration,
             baseDecimals: baseDecimals,
             quoteDecimals: quoteDecimals,
-            feedDecimals: feedDecimals,
             inverse: config.inverse
         });
 
@@ -92,7 +97,6 @@ contract ChainlinkOracle is BaseOracle {
             maxDuration: config.maxDuration,
             baseDecimals: quoteDecimals,
             quoteDecimals: baseDecimals,
-            feedDecimals: feedDecimals,
             inverse: !config.inverse
         });
 
