@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
+import {RedstoneCoreOracleHarness} from "test/utils/RedstoneCoreOracleHarness.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -13,10 +14,10 @@ contract RedstoneCoreOracleTest is Test {
     address internal WETH = makeAddr("WETH");
     address internal RETH = makeAddr("RETH");
 
-    RedstoneCoreOracle oracle;
+    RedstoneCoreOracleHarness oracle;
 
     function setUp() public {
-        oracle = new RedstoneCoreOracle();
+        oracle = new RedstoneCoreOracleHarness();
         oracle.initialize(GOVERNOR);
     }
 
@@ -67,12 +68,22 @@ contract RedstoneCoreOracleTest is Test {
         oracle.govSetConfig(params);
     }
 
-    function todo_test_GetQuote_Integrity(
-        uint256 inAmount,
+    function test_GetQuote_RevertsWhen_NoConfig(uint256 inAmount, address base, address quote) public {
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        oracle.getQuote(inAmount, base, quote);
+    }
+
+    function test_GetQuote_Integrity(
         RedstoneCoreOracle.ConfigParams memory params,
         uint8 _baseDecimals,
-        uint8 _quoteDecimals
+        uint8 _quoteDecimals,
+        uint256 inAmount,
+        uint256 price
     ) public {
+        inAmount = bound(inAmount, 1, type(uint128).max);
+        price = bound(price, 1, type(uint128).max);
+        _baseDecimals = uint8(bound(_baseDecimals, 0, 27));
+        _quoteDecimals = uint8(bound(_quoteDecimals, 0, 27));
         params.base = boundAddr(params.base);
         params.quote = boundAddr(params.quote);
         vm.assume(params.base != params.quote);
@@ -82,16 +93,45 @@ contract RedstoneCoreOracleTest is Test {
 
         vm.prank(GOVERNOR);
         oracle.govSetConfig(params);
-        uint256 outAmount = oracle.getQuote(inAmount, params.base, params.quote);
-    }
+        oracle.setPrice(price);
 
-    function test_GetQuote_RevertsWhen_NoConfig(uint256 inAmount, address base, address quote) public {
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
-        oracle.getQuote(inAmount, base, quote);
+        uint256 outAmount = oracle.getQuote(inAmount, params.base, params.quote);
+        uint256 expectedOutAmount =
+            params.inverse ? (inAmount * 10 ** _quoteDecimals) / price : (inAmount * price) / 10 ** _baseDecimals;
+        assertEq(outAmount, expectedOutAmount);
     }
 
     function test_GetQuotes_RevertsWhen_NoConfig(uint256 inAmount, address base, address quote) public {
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
+    }
+
+    function test_GetQuotes_Integrity(
+        RedstoneCoreOracle.ConfigParams memory params,
+        uint8 _baseDecimals,
+        uint8 _quoteDecimals,
+        uint256 inAmount,
+        uint256 price
+    ) public {
+        inAmount = bound(inAmount, 1, type(uint128).max);
+        price = bound(price, 1, type(uint128).max);
+        _baseDecimals = uint8(bound(_baseDecimals, 0, 27));
+        _quoteDecimals = uint8(bound(_quoteDecimals, 0, 27));
+        params.base = boundAddr(params.base);
+        params.quote = boundAddr(params.quote);
+        vm.assume(params.base != params.quote);
+        vm.assume(params.feedId != 0);
+        vm.mockCall(params.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(_baseDecimals));
+        vm.mockCall(params.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(_quoteDecimals));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(params);
+        oracle.setPrice(price);
+
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, params.base, params.quote);
+        uint256 expectedOutAmount =
+            params.inverse ? (inAmount * 10 ** _quoteDecimals) / price : (inAmount * price) / 10 ** _baseDecimals;
+        assertEq(bidOutAmount, expectedOutAmount);
+        assertEq(askOutAmount, expectedOutAmount);
     }
 }

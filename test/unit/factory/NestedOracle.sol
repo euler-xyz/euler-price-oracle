@@ -11,7 +11,7 @@ contract ParentOracle {
     }
 
     function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
-        (address base, address child) = UNPACK();
+        (, address child) = UNPACK();
         return scalar() * IEOracle(child).getQuote(_inAmount, _base, _quote);
     }
 
@@ -31,7 +31,7 @@ contract ParentOracle2 {
     }
 
     function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
-        (address base, address child) = UNPACK();
+        (, address child) = UNPACK();
         return scalar() * IEOracle(child).getQuote(_inAmount, _base, _quote);
     }
 
@@ -46,8 +46,8 @@ contract ParentOracle2 {
 contract ChildOracle {
     function initialize(address) external {}
 
-    function getQuote(uint256 _inAmount, address _base, address _quote) external view returns (uint256) {
-        (address base, uint160 outAmount) = UNPACK();
+    function getQuote(uint256, address, address) external pure returns (uint256) {
+        (, uint160 outAmount) = UNPACK();
         return uint256(outAmount);
     }
 

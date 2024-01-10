@@ -27,6 +27,19 @@ contract AggregatorFunctionsTest is Test {
         }
     }
 
+    function test_Max_Concrete_Reverse(LibPRNG.PRNG memory prng) public {
+        uint256[] memory quotes = new uint256[](3);
+        quotes[0] = 2;
+        quotes[1] = 1;
+        quotes[2] = 0;
+
+        for (uint256 i = 0; i < SHUFFLE_ITERATIONS; ++i) {
+            LibPRNG.shuffle(prng, quotes);
+            uint256 result = functions.max(quotes);
+            assertEq(result, 2);
+        }
+    }
+
     function test_Max_Integrity(LibPRNG.PRNG memory prng, uint256[] memory quotes, uint256 k) public {
         vm.assume(quotes.length > 0);
         vm.assume(k < quotes.length);

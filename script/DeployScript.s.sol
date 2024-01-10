@@ -35,7 +35,6 @@ contract DeployScript is Script {
         OracleFactory linearFactory = new OracleFactory(address(this));
         LinearStrategy linearImpl = new LinearStrategy();
         linearFactory.setImplementation(address(linearImpl));
-        LinearStrategy linearStrategy = LinearStrategy(linearFactory.deploy(true, ""));
 
         chainlinkOracle.govSetConfig(
             ChainlinkOracle.ConfigParams({

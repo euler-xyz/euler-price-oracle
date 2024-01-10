@@ -326,7 +326,7 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
-    function todo_GetQuote_RevertsWhen_TooStale(
+    function test_GetQuote_RevertsWhen_TooStale(
         FuzzableConfig memory c,
         FuzzableRoundData memory d,
         uint256 inAmount,
@@ -336,7 +336,7 @@ contract ChainlinkOracleTest is Test {
         vm.assume(c.params.feed != CHAINLINK_FEED_REGISTRY);
 
         _prepareValidRoundData(d);
-        vm.assume(d.updatedAt > 0);
+        vm.assume(d.updatedAt > d.startedAt && d.updatedAt - d.startedAt <= c.params.maxDuration);
         vm.assume(timestamp > d.updatedAt && timestamp - d.updatedAt > c.params.maxStaleness);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
@@ -371,7 +371,7 @@ contract ChainlinkOracleTest is Test {
             abi.encodeWithSelector(FeedRegistryInterface.latestRoundData.selector, c.params.base, c.params.quote),
             abi.encode(uint80(0), int256(1), uint256(8), uint256(8), uint80(0))
         );
-        uint256 res = oracle.getQuote(inAmount, c.params.base, c.params.quote);
+        oracle.getQuote(inAmount, c.params.base, c.params.quote);
     }
 
     function test_GetQuotes_RevertsWhen_NoConfig(FuzzableConfig memory c, uint256 inAmount) public {
