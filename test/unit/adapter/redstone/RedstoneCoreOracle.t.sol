@@ -67,6 +67,24 @@ contract RedstoneCoreOracleTest is Test {
         oracle.govSetConfig(params);
     }
 
+    function todo_test_GetQuote_Integrity(
+        uint256 inAmount,
+        RedstoneCoreOracle.ConfigParams memory params,
+        uint8 _baseDecimals,
+        uint8 _quoteDecimals
+    ) public {
+        params.base = boundAddr(params.base);
+        params.quote = boundAddr(params.quote);
+        vm.assume(params.base != params.quote);
+        vm.assume(params.feedId != 0);
+        vm.mockCall(params.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(_baseDecimals));
+        vm.mockCall(params.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(_quoteDecimals));
+
+        vm.prank(GOVERNOR);
+        oracle.govSetConfig(params);
+        uint256 outAmount = oracle.getQuote(inAmount, params.base, params.quote);
+    }
+
     function test_GetQuote_RevertsWhen_NoConfig(uint256 inAmount, address base, address quote) public {
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
