@@ -29,7 +29,3 @@ address constant PYTH = 0x4305FB66699C3B2702D4d05CF36551390A4c69C6;
 // Pyth Feeds (see https://pyth.network/developers/price-feed-ids)
 bytes32 constant PYTH_ETH_USD_FEED = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 bytes32 constant PYTH_USDC_USD_FEED = 0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a;
-
-// Chronicle Feeds (see https://chroniclelabs.org/dashboard/oracles)
-address constant CHRONICLE_BTC_USD_FEED = 0xe0F30cb149fAADC7247E953746Be9BbBB6B5751f;
-address constant CHRONICLE_ETH_USD_FEED = 0x64DE91F5A373Cd4c28de3600cB34C7C6cE410C85;

@@ -18,7 +18,7 @@ contract ChainlinkOracle is BaseOracle {
     /// @dev The address of Wrapped Ether.
     address public immutable weth;
     /// @dev Oracle configurations for a given base/quote pair.
-    /// This mapping is populated symmetrically. When setting base/quote, 
+    /// This mapping is populated symmetrically. When setting base/quote,
     /// the inverse path quote/base is also populated.
     mapping(address base => mapping(address quote => Config)) public configs;
 
