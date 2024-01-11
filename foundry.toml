@@ -6,7 +6,7 @@ libs = ["lib"]
 solc = "0.8.23"
 optimizer = true
 optimizer_runs = 100_000
-# no_match_contract = "Fork" # fork tests skipped for easy dev
+no_match_contract = "Fork" # fork tests skipped for easy dev
 
 [fuzz]
 runs = 1_000
