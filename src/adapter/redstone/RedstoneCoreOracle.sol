@@ -8,6 +8,8 @@ import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @author totomanov
+/// @notice Adapter for Redstone Core (pull-based)
 contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseOracle {
     mapping(address base => mapping(address quote => Config)) public configs;
 

@@ -73,24 +73,10 @@ contract WstEthOracleTest is Test {
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
-    function test_GetQuote_RevertsWhen_StEth_WstEth_RateZero(uint256 inAmount) public {
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
-        oracle.getQuote(inAmount, STETH, WSTETH);
-    }
-
     function test_GetQuote_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
         vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), "");
 
         vm.expectRevert();
-        oracle.getQuote(inAmount, WSTETH, STETH);
-    }
-
-    function test_GetQuote_RevertsWhen_WstEth_StEth_RateZero(uint256 inAmount) public {
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         oracle.getQuote(inAmount, WSTETH, STETH);
     }
 
@@ -173,24 +159,10 @@ contract WstEthOracleTest is Test {
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
-    function test_GetQuotes_RevertsWhen_StEth_WstEth_RateZero(uint256 inAmount) public {
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
-        oracle.getQuotes(inAmount, STETH, WSTETH);
-    }
-
     function test_GetQuotes_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
         vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), "");
 
         vm.expectRevert();
-        oracle.getQuotes(inAmount, WSTETH, STETH);
-    }
-
-    function test_GetQuotes_RevertsWhen_WstEth_StEth_RateZero(uint256 inAmount) public {
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         oracle.getQuotes(inAmount, WSTETH, STETH);
     }
 

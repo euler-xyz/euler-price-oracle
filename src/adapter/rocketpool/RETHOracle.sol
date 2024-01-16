@@ -38,7 +38,6 @@ contract RethOracle is BaseOracle {
             revert Errors.EOracle_NotSupported(base, quote);
         }
 
-        if (outAmount == 0) revert Errors.EOracle_NoAnswer();
         return outAmount;
     }
 }

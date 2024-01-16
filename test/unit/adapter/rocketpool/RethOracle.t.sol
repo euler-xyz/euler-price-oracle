@@ -73,24 +73,10 @@ contract RethOracleTest is Test {
         oracle.getQuote(inAmount, WETH, RETH);
     }
 
-    function test_GetQuote_RevertsWhen_Weth_Reth_ReturnsZero(uint256 inAmount) public {
-        vm.mockCall(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
-        oracle.getQuote(inAmount, WETH, RETH);
-    }
-
     function test_GetQuote_RevertsWhen_Reth_Weth_RethCallReverts(uint256 inAmount) public {
         vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "");
 
         vm.expectRevert();
-        oracle.getQuote(inAmount, RETH, WETH);
-    }
-
-    function test_GetQuote_RevertsWhen_Reth_Weth_ReturnsZero(uint256 inAmount) public {
-        vm.mockCall(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         oracle.getQuote(inAmount, RETH, WETH);
     }
 
@@ -167,24 +153,10 @@ contract RethOracleTest is Test {
         oracle.getQuotes(inAmount, WETH, RETH);
     }
 
-    function test_GetQuotes_RevertsWhen_Weth_Reth_ReturnsZero(uint256 inAmount) public {
-        vm.mockCall(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
-        oracle.getQuotes(inAmount, WETH, RETH);
-    }
-
     function test_GetQuotes_RevertsWhen_Reth_Weth_RethCallReverts(uint256 inAmount) public {
         vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "");
 
         vm.expectRevert();
-        oracle.getQuotes(inAmount, RETH, WETH);
-    }
-
-    function test_GetQuotes_RevertsWhen_Reth_Weth_ReturnsZero(uint256 inAmount) public {
-        vm.mockCall(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), abi.encode(0));
-
-        vm.expectRevert(Errors.EOracle_NoAnswer.selector);
         oracle.getQuotes(inAmount, RETH, WETH);
     }
 

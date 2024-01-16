@@ -134,9 +134,9 @@ contract ChainlinkOracle is BaseOracle {
         }
 
         uint256 unitPrice = uint256(answer);
-
-        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
+        return config.inverse
+            ? (inAmount * 10 ** config.quoteDecimals) / unitPrice
+            : (inAmount * unitPrice) / 10 ** config.baseDecimals;
     }
 
     function _getConfigOrRevert(address base, address quote) internal view returns (Config memory) {

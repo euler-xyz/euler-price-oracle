@@ -81,6 +81,7 @@ abstract contract UniswapV3Oracle is BaseOracle {
         UniswapV3Config config = _getConfigOrRevert(base, quote);
 
         (int24 meanTick,) = OracleLibrary.consult(config.getPool(), config.getTwapWindow());
-        return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
+        uint256 outAmount = OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), base, quote);
+        return outAmount;
     }
 }

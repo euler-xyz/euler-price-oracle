@@ -42,9 +42,6 @@ contract WstEthOracle is BaseOracle {
             revert Errors.EOracle_NotSupported(base, quote);
         }
 
-        uint256 outAmount = inAmount * rate / 1e18;
-        if (outAmount == 0) revert Errors.EOracle_NoAnswer();
-
-        return outAmount;
+        return inAmount * rate / 1e18;
     }
 }
