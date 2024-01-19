@@ -2,11 +2,10 @@
 pragma solidity 0.8.23;
 
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
-import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract RethOracle is BaseOracle {
+contract RethOracle {
     address public immutable weth;
     address public immutable reth;
 
@@ -29,15 +28,11 @@ contract RethOracle is BaseOracle {
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        uint256 outAmount;
         if (base == reth && quote == weth) {
-            outAmount = IReth(reth).getEthValue(inAmount);
+            return IReth(reth).getEthValue(inAmount);
         } else if (base == weth && quote == reth) {
-            outAmount = IReth(reth).getRethValue(inAmount);
-        } else {
-            revert Errors.EOracle_NotSupported(base, quote);
+            return IReth(reth).getRethValue(inAmount);
         }
-
-        return outAmount;
+        revert Errors.EOracle_NotSupported(base, quote);
     }
 }

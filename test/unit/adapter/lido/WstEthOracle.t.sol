@@ -7,7 +7,6 @@ import {WstEthOracle} from "src/adapter/lido/WstEthOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract WstEthOracleTest is Test {
-    address internal GOVERNOR = makeAddr("GOVERNOR");
     address internal STETH = makeAddr("STETH");
     address internal WSTETH = makeAddr("WSTETH");
 
@@ -15,7 +14,6 @@ contract WstEthOracleTest is Test {
 
     function setUp() public {
         oracle = new WstEthOracle(STETH, WSTETH);
-        oracle.initialize(GOVERNOR);
     }
 
     function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {

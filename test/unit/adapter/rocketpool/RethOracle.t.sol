@@ -7,7 +7,6 @@ import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract RethOracleTest is Test {
-    address internal GOVERNOR = makeAddr("GOVERNOR");
     address internal WETH = makeAddr("WETH");
     address internal RETH = makeAddr("RETH");
 
@@ -15,7 +14,6 @@ contract RethOracleTest is Test {
 
     function setUp() public {
         oracle = new RethOracle(WETH, RETH);
-        oracle.initialize(GOVERNOR);
     }
 
     function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {

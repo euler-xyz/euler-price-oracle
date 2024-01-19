@@ -5,27 +5,15 @@ pragma solidity 0.8.23;
 /// @notice Stores oracle descriptions for all `IEOracle` implementations.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library OracleDescription {
-    function ChainlinkOracle(uint256 maxStaleness, address governor) internal pure returns (Description memory) {
+    function ChainlinkOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.VWAP,
             authority: Authority.GOVERNED,
             paymentModel: PaymentModel.FREE,
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: governor, supportsBidAskSpread: false}),
+            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
             name: "Chainlink"
-        });
-    }
-
-    function GovernedUniswapV3Oracle(address governor) internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.GEOMETRIC_MEAN_TWAP,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.PUSH,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
-            name: "Uniswap V3"
         });
     }
 
@@ -53,14 +41,14 @@ library OracleDescription {
         });
     }
 
-    function RedstoneCoreOracle(address governor) internal pure returns (Description memory) {
+    function RedstoneCoreOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.MEDIAN,
             authority: Authority.GOVERNED,
             paymentModel: PaymentModel.PER_REQUEST,
             requestModel: RequestModel.PULL,
             variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
+            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
             name: "Linear"
         });
     }

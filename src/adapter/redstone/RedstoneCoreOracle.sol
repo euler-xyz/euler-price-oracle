@@ -4,80 +4,48 @@ pragma solidity 0.8.23;
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {BaseOracle} from "src/BaseOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @author totomanov
 /// @notice Adapter for Redstone Core (pull-based)
-contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseOracle {
-    mapping(address base => mapping(address quote => Config)) public configs;
+contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase {
+    address public immutable base;
+    address public immutable quote;
+    bytes32 public immutable feedId;
+    uint256 public immutable maxStaleness;
+    bool public immutable inverse;
+    uint8 internal immutable baseDecimals;
+    uint8 internal immutable quoteDecimals;
 
-    event ConfigSet(address indexed base, address indexed quote, bytes32 indexed feedId);
-    event ConfigUnset(address indexed base, address indexed quote);
+    constructor(address _base, address _quote, bytes32 _feedId, uint32 _maxStaleness, bool _inverse) {
+        base = _base;
+        quote = _quote;
+        feedId = _feedId;
+        maxStaleness = _maxStaleness;
+        inverse = _inverse;
 
-    struct Config {
-        bytes32 feedId;
-        uint32 maxStaleness;
-        uint8 baseDecimals;
-        uint8 quoteDecimals;
-        bool inverse;
+        baseDecimals = ERC20(base).decimals();
+        quoteDecimals = ERC20(quote).decimals();
     }
 
-    struct ConfigParams {
-        address base;
-        address quote;
-        bytes32 feedId;
-        uint32 maxStaleness;
-        bool inverse;
+    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
+        return _getQuote(inAmount, _base, _quote);
     }
 
-    function govSetConfig(ConfigParams memory params) external onlyGovernor {
-        uint8 baseDecimals = ERC20(params.base).decimals();
-        uint8 quoteDecimals = ERC20(params.quote).decimals();
-
-        configs[params.base][params.quote] = Config({
-            feedId: params.feedId,
-            maxStaleness: params.maxStaleness,
-            baseDecimals: baseDecimals,
-            quoteDecimals: quoteDecimals,
-            inverse: params.inverse
-        });
-
-        configs[params.quote][params.base] = Config({
-            feedId: params.feedId,
-            maxStaleness: params.maxStaleness,
-            baseDecimals: quoteDecimals,
-            quoteDecimals: baseDecimals,
-            inverse: !params.inverse
-        });
-        emit ConfigSet(params.base, params.quote, params.feedId);
-        emit ConfigSet(params.quote, params.base, params.feedId);
-    }
-
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _getQuote(inAmount, base, quote);
-    }
-
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, base, quote);
+    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(inAmount, _base, _quote);
         return (outAmount, outAmount);
     }
 
     function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.RedstoneCoreOracle(governor);
+        return OracleDescription.RedstoneCoreOracle(maxStaleness);
     }
 
-    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        Config memory config = _getConfigOrRevert(base, quote);
-        uint256 unitPrice = getOracleNumericValueFromTxMsg(config.feedId);
-        if (config.inverse) return (inAmount * 10 ** config.quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** config.baseDecimals;
-    }
-
-    function _getConfigOrRevert(address base, address quote) internal view returns (Config memory) {
-        Config memory config = configs[base][quote];
-        if (config.feedId == 0) revert Errors.EOracle_NotSupported(base, quote);
-        return config;
+    function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
+        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+        uint256 unitPrice = getOracleNumericValueFromTxMsg(feedId);
+        if (inverse) return (inAmount * 10 ** quoteDecimals) / unitPrice;
+        else return (inAmount * unitPrice) / 10 ** baseDecimals;
     }
 }
