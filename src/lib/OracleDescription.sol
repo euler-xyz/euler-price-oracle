@@ -65,7 +65,7 @@ library OracleDescription {
         });
     }
 
-    function WstEthOracle() internal pure returns (Description memory) {
+    function LidoOracle() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.SPOT,
             authority: Authority.IMMUTABLE,

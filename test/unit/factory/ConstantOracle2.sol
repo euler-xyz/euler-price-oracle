@@ -28,7 +28,7 @@ contract ConstantOracle2 is GovEOracle {
     }
 
     function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.WstEthOracle();
+        return OracleDescription.LidoOracle();
     }
 
     function UNPACK() internal pure returns (address base, address quote) {

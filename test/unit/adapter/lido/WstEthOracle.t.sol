@@ -2,19 +2,19 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {IWstEth} from "src/adapter/lido/IWstEth.sol";
-import {WstEthOracle} from "src/adapter/lido/WstEthOracle.sol";
+import {IStEth} from "src/adapter/lido/IStEth.sol";
+import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract WstEthOracleTest is Test {
+contract LidoOracleTest is Test {
     address internal STETH = makeAddr("STETH");
     address internal WSTETH = makeAddr("WSTETH");
 
-    WstEthOracle oracle;
+    LidoOracle oracle;
 
     function setUp() public {
-        oracle = new WstEthOracle(STETH, WSTETH);
+        oracle = new LidoOracle(STETH, WSTETH);
     }
 
     function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
@@ -66,41 +66,35 @@ contract WstEthOracleTest is Test {
     }
 
     function test_GetQuote_RevertsWhen_StEth_WstEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "");
 
         vm.expectRevert();
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
     function test_GetQuote_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "");
 
         vm.expectRevert();
         oracle.getQuote(inAmount, WSTETH, STETH);
     }
 
-    function test_GetQuote_StEth_WstEth_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuote_StEth_WstEth_Integrity(uint256 inAmount, uint256 outAmount) public {
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-        uint256 expectedOutAmount = (inAmount * rate) / 1e18;
-        vm.assume(expectedOutAmount != 0);
 
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), abi.encode(rate));
+        vm.mockCall(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), abi.encode(outAmount));
 
-        uint256 outAmount = oracle.getQuote(inAmount, STETH, WSTETH);
-        assertEq(outAmount, expectedOutAmount);
+        uint256 actualOutAmount = oracle.getQuote(inAmount, STETH, WSTETH);
+        assertEq(actualOutAmount, outAmount);
     }
 
-    function test_GetQuote_WstEth_StEth_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuote_WstEth_StEth_Integrity(uint256 inAmount, uint256 outAmount) public {
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-        uint256 expectedOutAmount = (inAmount * rate) / 1e18;
-        vm.assume(expectedOutAmount != 0);
 
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), abi.encode(rate));
+        vm.mockCall(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), abi.encode(outAmount));
 
-        uint256 outAmount = oracle.getQuote(inAmount, WSTETH, STETH);
-        assertEq(outAmount, expectedOutAmount);
+        uint256 actualOutAmount = oracle.getQuote(inAmount, WSTETH, STETH);
+        assertEq(actualOutAmount, outAmount);
     }
 
     function test_GetQuotes_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
@@ -152,43 +146,37 @@ contract WstEthOracleTest is Test {
     }
 
     function test_GetQuotes_RevertsWhen_StEth_WstEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "");
 
         vm.expectRevert();
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
     function test_GetQuotes_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "");
 
         vm.expectRevert();
         oracle.getQuotes(inAmount, WSTETH, STETH);
     }
 
-    function test_GetQuotes_StEth_WstEth_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuotes_StEth_WstEth_Integrity(uint256 inAmount, uint256 outAmount) public {
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-        uint256 expectedOutAmount = (inAmount * rate) / 1e18;
-        vm.assume(expectedOutAmount != 0);
 
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.tokensPerStEth.selector), abi.encode(rate));
+        vm.mockCall(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), abi.encode(outAmount));
 
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, STETH, WSTETH);
-        assertEq(bidOutAmount, expectedOutAmount);
-        assertEq(askOutAmount, expectedOutAmount);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
     }
 
-    function test_GetQuotes_WstEth_StEth_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuotes_WstEth_StEth_Integrity(uint256 inAmount, uint256 outAmount) public {
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-        uint256 expectedOutAmount = (inAmount * rate) / 1e18;
-        vm.assume(expectedOutAmount != 0);
 
-        vm.mockCall(WSTETH, abi.encodeWithSelector(IWstEth.stEthPerToken.selector), abi.encode(rate));
+        vm.mockCall(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), abi.encode(outAmount));
 
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, WSTETH, STETH);
-        assertEq(bidOutAmount, expectedOutAmount);
-        assertEq(askOutAmount, expectedOutAmount);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
     }
 
     function test_Description() public {

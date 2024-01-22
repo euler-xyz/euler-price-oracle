@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {IWstEth} from "src/adapter/lido/IWstEth.sol";
+import {IStEth} from "src/adapter/lido/IStEth.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Adapter for pricing Lido stEth <-> wstEth via the wstEth contract.
-contract WstEthOracle is IEOracle {
+/// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
+contract LidoOracle is IEOracle {
     /// @dev The address of Lido staked Ether.
     address public immutable stEth;
     /// @dev The address of Lido wrapped staked Ether.
@@ -29,19 +29,15 @@ contract WstEthOracle is IEOracle {
     }
 
     function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.WstEthOracle();
+        return OracleDescription.LidoOracle();
     }
 
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
-        uint256 rate;
         if (base == stEth && quote == wstEth) {
-            rate = IWstEth(wstEth).tokensPerStEth();
+            return IStEth(stEth).getSharesByPooledEth(inAmount);
         } else if (base == wstEth && quote == stEth) {
-            rate = IWstEth(wstEth).stEthPerToken();
-        } else {
-            revert Errors.EOracle_NotSupported(base, quote);
+            return IStEth(stEth).getPooledEthByShares(inAmount);
         }
-
-        return inAmount * rate / 1e18;
+        revert Errors.EOracle_NotSupported(base, quote);
     }
 }
