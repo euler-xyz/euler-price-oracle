@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {GovEOracle} from "src/GovEOracle.sol";
-import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract TestOracle is GovEOracle {
@@ -27,7 +27,7 @@ contract GovEOracleTest is Test {
             oracle.initialize(_governor);
             assertEq(oracle.governor(), _governor);
         } else {
-            vm.expectRevert(IFactoryInitializable.AlreadyInitialized.selector);
+            vm.expectRevert(Errors.Governance_AlreadyInitialized.selector);
             oracle.initialize(_governor);
         }
     }
@@ -40,7 +40,7 @@ contract GovEOracleTest is Test {
             oracle.transferGovernance(newGovernor);
             assertEq(oracle.governor(), newGovernor);
         } else {
-            vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+            vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
             vm.prank(caller);
             oracle.transferGovernance(newGovernor);
         }
@@ -62,7 +62,7 @@ contract GovEOracleTest is Test {
             oracle.renounceGovernance();
             assertEq(oracle.governor(), address(0));
         } else {
-            vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+            vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
             vm.prank(caller);
             oracle.renounceGovernance();
         }

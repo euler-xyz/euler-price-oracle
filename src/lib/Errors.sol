@@ -26,6 +26,8 @@ library Errors {
     error EOracle_NotSupported(address base, address quote);
     error EOracle_Overflow();
     error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);
+    error Governance_AlreadyInitialized();
+    error Governance_CallerNotGovernor();
     error Pyth_InvalidConfidenceInterval(int64 price, uint64 conf);
     error Pyth_InvalidExponent(int32 expo);
     error Pyth_InvalidPrice(int64 price);

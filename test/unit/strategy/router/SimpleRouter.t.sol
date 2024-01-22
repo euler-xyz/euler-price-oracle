@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
-import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {SimpleRouter} from "src/strategy/router/SimpleRouter.sol";
@@ -54,7 +53,7 @@ contract SimpleRouterTest is Test {
     ) public {
         vm.assume(caller != GOVERNOR);
 
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         router.govSetConfig(base, quote, oracle);
     }
 
@@ -80,7 +79,7 @@ contract SimpleRouterTest is Test {
     function test_GovUnsetConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
         vm.assume(caller != GOVERNOR);
 
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         router.govUnsetConfig(base, quote);
     }
 
@@ -111,7 +110,7 @@ contract SimpleRouterTest is Test {
     function test_GovSetFallbackOracle_RevertsWhen_CallerNotGovernor(address caller, address fallbackOracle) public {
         vm.assume(caller != GOVERNOR);
 
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         router.govSetFallbackOracle(fallbackOracle);
     }
 
@@ -203,7 +202,7 @@ contract SimpleRouterTest is Test {
 
     function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {
         vm.assume(caller != GOVERNOR);
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.transferGovernance(newGovernor);
     }
@@ -229,7 +228,7 @@ contract SimpleRouterTest is Test {
 
     function test_RenounceGovernance_RevertsWhen_CallerNotGovernor(address caller) public {
         vm.assume(caller != GOVERNOR);
-        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.renounceGovernance();
     }

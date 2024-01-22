@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 
 abstract contract GovEOracle is IEOracle, IFactoryInitializable {
@@ -9,7 +10,7 @@ abstract contract GovEOracle is IEOracle, IFactoryInitializable {
     bool public override initialized;
 
     function initialize(address _governor) external override {
-        if (initialized) revert AlreadyInitialized();
+        if (initialized) revert Errors.Governance_AlreadyInitialized();
         initialized = true;
         _setGovernor(_governor);
     }
@@ -38,7 +39,7 @@ abstract contract GovEOracle is IEOracle, IFactoryInitializable {
 
     modifier onlyGovernor() {
         if (msg.sender != governor) {
-            revert CallerNotGovernor();
+            revert Errors.Governance_CallerNotGovernor();
         }
         _;
     }
