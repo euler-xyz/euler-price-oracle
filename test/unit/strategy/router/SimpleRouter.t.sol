@@ -6,6 +6,7 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {SimpleRouter} from "src/strategy/router/SimpleRouter.sol";
 
 contract SimpleRouterTest is Test {
@@ -29,12 +30,16 @@ contract SimpleRouterTest is Test {
         assertEq(router.oracles(base, quote), oracle);
     }
 
-    function test_GovSetConfig_Integrity_OverWriteOk(address base, address quote, address oracleA, address oracleB)
+    function test_GovSetConfig_Integrity_OverwriteOk(address base, address quote, address oracleA, address oracleB)
         public
     {
+        vm.expectEmit();
+        emit SimpleRouter.ConfigSet(base, quote, oracleA);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleA);
 
+        vm.expectEmit();
+        emit SimpleRouter.ConfigSet(base, quote, oracleB);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleB);
 
@@ -57,6 +62,8 @@ contract SimpleRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
+        vm.expectEmit();
+        emit SimpleRouter.ConfigUnset(base, quote);
         vm.prank(GOVERNOR);
         router.govUnsetConfig(base, quote);
 
@@ -84,7 +91,7 @@ contract SimpleRouterTest is Test {
         assertEq(router.fallbackOracle(), fallbackOracle);
     }
 
-    function test_GovSetFallbackOracle_OverWriteOk(address fallbackOracleA, address fallbackOracleB) public {
+    function test_GovSetFallbackOracle_OverwriteOk(address fallbackOracleA, address fallbackOracleB) public {
         vm.prank(GOVERNOR);
         router.govSetFallbackOracle(fallbackOracleA);
 
@@ -180,5 +187,59 @@ contract SimpleRouterTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
         router.getQuotes(inAmount, base, quote);
+    }
+
+    function test_Description() public {
+        OracleDescription.Description memory desc = router.description();
+        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.UNKNOWN));
+        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.GOVERNED));
+        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.UNKNOWN));
+        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.INTERNAL));
+        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.STRATEGY));
+        assertEq(desc.configuration.maxStaleness, 0);
+        assertEq(desc.configuration.governor, GOVERNOR);
+        assertEq(desc.configuration.supportsBidAskSpread, false);
+    }
+
+    function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {
+        vm.assume(caller != GOVERNOR);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.prank(caller);
+        router.transferGovernance(newGovernor);
+    }
+
+    function test_TransferGovernance_Integrity(address newGovernor) public {
+        vm.assume(newGovernor != address(0));
+        vm.prank(GOVERNOR);
+        router.transferGovernance(newGovernor);
+
+        assertEq(router.governor(), newGovernor);
+        assertTrue(router.governed());
+        assertFalse(router.finalized());
+    }
+
+    function test_TransferGovernance_Integrity_ZeroAddress() public {
+        vm.prank(GOVERNOR);
+        router.transferGovernance(address(0));
+
+        assertEq(router.governor(), address(0));
+        assertFalse(router.governed());
+        assertTrue(router.finalized());
+    }
+
+    function test_RenounceGovernance_RevertsWhen_CallerNotGovernor(address caller) public {
+        vm.assume(caller != GOVERNOR);
+        vm.expectRevert(IFactoryInitializable.CallerNotGovernor.selector);
+        vm.prank(caller);
+        router.renounceGovernance();
+    }
+
+    function test_RenounceGovernance_Integrity() public {
+        vm.prank(GOVERNOR);
+        router.renounceGovernance();
+
+        assertEq(router.governor(), address(0));
+        assertFalse(router.governed());
+        assertTrue(router.finalized());
     }
 }

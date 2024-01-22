@@ -41,14 +41,14 @@ library OracleDescription {
         });
     }
 
-    function SimpleRouter() internal pure returns (Description memory) {
+    function SimpleRouter(address governor) internal pure returns (Description memory) {
         return Description({
-            algorithm: Algorithm.SPOT,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
+            algorithm: Algorithm.UNKNOWN,
+            authority: Authority.GOVERNED,
+            paymentModel: PaymentModel.UNKNOWN,
             requestModel: RequestModel.INTERNAL,
-            variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            variant: Variant.STRATEGY,
+            configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
             name: "Router"
         });
     }
@@ -90,20 +90,23 @@ library OracleDescription {
         AGGREGATE_MEDIAN,
         AGGREGATE_MIN,
         AGGREGATE_WEIGHTED,
-        OTHER
+        OTHER,
+        UNKNOWN
     }
 
     enum Authority {
         IMMUTABLE,
         GOVERNED,
-        OTHER
+        OTHER,
+        UNKNOWN
     }
 
     enum PaymentModel {
         FREE,
         SUBSCRIPTION,
         PER_REQUEST,
-        OTHER
+        OTHER,
+        UNKNOWN
     }
 
     enum RequestModel {
@@ -111,7 +114,8 @@ library OracleDescription {
         PULL,
         SIGNATURE,
         INTERNAL,
-        OTHER
+        OTHER,
+        UNKNOWN
     }
 
     enum Variant {

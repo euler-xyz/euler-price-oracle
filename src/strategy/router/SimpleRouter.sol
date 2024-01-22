@@ -57,8 +57,8 @@ contract SimpleRouter is GovEOracle {
     }
 
     /// @inheritdoc IEOracle
-    function description() external pure override returns (OracleDescription.Description memory) {
-        return OracleDescription.SimpleRouter();
+    function description() external view override returns (OracleDescription.Description memory) {
+        return OracleDescription.SimpleRouter(governor);
     }
 
     function _resolveOracle(address base, address quote) internal view returns (address) {
