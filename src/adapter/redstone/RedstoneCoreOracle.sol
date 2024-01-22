@@ -18,7 +18,12 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase {
     uint8 internal immutable baseDecimals;
     uint8 internal immutable quoteDecimals;
 
-    constructor(address _base, address _quote, bytes32 _feedId, uint32 _maxStaleness, bool _inverse) {
+    uint224 public lastPrice;
+    uint32 public lastUpdatedAt;
+
+    event PriceUpdated(uint256 indexed price);
+
+    constructor(address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
         base = _base;
         quote = _quote;
         feedId = _feedId;
@@ -27,6 +32,14 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase {
 
         baseDecimals = ERC20(base).decimals();
         quoteDecimals = ERC20(quote).decimals();
+    }
+
+    function updatePrice() external {
+        uint256 price = getOracleNumericValueFromTxMsg(feedId);
+        if (price > type(uint224).max) revert Errors.EOracle_Overflow();
+        lastPrice = uint224(price);
+        lastUpdatedAt = uint32(block.timestamp);
+        emit PriceUpdated(price);
     }
 
     function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
@@ -44,8 +57,10 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase {
 
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
-        uint256 unitPrice = getOracleNumericValueFromTxMsg(feedId);
-        if (inverse) return (inAmount * 10 ** quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** baseDecimals;
+        uint256 staleness = block.timestamp - lastUpdatedAt;
+        if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);
+
+        if (inverse) return (inAmount * 10 ** quoteDecimals) / lastPrice;
+        else return (inAmount * lastPrice) / 10 ** baseDecimals;
     }
 }
