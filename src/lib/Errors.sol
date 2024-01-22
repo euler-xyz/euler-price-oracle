@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-/// @author totomanov
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Stores common errors in Oracles.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library Errors {

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
-import {BaseOracle} from "src/BaseOracle.sol";
+import {GovEOracle} from "src/GovEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConstantOracle2 is BaseOracle {
+contract ConstantOracle2 is GovEOracle {
     uint256 public constant PRECISION = 10 ** 27;
     uint256 public constant rate = 10 ** 27;
     uint256 public immutable immutableValue;

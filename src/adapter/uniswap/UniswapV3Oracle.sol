@@ -2,9 +2,11 @@
 pragma solidity 0.8.23;
 
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract UniswapV3Oracle {
+contract UniswapV3Oracle is IEOracle {
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
     address public immutable base;
@@ -34,6 +36,10 @@ contract UniswapV3Oracle {
     function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, _base, _quote);
         return (outAmount, outAmount);
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.UniswapV3Oracle();
     }
 
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {

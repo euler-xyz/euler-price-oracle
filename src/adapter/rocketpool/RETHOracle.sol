@@ -2,10 +2,11 @@
 pragma solidity 0.8.23;
 
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract RethOracle {
+contract RethOracle is IEOracle {
     address public immutable weth;
     address public immutable reth;
 

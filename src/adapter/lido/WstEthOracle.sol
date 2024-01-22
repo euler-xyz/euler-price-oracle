@@ -2,12 +2,13 @@
 pragma solidity 0.8.23;
 
 import {IWstEth} from "src/adapter/lido/IWstEth.sol";
+import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-/// @author totomanov
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the wstEth contract.
-contract WstEthOracle {
+contract WstEthOracle is IEOracle {
     /// @dev The address of Lido staked Ether.
     address public immutable stEth;
     /// @dev The address of Lido wrapped staked Ether.

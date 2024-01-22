@@ -3,9 +3,8 @@ pragma solidity 0.8.23;
 
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-abstract contract BaseOracle is IEOracle, IFactoryInitializable {
+abstract contract GovEOracle is IEOracle, IFactoryInitializable {
     address public override governor;
     bool public override initialized;
 

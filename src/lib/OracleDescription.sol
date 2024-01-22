@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-/// @author totomanov
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Stores oracle descriptions for all `IEOracle` implementations.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library OracleDescription {
@@ -17,7 +17,7 @@ library OracleDescription {
         });
     }
 
-    function ImmutableUniswapV3Oracle() internal pure returns (Description memory) {
+    function UniswapV3Oracle() internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.GEOMETRIC_MEAN_TWAP,
             authority: Authority.IMMUTABLE,
@@ -26,18 +26,6 @@ library OracleDescription {
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
             name: "Uniswap V3"
-        });
-    }
-
-    function LinearStrategy() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.OTHER,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Linear"
         });
     }
 
@@ -50,18 +38,6 @@ library OracleDescription {
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
             name: "Linear"
-        });
-    }
-
-    function SimpleAggregator() internal pure returns (Description memory) {
-        return Description({
-            algorithm: Algorithm.AGGREGATE_MAX,
-            authority: Authority.IMMUTABLE,
-            paymentModel: PaymentModel.FREE,
-            requestModel: RequestModel.INTERNAL,
-            variant: Variant.STRATEGY,
-            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
-            name: "Aggregator (Simple)"
         });
     }
 

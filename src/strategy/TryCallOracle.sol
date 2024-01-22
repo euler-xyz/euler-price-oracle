@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 
-/// @author totomanov
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Call IEOracle without reverting
 /// @dev Uses staticcall. Rejects returndata with invalid length.
 abstract contract TryCallOracle {
