@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IWstEth} from "src/adapter/lido/IWstEth.sol";
 import {WstEthOracle} from "src/adapter/lido/WstEthOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract WstEthOracleTest is Test {
     address internal STETH = makeAddr("STETH");
@@ -188,5 +189,17 @@ contract WstEthOracleTest is Test {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, WSTETH, STETH);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
+    }
+
+    function test_Description() public {
+        OracleDescription.Description memory desc = oracle.description();
+        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.SPOT));
+        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.IMMUTABLE));
+        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.FREE));
+        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.PUSH));
+        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.ADAPTER));
+        assertEq(desc.configuration.maxStaleness, 0);
+        assertEq(desc.configuration.governor, address(0));
+        assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 }

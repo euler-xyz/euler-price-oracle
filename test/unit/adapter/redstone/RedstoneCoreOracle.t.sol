@@ -7,6 +7,7 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracleHarness} from "test/utils/RedstoneCoreOracleHarness.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract RedstoneCoreOracleTest is Test {
     struct FuzzableConfig {
@@ -167,6 +168,19 @@ contract RedstoneCoreOracleTest is Test {
             abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
         );
         oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_Description(FuzzableConfig memory c) public {
+        _deploy(c);
+        OracleDescription.Description memory desc = oracle.description();
+        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.MEDIAN));
+        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.IMMUTABLE));
+        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.PER_REQUEST));
+        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.PULL));
+        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.ADAPTER));
+        assertEq(desc.configuration.maxStaleness, c.maxStaleness);
+        assertEq(desc.configuration.governor, address(0));
+        assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 
     function _deploy(FuzzableConfig memory c) private {

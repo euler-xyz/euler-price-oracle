@@ -8,7 +8,7 @@ library OracleDescription {
     function ChainlinkOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.VWAP,
-            authority: Authority.GOVERNED,
+            authority: Authority.IMMUTABLE,
             paymentModel: PaymentModel.FREE,
             requestModel: RequestModel.PUSH,
             variant: Variant.ADAPTER,
@@ -32,7 +32,7 @@ library OracleDescription {
     function RedstoneCoreOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.MEDIAN,
-            authority: Authority.GOVERNED,
+            authority: Authority.IMMUTABLE,
             paymentModel: PaymentModel.PER_REQUEST,
             requestModel: RequestModel.PULL,
             variant: Variant.ADAPTER,

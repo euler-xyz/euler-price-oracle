@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
 import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract RethOracleTest is Test {
     address internal WETH = makeAddr("WETH");
@@ -176,5 +177,17 @@ contract RethOracleTest is Test {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, RETH, WETH);
         assertEq(expectedOutAmount, bidOutAmount);
         assertEq(expectedOutAmount, askOutAmount);
+    }
+
+    function test_Description() public {
+        OracleDescription.Description memory desc = oracle.description();
+        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.SPOT));
+        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.IMMUTABLE));
+        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.FREE));
+        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.PUSH));
+        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.ADAPTER));
+        assertEq(desc.configuration.maxStaleness, 0);
+        assertEq(desc.configuration.governor, address(0));
+        assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 }
