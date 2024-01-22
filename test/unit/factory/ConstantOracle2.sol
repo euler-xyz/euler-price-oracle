@@ -9,7 +9,6 @@ contract ConstantOracle2 is GovEOracle {
     uint256 public constant PRECISION = 10 ** 27;
     uint256 public constant rate = 10 ** 27;
     uint256 public immutable immutableValue;
-    uint256 public metadataValue;
 
     constructor(uint256 _immutableValue) {
         immutableValue = _immutableValue;

@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
