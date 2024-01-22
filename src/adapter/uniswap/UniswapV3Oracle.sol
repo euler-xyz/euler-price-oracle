@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -8,15 +10,18 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract UniswapV3Oracle is IEOracle {
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+    uint32 internal constant MAX_TWAP_WINDOW = 30 days;
 
     address public immutable base;
     address public immutable quote;
-    uint24 public immutable fee;
     address public immutable pool;
-    uint32 public immutable twapWindow;
     address public immutable uniswapV3Factory;
+    uint24 public immutable fee;
+    uint32 public immutable twapWindow;
 
     constructor(address _base, address _quote, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
+        if (_twapWindow > MAX_TWAP_WINDOW) revert Errors.UniswapV3_TwapWindowTooLong(_twapWindow, MAX_TWAP_WINDOW);
+
         base = _base;
         quote = _quote;
         fee = _fee;
@@ -47,7 +52,19 @@ contract UniswapV3Oracle is IEOracle {
             revert Errors.EOracle_NotSupported(_base, _quote);
         }
         if (inAmount > type(uint128).max) revert Errors.EOracle_Overflow();
-        (int24 meanTick,) = OracleLibrary.consult(pool, twapWindow);
-        return OracleLibrary.getQuoteAtTick(meanTick, uint128(inAmount), _base, _quote);
+
+        int24 tick;
+        if (twapWindow == 0) {
+            // return the spot price
+            (, tick,,,,,) = IUniswapV3Pool(pool).slot0();
+        } else {
+            uint32[] memory secondsAgos = new uint32[](2);
+            secondsAgos[0] = twapWindow;
+            secondsAgos[1] = 0;
+
+            (int56[] memory tickCumulatives,) = IUniswapV3Pool(pool).observe(secondsAgos);
+            tick = int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapWindow));
+        }
+        return OracleLibrary.getQuoteAtTick(tick, uint128(inAmount), _base, _quote);
     }
 }

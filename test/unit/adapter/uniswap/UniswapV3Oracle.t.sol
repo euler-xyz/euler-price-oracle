@@ -2,6 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import {IUniswapV3PoolState} from "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
+import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -16,13 +19,51 @@ contract UniswapV3OracleTest is Test {
         address uniswapV3Factory;
     }
 
+    struct FuzzableSlot0 {
+        uint160 sqrtPriceX96;
+        int24 tick;
+        uint16 observationIndex;
+        uint16 observationCardinality;
+        uint16 observationCardinalityNext;
+        uint8 feeProtocol;
+        bool unlocked;
+    }
+
     UniswapV3Oracle oracle;
 
     function test_Constructor_Integrity(FuzzableConfig memory c) public {
+        _bound(c);
+        _deploy(c);
+        assertEq(oracle.base(), c.base);
+        assertEq(oracle.quote(), c.quote);
+        assertEq(oracle.uniswapV3Factory(), c.uniswapV3Factory);
+        assertEq(oracle.fee(), c.fee);
+        assertEq(oracle.twapWindow(), c.twapWindow);
+    }
+
+    function test_Constructor_RevertsWhen_TwapWindowTooLong(FuzzableConfig memory c) public {
+        _bound(c);
+        c.twapWindow = uint32(bound(c.twapWindow, 30 days + 1, type(uint32).max));
+        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_TwapWindowTooLong.selector, c.twapWindow, 30 days));
         _deploy(c);
     }
 
+    function test_GetQuote_Integrity_Spot(FuzzableConfig memory c, FuzzableSlot0 memory slot0, uint256 inAmount)
+        public
+    {
+        _bound(c);
+        c.twapWindow = 0;
+        _deploy(c);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        _bound(slot0);
+        vm.mockCall(oracle.pool(), abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector), abi.encode(slot0));
+        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
+        assertEq(outAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
+    }
+
     function test_GetQuote_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
+        _bound(c);
         _deploy(c);
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
@@ -32,6 +73,7 @@ contract UniswapV3OracleTest is Test {
     function test_GetQuote_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, uint256 inAmount, address base)
         public
     {
+        _bound(c);
         _deploy(c);
         vm.assume(base != c.base);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
@@ -42,6 +84,7 @@ contract UniswapV3OracleTest is Test {
     function test_GetQuote_RevertsWhen_NotSupported_Quote(FuzzableConfig memory c, uint256 inAmount, address quote)
         public
     {
+        _bound(c);
         _deploy(c);
         vm.assume(quote != c.quote);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
@@ -49,7 +92,23 @@ contract UniswapV3OracleTest is Test {
         oracle.getQuote(inAmount, c.base, quote);
     }
 
+    function test_GetQuotes_Integrity_Spot(FuzzableConfig memory c, FuzzableSlot0 memory slot0, uint256 inAmount)
+        public
+    {
+        _bound(c);
+        c.twapWindow = 0;
+        _deploy(c);
+        inAmount = bound(inAmount, 0, type(uint128).max);
+
+        _bound(slot0);
+        vm.mockCall(oracle.pool(), abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector), abi.encode(slot0));
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
+        assertEq(bidOutAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
+        assertEq(askOutAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
+    }
+
     function test_GetQuotes_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
+        _bound(c);
         _deploy(c);
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
@@ -59,6 +118,7 @@ contract UniswapV3OracleTest is Test {
     function test_GetQuotes_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, uint256 inAmount, address base)
         public
     {
+        _bound(c);
         _deploy(c);
         vm.assume(base != c.base);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
@@ -69,6 +129,7 @@ contract UniswapV3OracleTest is Test {
     function test_GetQuotes_RevertsWhen_NotSupported_Quote(FuzzableConfig memory c, uint256 inAmount, address quote)
         public
     {
+        _bound(c);
         _deploy(c);
         vm.assume(quote != c.quote);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
@@ -77,6 +138,7 @@ contract UniswapV3OracleTest is Test {
     }
 
     function test_Description(FuzzableConfig memory c) public {
+        _bound(c);
         _deploy(c);
         OracleDescription.Description memory desc = oracle.description();
         assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.GEOMETRIC_MEAN_TWAP));
@@ -89,13 +151,19 @@ contract UniswapV3OracleTest is Test {
         assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 
-    function _deploy(FuzzableConfig memory c) private {
+    function _bound(FuzzableConfig memory c) private view {
         c.base = boundAddr(c.base);
         c.quote = boundAddr(c.quote);
         c.uniswapV3Factory = boundAddr(c.uniswapV3Factory);
         vm.assume(c.base != c.quote && c.quote != c.uniswapV3Factory && c.uniswapV3Factory != c.base);
-        vm.assume(c.twapWindow != 0);
+        c.twapWindow = uint32(bound(c.twapWindow, 0, 30 days));
+    }
 
+    function _bound(FuzzableSlot0 memory slot0) private view {
+        slot0.tick = int24(bound(slot0.tick, TickMath.MIN_TICK, TickMath.MAX_TICK));
+    }
+
+    function _deploy(FuzzableConfig memory c) private {
         oracle = new UniswapV3Oracle(c.base, c.quote, c.fee, c.twapWindow, c.uniswapV3Factory);
     }
 }
