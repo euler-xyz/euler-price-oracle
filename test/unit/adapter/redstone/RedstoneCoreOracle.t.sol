@@ -95,6 +95,27 @@ contract RedstoneCoreOracleTest is Test {
         oracle.getQuote(inAmount, c.base, quote);
     }
 
+    function test_GetQuote_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        uint256 timestamp,
+        uint256 inAmount,
+        uint256 price
+    ) public {
+        _deploy(c);
+        inAmount = bound(inAmount, 0, type(uint128).max);
+        price = bound(price, 1, type(uint128).max);
+        uint256 initTimestamp = block.timestamp;
+        timestamp = bound(timestamp, block.timestamp + c.maxStaleness + 1, type(uint256).max);
+        oracle.setPrice(price);
+        oracle.updatePrice();
+
+        vm.warp(timestamp);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
+        );
+        oracle.getQuote(inAmount, c.base, c.quote);
+    }
+
     function test_GetQuotes_Integrity(FuzzableConfig memory c, uint256 timestamp, uint256 inAmount, uint256 price)
         public
     {
@@ -125,6 +146,27 @@ contract RedstoneCoreOracleTest is Test {
         vm.assume(quote != c.quote);
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
         oracle.getQuotes(inAmount, c.base, quote);
+    }
+
+    function test_GetQuotes_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        uint256 timestamp,
+        uint256 inAmount,
+        uint256 price
+    ) public {
+        _deploy(c);
+        inAmount = bound(inAmount, 0, type(uint128).max);
+        price = bound(price, 1, type(uint128).max);
+        uint256 initTimestamp = block.timestamp;
+        timestamp = bound(timestamp, block.timestamp + c.maxStaleness + 1, type(uint256).max);
+        oracle.setPrice(price);
+        oracle.updatePrice();
+
+        vm.warp(timestamp);
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
+        );
+        oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
     function _deploy(FuzzableConfig memory c) private {
