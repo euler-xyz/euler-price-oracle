@@ -172,7 +172,7 @@ contract UniswapV3OracleTest is Test {
         assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 
-    function _bound(FuzzableConfig memory c) private view {
+    function _bound(FuzzableConfig memory c) private pure {
         c.base = boundAddr(c.base);
         c.quote = boundAddr(c.quote);
         c.uniswapV3Factory = boundAddr(c.uniswapV3Factory);

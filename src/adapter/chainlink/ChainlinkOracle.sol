@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
+import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";

@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {AggregatorV3Interface} from "@chainlink/interfaces/AggregatorV3Interface.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
+import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
@@ -205,7 +205,7 @@ contract ChainlinkOracleTest is Test {
         oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.maxDuration, c.inverse);
     }
 
-    function _prepareValidRoundData(FuzzableRoundData memory d) private view {
+    function _prepareValidRoundData(FuzzableRoundData memory d) private pure {
         d.answer = bound(d.answer, 1, int256(type(int128).max));
     }
 }
