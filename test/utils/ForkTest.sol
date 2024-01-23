@@ -15,6 +15,6 @@ contract ForkTest is Test {
         string memory ETHEREUM_RPC_URL = vm.envString("ETHEREUM_RPC_URL");
         ethereumFork = vm.createFork(ETHEREUM_RPC_URL);
         vm.selectFork(ethereumFork);
-        vm.roll(blockNumber);
+        vm.rollFork(blockNumber);
     }
 }
