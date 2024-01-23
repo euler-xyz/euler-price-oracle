@@ -43,8 +43,8 @@ contract UniswapV3OracleTest is Test {
 
     function test_Constructor_RevertsWhen_TwapWindowTooLong(FuzzableConfig memory c) public {
         _bound(c);
-        c.twapWindow = uint32(bound(c.twapWindow, 30 days + 1, type(uint32).max));
-        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_TwapWindowTooLong.selector, c.twapWindow, 30 days));
+        c.twapWindow = uint32(bound(c.twapWindow, 9 days + 1, type(uint32).max));
+        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_TwapWindowTooLong.selector, c.twapWindow, 9 days));
         _deploy(c);
     }
 
@@ -156,7 +156,7 @@ contract UniswapV3OracleTest is Test {
         c.quote = boundAddr(c.quote);
         c.uniswapV3Factory = boundAddr(c.uniswapV3Factory);
         vm.assume(c.base != c.quote && c.quote != c.uniswapV3Factory && c.uniswapV3Factory != c.base);
-        c.twapWindow = uint32(bound(c.twapWindow, 0, 30 days));
+        c.twapWindow = uint32(bound(c.twapWindow, 0, 9 days));
     }
 
     function _bound(FuzzableSlot0 memory slot0) private view {

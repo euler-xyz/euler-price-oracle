@@ -5,7 +5,7 @@ import {GovEOracle} from "src/GovEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-contract ConstantOracle2 is GovEOracle {
+contract ConstantOracle is GovEOracle {
     uint256 public constant PRECISION = 10 ** 27;
     uint256 public constant rate = 10 ** 27;
     uint256 public immutable immutableValue;
@@ -45,8 +45,8 @@ contract ConstantOracle2 is GovEOracle {
     }
 }
 
-contract ConstantOracle2Upgraded is ConstantOracle2 {
-    constructor(uint256 _immutableValue) ConstantOracle2(_immutableValue) {}
+contract ConstantOracleUpgraded is ConstantOracle {
+    constructor(uint256 _immutableValue) ConstantOracle(_immutableValue) {}
 
     function hey() external pure override returns (uint256) {
         return 2;

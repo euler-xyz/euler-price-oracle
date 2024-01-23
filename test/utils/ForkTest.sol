@@ -8,10 +8,7 @@ contract ForkTest is Test {
     uint256 ethereumFork;
 
     function _setUpFork() public {
-        string memory ETHEREUM_RPC_URL = vm.envString("ETHEREUM_RPC_URL");
-        ethereumFork = vm.createFork(ETHEREUM_RPC_URL);
-        vm.selectFork(ethereumFork);
-        vm.roll(ETHEREUM_FORK_BLOCK);
+        _setUpFork(ETHEREUM_FORK_BLOCK);
     }
 
     function _setUpFork(uint256 blockNumber) public {

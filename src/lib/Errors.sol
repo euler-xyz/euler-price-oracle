@@ -14,5 +14,6 @@ library Errors {
     error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);
     error Governance_AlreadyInitialized();
     error Governance_CallerNotGovernor();
+    error UniswapV3_ObservationsNotInitialized(uint256 availableAtBlock);
     error UniswapV3_TwapWindowTooLong(uint32 twapWindow, uint32 maxTwapWindow);
 }

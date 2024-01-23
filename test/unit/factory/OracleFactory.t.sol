@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ConstantOracle2, ConstantOracle2Upgraded} from "test/unit/factory/ConstantOracle2.sol";
+import {ConstantOracle, ConstantOracleUpgraded} from "test/unit/factory/ConstantOracle.sol";
 import {ParentOracle, ParentOracle2, ChildOracle} from "test/unit/factory/NestedOracle.sol";
 import {OracleFactory} from "src/factory/OracleFactory.sol";
 
@@ -14,24 +14,24 @@ contract OracleFactoryTest is Test {
 
         OracleFactory factory = new OracleFactory(admin);
 
-        ConstantOracle2 oracleImpl = new ConstantOracle2(777);
+        ConstantOracle oracleImpl = new ConstantOracle(777);
 
         vm.prank(admin);
         factory.setImplementation(address(oracleImpl));
 
         bytes memory trailingData = abi.encode(base, quote);
 
-        ConstantOracle2 deploymentUpgradeable = ConstantOracle2(factory.deploy(true, trailingData));
+        ConstantOracle deploymentUpgradeable = ConstantOracle(factory.deploy(true, trailingData));
         assertEq(deploymentUpgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentUpgradeable.immutableValue(), 777);
         assertEq(deploymentUpgradeable.hey(), 1);
 
-        ConstantOracle2 deploymentNonupgradeable = ConstantOracle2(factory.deploy(false, trailingData));
+        ConstantOracle deploymentNonupgradeable = ConstantOracle(factory.deploy(false, trailingData));
         assertEq(deploymentNonupgradeable.getQuote(5 ether, base, quote), 5 ether);
         assertEq(deploymentNonupgradeable.immutableValue(), 777);
         assertEq(deploymentNonupgradeable.hey(), 1);
 
-        ConstantOracle2Upgraded oracleImplUpgraded = new ConstantOracle2Upgraded(778);
+        ConstantOracleUpgraded oracleImplUpgraded = new ConstantOracleUpgraded(778);
         vm.prank(admin);
         factory.setImplementation(address(oracleImplUpgraded));
 
