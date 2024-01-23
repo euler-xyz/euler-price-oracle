@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import {IUniswapV3PoolActions} from "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolActions.sol";
 import {IUniswapV3PoolState} from "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
 import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
@@ -17,6 +18,7 @@ contract UniswapV3OracleTest is Test {
         uint24 fee;
         uint32 twapWindow;
         address uniswapV3Factory;
+        FuzzableSlot0 slot0;
     }
 
     struct FuzzableSlot0 {
@@ -48,26 +50,13 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
     }
 
-    function test_GetQuote_Integrity_Spot(FuzzableConfig memory c, FuzzableSlot0 memory slot0, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Spot(FuzzableConfig memory c, uint256 inAmount) public {
         _bound(c);
         c.twapWindow = 0;
         _deploy(c);
         inAmount = bound(inAmount, 1, type(uint128).max);
-
-        _bound(slot0);
-        vm.mockCall(oracle.pool(), abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector), abi.encode(slot0));
         uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        assertEq(outAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
-    }
-
-    function test_GetQuote_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
-        _bound(c);
-        _deploy(c);
-        inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
-        oracle.getQuote(inAmount, c.base, c.quote);
+        assertEq(outAmount, OracleLibrary.getQuoteAtTick(c.slot0.tick, uint128(inAmount), c.base, c.quote));
     }
 
     function test_GetQuote_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, uint256 inAmount, address base)
@@ -92,27 +81,37 @@ contract UniswapV3OracleTest is Test {
         oracle.getQuote(inAmount, c.base, quote);
     }
 
-    function test_GetQuotes_Integrity_Spot(FuzzableConfig memory c, FuzzableSlot0 memory slot0, uint256 inAmount)
+    function test_GetQuote_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
+        _bound(c);
+        _deploy(c);
+        inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
+        oracle.getQuote(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuote_RevertsWhen_NotAvailable(FuzzableConfig memory c, uint256 inAmount, uint256 blockNumber)
         public
     {
+        _bound(c);
+        _deploy(c);
+        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
+        uint256 availableAtBlock = oracle.availableAtBlock();
+        vm.assume(availableAtBlock != 0);
+        blockNumber = bound(blockNumber, 0, availableAtBlock - 1);
+        vm.roll(blockNumber);
+        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_ObservationsNotInitialized.selector, availableAtBlock));
+        oracle.getQuote(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_Integrity_Spot(FuzzableConfig memory c, uint256 inAmount) public {
         _bound(c);
         c.twapWindow = 0;
         _deploy(c);
         inAmount = bound(inAmount, 0, type(uint128).max);
 
-        _bound(slot0);
-        vm.mockCall(oracle.pool(), abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector), abi.encode(slot0));
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
-        assertEq(askOutAmount, OracleLibrary.getQuoteAtTick(slot0.tick, uint128(inAmount), c.base, c.quote));
-    }
-
-    function test_GetQuotes_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
-        _bound(c);
-        _deploy(c);
-        inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
-        oracle.getQuotes(inAmount, c.base, c.quote);
+        assertEq(bidOutAmount, OracleLibrary.getQuoteAtTick(c.slot0.tick, uint128(inAmount), c.base, c.quote));
+        assertEq(askOutAmount, OracleLibrary.getQuoteAtTick(c.slot0.tick, uint128(inAmount), c.base, c.quote));
     }
 
     function test_GetQuotes_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, uint256 inAmount, address base)
@@ -137,6 +136,28 @@ contract UniswapV3OracleTest is Test {
         oracle.getQuotes(inAmount, c.base, quote);
     }
 
+    function test_GetQuotes_RevertsWhen_InAmountGtUint128(FuzzableConfig memory c, uint256 inAmount) public {
+        _bound(c);
+        _deploy(c);
+        inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_RevertsWhen_NotAvailable(FuzzableConfig memory c, uint256 inAmount, uint256 blockNumber)
+        public
+    {
+        _bound(c);
+        _deploy(c);
+        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
+        uint256 availableAtBlock = oracle.availableAtBlock();
+        vm.assume(availableAtBlock != 0);
+        blockNumber = bound(blockNumber, 0, availableAtBlock - 1);
+        vm.roll(blockNumber);
+        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_ObservationsNotInitialized.selector, availableAtBlock));
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
     function test_Description(FuzzableConfig memory c) public {
         _bound(c);
         _deploy(c);
@@ -157,13 +178,27 @@ contract UniswapV3OracleTest is Test {
         c.uniswapV3Factory = boundAddr(c.uniswapV3Factory);
         vm.assume(c.base != c.quote && c.quote != c.uniswapV3Factory && c.uniswapV3Factory != c.base);
         c.twapWindow = uint32(bound(c.twapWindow, 0, 9 days));
-    }
-
-    function _bound(FuzzableSlot0 memory slot0) private view {
-        slot0.tick = int24(bound(slot0.tick, TickMath.MIN_TICK, TickMath.MAX_TICK));
+        c.slot0.tick = int24(bound(c.slot0.tick, TickMath.MIN_TICK, TickMath.MAX_TICK));
+        c.slot0.observationCardinalityNext =
+            uint16(bound(c.slot0.observationCardinalityNext, c.slot0.observationCardinality, type(uint16).max));
     }
 
     function _deploy(FuzzableConfig memory c) private {
+        (address token0, address token1) = c.base < c.quote ? (c.base, c.quote) : (c.quote, c.base);
+        bytes32 poolKey = keccak256(abi.encode(token0, token1, c.fee));
+        bytes32 create2Hash = keccak256(
+            abi.encodePacked(
+                hex"ff",
+                c.uniswapV3Factory,
+                poolKey,
+                bytes32(0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54)
+            )
+        );
+        address pool = address(uint160(uint256(create2Hash)));
+
+        vm.mockCall(pool, abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector), abi.encode(c.slot0));
+        vm.mockCall(pool, abi.encodeWithSelector(IUniswapV3PoolActions.increaseObservationCardinalityNext.selector), "");
+
         oracle = new UniswapV3Oracle(c.base, c.quote, c.fee, c.twapWindow, c.uniswapV3Factory);
     }
 }
