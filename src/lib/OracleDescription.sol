@@ -77,6 +77,18 @@ library OracleDescription {
         });
     }
 
+    function ERC4626Oracle() internal pure returns (Description memory) {
+        return Description({
+            algorithm: Algorithm.SPOT,
+            authority: Authority.IMMUTABLE,
+            paymentModel: PaymentModel.FREE,
+            requestModel: RequestModel.PUSH,
+            variant: Variant.ADAPTER,
+            configuration: Configuration({maxStaleness: 0, governor: address(0), supportsBidAskSpread: false}),
+            name: "ERC4626"
+        });
+    }
+
     enum Algorithm {
         SPOT,
         MEDIAN,
