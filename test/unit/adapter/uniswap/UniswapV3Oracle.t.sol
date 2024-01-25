@@ -89,20 +89,6 @@ contract UniswapV3OracleTest is Test {
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuote_RevertsWhen_NotAvailable(FuzzableConfig memory c, uint256 inAmount, uint256 blockNumber)
-        public
-    {
-        _bound(c);
-        _deploy(c);
-        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        uint256 availableAtBlock = oracle.availableAtBlock();
-        vm.assume(availableAtBlock != 0);
-        blockNumber = bound(blockNumber, 0, availableAtBlock - 1);
-        vm.roll(blockNumber);
-        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_ObservationsNotInitialized.selector, availableAtBlock));
-        oracle.getQuote(inAmount, c.base, c.quote);
-    }
-
     function test_GetQuotes_Integrity_Spot(FuzzableConfig memory c, uint256 inAmount) public {
         _bound(c);
         c.twapWindow = 0;
@@ -141,20 +127,6 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
         vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
-        oracle.getQuotes(inAmount, c.base, c.quote);
-    }
-
-    function test_GetQuotes_RevertsWhen_NotAvailable(FuzzableConfig memory c, uint256 inAmount, uint256 blockNumber)
-        public
-    {
-        _bound(c);
-        _deploy(c);
-        inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        uint256 availableAtBlock = oracle.availableAtBlock();
-        vm.assume(availableAtBlock != 0);
-        blockNumber = bound(blockNumber, 0, availableAtBlock - 1);
-        vm.roll(blockNumber);
-        vm.expectRevert(abi.encodeWithSelector(Errors.UniswapV3_ObservationsNotInitialized.selector, availableAtBlock));
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 

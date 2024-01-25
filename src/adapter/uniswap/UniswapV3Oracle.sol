@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -19,7 +18,6 @@ contract UniswapV3Oracle is IEOracle {
     address public immutable uniswapV3Factory;
     uint24 public immutable fee;
     uint32 public immutable twapWindow;
-    uint256 public immutable availableAtBlock;
 
     constructor(address _base, address _quote, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
         if (_twapWindow > MAX_TWAP_WINDOW) revert Errors.UniswapV3_TwapWindowTooLong(_twapWindow, MAX_TWAP_WINDOW);
@@ -39,13 +37,6 @@ contract UniswapV3Oracle is IEOracle {
         uint16 requiredObservationCardinality = uint16(_twapWindow / BLOCK_TIME);
         if (requiredObservationCardinality < observationCardinalityNext) {
             IUniswapV3Pool(pool).increaseObservationCardinalityNext(requiredObservationCardinality);
-        }
-
-        if (requiredObservationCardinality < observationCardinality) {
-            availableAtBlock = block.number;
-        } else {
-            uint16 observationsNeeded = requiredObservationCardinality - observationCardinality;
-            availableAtBlock = block.number + observationsNeeded;
         }
     }
 
@@ -67,7 +58,6 @@ contract UniswapV3Oracle is IEOracle {
             revert Errors.EOracle_NotSupported(_base, _quote);
         }
         if (inAmount > type(uint128).max) revert Errors.EOracle_Overflow();
-        if (block.number < availableAtBlock) revert Errors.UniswapV3_ObservationsNotInitialized(availableAtBlock);
 
         int24 tick;
         if (twapWindow == 0) {
