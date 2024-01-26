@@ -15,7 +15,8 @@ contract PythOracle is IEOracle {
     bytes32 public immutable feedId;
     uint256 public immutable maxStaleness;
     bool public immutable inverse;
-    uint8 public immutable decimals;
+    uint8 public immutable baseDecimals;
+    uint8 public immutable quoteDecimals;
 
     constructor(address _pyth, address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
         pyth = IPyth(_pyth);
@@ -24,7 +25,8 @@ contract PythOracle is IEOracle {
         feedId = _feedId;
         maxStaleness = _maxStaleness;
         inverse = _inverse;
-        decimals = ERC20(_inverse ? _quote : _base).decimals();
+        baseDecimals = ERC20(_base).decimals();
+        quoteDecimals = ERC20(_quote).decimals();
     }
 
     function updatePrice(bytes[] calldata updateData) external payable {
@@ -33,10 +35,22 @@ contract PythOracle is IEOracle {
 
     function getQuote(uint256 inAmount, address _base, address _quote) external view override returns (uint256) {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
-        uint32 exponent = uint32(priceStruct.expo) + decimals;
 
-        if (inverse) return inAmount * 10 ** exponent / uint64(priceStruct.price);
-        else return inAmount * uint64(priceStruct.price) / 10 ** exponent;
+        if (inverse) {
+            int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
+            if (exponent > 0) {
+                return inAmount / (uint64(priceStruct.price) * 10 ** uint32(exponent));
+            } else {
+                return inAmount * 10 ** uint32(-exponent) / uint64(priceStruct.price);
+            }
+        } else {
+            int32 exponent = priceStruct.expo + int8(quoteDecimals) - int8(baseDecimals);
+            if (exponent > 0) {
+                return inAmount * uint64(priceStruct.price) * 10 ** uint32(exponent);
+            } else {
+                return inAmount * uint64(priceStruct.price) / 10 ** uint32(-exponent);
+            }
+        }
     }
 
     function getQuotes(uint256 inAmount, address _base, address _quote)
@@ -46,14 +60,23 @@ contract PythOracle is IEOracle {
         returns (uint256, uint256)
     {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
-        uint32 exponent = uint32(priceStruct.expo) + decimals;
+        uint64 bidPrice = uint64(priceStruct.price - int64(priceStruct.conf));
+        uint64 askPrice = uint64(priceStruct.price + int64(priceStruct.conf));
 
-        uint64 bidPrice = uint64(priceStruct.price) - priceStruct.conf;
-        uint64 askPrice = uint64(priceStruct.price) + priceStruct.conf;
         if (inverse) {
-            return (inAmount * 10 ** exponent / askPrice, inAmount * 10 ** exponent / bidPrice);
+            int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
+            if (exponent > 0) {
+                return (inAmount / (askPrice * 10 ** uint32(exponent)), inAmount / (bidPrice * 10 ** uint32(exponent)));
+            } else {
+                return (inAmount * 10 ** uint32(-exponent) / askPrice, inAmount * 10 ** uint32(-exponent) / bidPrice);
+            }
         } else {
-            return (inAmount * bidPrice / 10 ** exponent, inAmount * askPrice / 10 ** exponent);
+            int32 exponent = priceStruct.expo + int8(quoteDecimals) - int8(baseDecimals);
+            if (exponent > 0) {
+                return (inAmount * bidPrice * 10 ** uint32(exponent), inAmount * askPrice * 10 ** uint32(exponent));
+            } else {
+                return (inAmount * bidPrice / 10 ** uint32(-exponent), inAmount * askPrice / 10 ** uint32(-exponent));
+            }
         }
     }
 
@@ -63,22 +86,18 @@ contract PythOracle is IEOracle {
 
     function _fetchPriceStruct(address _base, address _quote) internal view returns (PythStructs.Price memory) {
         if (base != _base || quote != _quote) revert Errors.EOracle_NotSupported(_base, _quote);
-        PythStructs.Price memory priceStruct = pyth.getPriceNoOlderThan(feedId, maxStaleness);
-        _sanityCheckPriceStruct(priceStruct);
-        return priceStruct;
-    }
-
-    function _sanityCheckPriceStruct(PythStructs.Price memory price) internal pure {
-        if (price.price <= 0) {
-            revert Errors.Pyth_InvalidPrice(price.price);
+        PythStructs.Price memory p = pyth.getPriceNoOlderThan(feedId, maxStaleness);
+        if (p.price <= 0) {
+            revert Errors.Pyth_InvalidPrice(p.price);
         }
 
-        if (price.conf > uint64(type(int64).max) || int64(price.conf) > price.price) {
-            revert Errors.Pyth_InvalidConfidenceInterval(price.price, price.conf);
+        if (p.conf > uint64(type(int64).max) || int64(p.conf) > p.price) {
+            revert Errors.Pyth_InvalidConfidenceInterval(p.price, p.conf);
         }
 
-        if (price.expo > 32 || price.expo < -32) {
-            revert Errors.Pyth_InvalidExponent(price.expo);
+        if (p.expo > 32 || p.expo < -32) {
+            revert Errors.Pyth_InvalidExponent(p.expo);
         }
+        return p;
     }
 }

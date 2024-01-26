@@ -2,6 +2,8 @@
 pragma solidity 0.8.23;
 
 // Tokens
+address constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+address constant GUSD = 0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd;
 address constant LDO = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
 address constant RETH = 0xae78736Cd615f374D3085123A210448E74Fc6393;
 address constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
@@ -30,3 +32,4 @@ address constant PYTH = 0x4305FB66699C3B2702D4d05CF36551390A4c69C6;
 // Pyth Feeds (see https://pyth.network/developers/price-feed-ids)
 bytes32 constant PYTH_ETH_USD_FEED = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
 bytes32 constant PYTH_USDC_USD_FEED = 0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a;
+bytes32 constant PYTH_GUSD_USD_FEED = 0xe186e116f2c7642d0d8aa89c32345d83ebeb350242b2274c46a19ea82e04fb8d;
