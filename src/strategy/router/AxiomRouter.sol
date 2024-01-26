@@ -13,7 +13,8 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 contract AxiomRouter is GovEOracle {
     address public immutable eFactory;
     address public fallbackOracle;
-    mapping(address base => mapping(address quote => address)) public oracles;
+    mapping(address base => mapping(address quote => address oracle)) public oracles;
+    mapping(address vault => address asset) public nestedVaults;
 
     event ConfigSet(address indexed base, address indexed quote, address indexed oracle);
     event ConfigUnset(address indexed base, address indexed quote);
@@ -38,26 +39,28 @@ contract AxiomRouter is GovEOracle {
         emit FallbackOracleSet(_fallbackOracle);
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
+    function indexEVault(address vault) public {
+        if (!EFactory(eFactory).isProxy(vault)) return;
+        address asset = ERC4626(vault).asset();
+        nestedVaults[vault] = asset;
+        indexEVault(asset);
+    }
+
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         address oracle;
         (inAmount, base, quote, oracle) = _resolveOracle(inAmount, base, quote);
         if (base == quote) return inAmount;
         return IEOracle(oracle).getQuote(inAmount, base, quote);
     }
 
-    function getQuotes(uint256 inAmount, address base, address quote)
-        external
-        view
-        override
-        returns (uint256, uint256)
-    {
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         address oracle;
         (inAmount, base, quote, oracle) = _resolveOracle(inAmount, base, quote);
         if (base == quote) return (inAmount, inAmount);
         return IEOracle(oracle).getQuotes(inAmount, base, quote);
     }
 
-    function description() external view override returns (OracleDescription.Description memory) {
+    function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter(governor);
     }
 
@@ -70,16 +73,20 @@ contract AxiomRouter is GovEOracle {
         address oracle = oracles[base][quote];
         if (oracle != address(0)) return (inAmount, base, quote, oracle);
 
-        if (EFactory(eFactory).isProxy(base)) {
-            return _resolveOracle(ERC4626(base).convertToAssets(inAmount), ERC4626(base).asset(), quote);
-        }
-        if (EFactory(eFactory).isProxy(quote)) {
-            return _resolveOracle(ERC4626(quote).convertToShares(inAmount), base, ERC4626(quote).asset());
-        } else {
-            oracle = fallbackOracle;
-            if (oracle == address(0)) revert Errors.EOracle_NotSupported(base, quote);
+        address nestedBase = nestedVaults[base];
+        if (nestedBase != address(0)) {
+            inAmount = ERC4626(base).convertToAssets(inAmount);
+            return _resolveOracle(inAmount, nestedBase, quote);
         }
 
+        address nestedQuote = nestedVaults[quote];
+        if (nestedQuote != address(0)) {
+            inAmount = ERC4626(quote).convertToShares(inAmount);
+            return _resolveOracle(inAmount, base, nestedQuote);
+        }
+
+        oracle = fallbackOracle;
+        if (oracle == address(0)) revert Errors.EOracle_NotSupported(base, quote);
         return (inAmount, base, quote, oracle);
     }
 }

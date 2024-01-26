@@ -86,9 +86,12 @@ contract AxiomRouterTest is Test {
         router.govSetConfig(WETH, DAI, address(eOracle));
         vm.prank(GOVERNOR);
         router.govSetConfig(DAI, WETH, address(eOracle));
+
+        router.indexEVault(eeDAI);
+        router.indexEVault(eeWETH);
     }
 
-    function test_GetQuote_Nested() public {
+    function test_GetQuote_Nested() public view {
         console2.log("WETH/DAI=%s", router.getQuote(1e18, WETH, DAI));
         console2.log("eWETH/DAI=%s", router.getQuote(1e18, eWETH, DAI));
         console2.log("eeWETH/DAI=%s", router.getQuote(1e18, eeWETH, DAI));
@@ -141,7 +144,7 @@ contract AxiomRouterTest is Test {
         assertApproxEqRel(initInAmount, inAmount, 0.00000001e18);
     }
 
-    function _shuffle(LibPRNG.PRNG memory prng, address[] memory a) private {
+    function _shuffle(LibPRNG.PRNG memory prng, address[] memory a) private pure {
         uint256[] memory a_;
         assembly {
             a_ := a
