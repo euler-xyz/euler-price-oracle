@@ -26,3 +26,6 @@
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
     branch = release-v4.9
 	
+[submodule "lib/pyth-sdk-solidity"]
+	path = lib/pyth-sdk-solidity
+	url = https://github.com/pyth-network/pyth-sdk-solidity

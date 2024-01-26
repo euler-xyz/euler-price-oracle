@@ -33,7 +33,8 @@ contract UniswapV3Oracle is IEOracle {
         bytes32 create2Hash = keccak256(abi.encodePacked(hex"ff", _uniswapV3Factory, poolKey, POOL_INIT_CODE_HASH));
         pool = address(uint160(uint256(create2Hash)));
 
-        (,,, uint16 observationCardinality, uint16 observationCardinalityNext,,) = IUniswapV3Pool(pool).slot0();
+        (,,,, uint16 observationCardinalityNext,,) = IUniswapV3Pool(pool).slot0();
+        // the worst-case required cardinality, assuming no epoch slots are missed and someone interacts with the pool on every block
         uint16 requiredObservationCardinality = uint16(_twapWindow / BLOCK_TIME);
         if (requiredObservationCardinality < observationCardinalityNext) {
             IUniswapV3Pool(pool).increaseObservationCardinalityNext(requiredObservationCardinality);

@@ -37,7 +37,19 @@ library OracleDescription {
             requestModel: RequestModel.PULL,
             variant: Variant.ADAPTER,
             configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
-            name: "Linear"
+            name: "Redstone Core"
+        });
+    }
+
+    function PythOracle(uint256 maxStaleness) internal pure returns (Description memory) {
+        return Description({
+            algorithm: Algorithm.VWAP,
+            authority: Authority.IMMUTABLE,
+            paymentModel: PaymentModel.PER_REQUEST,
+            requestModel: RequestModel.PULL,
+            variant: Variant.ADAPTER,
+            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
+            name: "Pyth"
         });
     }
 
@@ -97,11 +109,6 @@ library OracleDescription {
         ARITHMETIC_MEAN_TWAP,
         GEOMETRIC_MEAN_TWAP,
         VWAP,
-        AGGREGATE_MAX,
-        AGGREGATE_MEAN,
-        AGGREGATE_MEDIAN,
-        AGGREGATE_MIN,
-        AGGREGATE_WEIGHTED,
         OTHER,
         UNKNOWN
     }
