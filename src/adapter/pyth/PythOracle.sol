@@ -27,6 +27,10 @@ contract PythOracle is IEOracle {
         decimals = ERC20(_inverse ? _quote : _base).decimals();
     }
 
+    function updatePrice(bytes[] calldata updateData) external payable {
+        IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
+    }
+
     function getQuote(uint256 inAmount, address _base, address _quote) external view override returns (uint256) {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
         uint32 exponent = uint32(priceStruct.expo) + decimals;
