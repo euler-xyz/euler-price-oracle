@@ -64,6 +64,7 @@ contract AxiomRouter is GovEOracle {
         return OracleDescription.AxiomRouter(governor);
     }
 
+    /// @dev reso
     function _resolveOracle(uint256 inAmount, address base, address quote)
         internal
         view
