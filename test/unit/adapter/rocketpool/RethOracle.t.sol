@@ -17,6 +17,11 @@ contract RethOracleTest is Test {
         oracle = new RethOracle(WETH, RETH);
     }
 
+    function test_Constructor_Integrity() public {
+        assertEq(oracle.weth(), WETH);
+        assertEq(oracle.reth(), RETH);
+    }
+
     function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
         vm.assume(base != RETH);
         address quote = WETH;

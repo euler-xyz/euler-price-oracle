@@ -17,6 +17,11 @@ contract LidoOracleTest is Test {
         oracle = new LidoOracle(STETH, WSTETH);
     }
 
+    function test_Constructor_Integrity() public {
+        assertEq(oracle.stEth(), STETH);
+        assertEq(oracle.wstEth(), WSTETH);
+    }
+
     function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
         vm.assume(base != WSTETH);
         address quote = STETH;

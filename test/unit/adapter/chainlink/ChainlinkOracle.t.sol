@@ -31,6 +31,16 @@ contract ChainlinkOracleTest is Test {
 
     ChainlinkOracle oracle;
 
+    function test_Constructor_Integrity(FuzzableConfig memory c) public {
+        _deploy(c);
+        assertEq(oracle.base(), c.base);
+        assertEq(oracle.quote(), c.quote);
+        assertEq(oracle.feed(), c.feed);
+        assertEq(oracle.maxStaleness(), c.maxStaleness);
+        assertEq(oracle.maxDuration(), c.maxDuration);
+        assertEq(oracle.inverse(), c.inverse);
+    }
+
     function test_GetQuote_RevertsWhen_AggregatorV3Reverts(FuzzableConfig memory c, uint256 inAmount) public {
         _deploy(c);
 
