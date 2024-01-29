@@ -61,7 +61,7 @@ contract AxiomRouter is GovEOracle {
     }
 
     function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.SimpleRouter(governor);
+        return OracleDescription.AxiomRouter(governor);
     }
 
     function _resolveOracle(uint256 inAmount, address base, address quote)
