@@ -15,8 +15,8 @@ contract PythOracle is IEOracle {
     bytes32 public immutable feedId;
     uint256 public immutable maxStaleness;
     bool public immutable inverse;
-    uint8 public immutable baseDecimals;
-    uint8 public immutable quoteDecimals;
+    uint8 internal immutable baseDecimals;
+    uint8 internal immutable quoteDecimals;
 
     constructor(address _pyth, address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
         pyth = IPyth(_pyth);
@@ -35,20 +35,21 @@ contract PythOracle is IEOracle {
 
     function getQuote(uint256 inAmount, address _base, address _quote) external view override returns (uint256) {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
+        uint64 midPrice = uint64(priceStruct.price);
 
         if (inverse) {
             int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
             if (exponent > 0) {
-                return inAmount / (uint64(priceStruct.price) * 10 ** uint32(exponent));
+                return inAmount / (midPrice * 10 ** uint32(exponent));
             } else {
-                return inAmount * 10 ** uint32(-exponent) / uint64(priceStruct.price);
+                return inAmount * 10 ** uint32(-exponent) / midPrice;
             }
         } else {
             int32 exponent = priceStruct.expo + int8(quoteDecimals) - int8(baseDecimals);
             if (exponent > 0) {
-                return inAmount * uint64(priceStruct.price) * 10 ** uint32(exponent);
+                return inAmount * midPrice * 10 ** uint32(exponent);
             } else {
-                return inAmount * uint64(priceStruct.price) / 10 ** uint32(-exponent);
+                return inAmount * midPrice / 10 ** uint32(-exponent);
             }
         }
     }
@@ -60,8 +61,8 @@ contract PythOracle is IEOracle {
         returns (uint256, uint256)
     {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
-        uint64 bidPrice = uint64(priceStruct.price - int64(priceStruct.conf));
-        uint64 askPrice = uint64(priceStruct.price + int64(priceStruct.conf));
+        uint256 bidPrice = uint256(int256(priceStruct.price) - int64(priceStruct.conf));
+        uint256 askPrice = uint256(int256(priceStruct.price) + int64(priceStruct.conf));
 
         if (inverse) {
             int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
@@ -95,7 +96,7 @@ contract PythOracle is IEOracle {
             revert Errors.Pyth_InvalidConfidenceInterval(p.price, p.conf);
         }
 
-        if (p.expo > 32 || p.expo < -32) {
+        if (p.expo > 16 || p.expo < -16) {
             revert Errors.Pyth_InvalidExponent(p.expo);
         }
         return p;

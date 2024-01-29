@@ -36,4 +36,36 @@ contract PythOracleForkTest is ForkTest {
         uint256 outAmount = oracle.getQuote(2500e18, DAI, WETH);
         assertApproxEqRel(outAmount, 1e18, 0.1e18);
     }
+
+    function test_GetQuotes_Integrity_WETH_USDC() public {
+        oracle = new PythOracle(PYTH, WETH, USDC, PYTH_ETH_USD_FEED, 1000 days, false);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, USDC);
+        assertApproxEqRel(bidOutAmount, 2500e6, 0.1e18);
+        assertApproxEqRel(askOutAmount, 2500e6, 0.1e18);
+        assertLt(bidOutAmount, askOutAmount);
+    }
+
+    function test_GetQuotes_Integrity_WETH_DAI() public {
+        oracle = new PythOracle(PYTH, WETH, DAI, PYTH_ETH_USD_FEED, 1000 days, false);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, DAI);
+        assertApproxEqRel(bidOutAmount, 2500e18, 0.1e18);
+        assertApproxEqRel(askOutAmount, 2500e18, 0.1e18);
+        assertLt(bidOutAmount, askOutAmount);
+    }
+
+    function test_GetQuotes_Integrity_USDC_WETH_inverse() public {
+        oracle = new PythOracle(PYTH, USDC, WETH, PYTH_ETH_USD_FEED, 1000 days, true);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(2500e6, USDC, WETH);
+        assertApproxEqRel(bidOutAmount, 1e18, 0.1e18);
+        assertApproxEqRel(askOutAmount, 1e18, 0.1e18);
+        assertLt(bidOutAmount, askOutAmount);
+    }
+
+    function test_GetQuotes_Integrity_DAI_WETH() public {
+        oracle = new PythOracle(PYTH, DAI, WETH, PYTH_ETH_USD_FEED, 1000 days, true);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(2500e18, DAI, WETH);
+        assertApproxEqRel(bidOutAmount, 1e18, 0.1e18);
+        assertApproxEqRel(askOutAmount, 1e18, 0.1e18);
+        assertLt(bidOutAmount, askOutAmount);
+    }
 }

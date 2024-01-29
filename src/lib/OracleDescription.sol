@@ -48,7 +48,7 @@ library OracleDescription {
             paymentModel: PaymentModel.PER_REQUEST,
             requestModel: RequestModel.PULL,
             variant: Variant.ADAPTER,
-            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: false}),
+            configuration: Configuration({maxStaleness: maxStaleness, governor: address(0), supportsBidAskSpread: true}),
             name: "Pyth"
         });
     }
