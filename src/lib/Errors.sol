@@ -8,7 +8,6 @@ library Errors {
     error Chainlink_CallReverted(bytes reason);
     error Chainlink_InvalidAnswer(int256 answer);
     error Chainlink_RoundIncomplete();
-    error Chainlink_RoundTooLong(uint256 duration, uint256 maxDuration);
     error EOracle_NotSupported(address base, address quote);
     error EOracle_Overflow();
     error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);

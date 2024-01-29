@@ -15,7 +15,6 @@ contract ChainlinkOracleTest is Test {
         address quote;
         address feed;
         uint256 maxStaleness;
-        uint256 maxDuration;
         bool inverse;
         uint8 baseDecimals;
         uint8 quoteDecimals;
@@ -37,7 +36,6 @@ contract ChainlinkOracleTest is Test {
         assertEq(oracle.quote(), c.quote);
         assertEq(oracle.feed(), c.feed);
         assertEq(oracle.maxStaleness(), c.maxStaleness);
-        assertEq(oracle.maxDuration(), c.maxDuration);
         assertEq(oracle.inverse(), c.inverse);
     }
 
@@ -98,24 +96,6 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuote_RevertsWhen_RoundTooLong(
-        FuzzableConfig memory c,
-        FuzzableRoundData memory d,
-        uint256 inAmount
-    ) public {
-        _deploy(c);
-        _prepareValidRoundData(d);
-        vm.assume(d.updatedAt > d.startedAt && d.updatedAt - d.startedAt > c.maxDuration);
-
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-
-        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.Chainlink_RoundTooLong.selector, d.updatedAt - d.startedAt, c.maxDuration)
-        );
-        oracle.getQuote(inAmount, c.base, c.quote);
-    }
-
     function test_GetQuote_RevertsWhen_TooStale(
         FuzzableConfig memory c,
         FuzzableRoundData memory d,
@@ -124,7 +104,6 @@ contract ChainlinkOracleTest is Test {
     ) public {
         _deploy(c);
         _prepareValidRoundData(d);
-        vm.assume(d.updatedAt > d.startedAt && d.updatedAt - d.startedAt <= c.maxDuration);
         vm.assume(timestamp > d.updatedAt && timestamp - d.updatedAt > c.maxStaleness);
 
         inAmount = bound(inAmount, 1, uint256(type(uint128).max));
@@ -212,10 +191,11 @@ contract ChainlinkOracleTest is Test {
         vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
 
-        oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.maxDuration, c.inverse);
+        oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.inverse);
     }
 
     function _prepareValidRoundData(FuzzableRoundData memory d) private pure {
         d.answer = bound(d.answer, 1, int256(type(int128).max));
+        vm.assume(d.updatedAt != 0);
     }
 }

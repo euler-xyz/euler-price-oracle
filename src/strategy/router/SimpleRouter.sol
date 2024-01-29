@@ -38,7 +38,7 @@ contract SimpleRouter is GovEOracle {
     /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
     /// or reverts if `fallbackOracle` is not set.
-    function getQuote(uint256 inAmount, address base, address quote) external view override returns (uint256) {
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         address oracle = _resolveOracle(base, quote);
         return IEOracle(oracle).getQuote(inAmount, base, quote);
     }
@@ -46,18 +46,13 @@ contract SimpleRouter is GovEOracle {
     /// @inheritdoc IEOracle
     /// @dev Calls the configured oracle for the path. If no oracle is configured, call `fallbackOracle`
     /// or reverts if `fallbackOracle` is not set.
-    function getQuotes(uint256 inAmount, address base, address quote)
-        external
-        view
-        override
-        returns (uint256, uint256)
-    {
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         address oracle = _resolveOracle(base, quote);
         return IEOracle(oracle).getQuotes(inAmount, base, quote);
     }
 
     /// @inheritdoc IEOracle
-    function description() external view override returns (OracleDescription.Description memory) {
+    function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.SimpleRouter(governor);
     }
 

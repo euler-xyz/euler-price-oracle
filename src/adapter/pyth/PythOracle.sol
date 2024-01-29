@@ -35,7 +35,7 @@ contract PythOracle is IEOracle {
         IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
     }
 
-    function getQuote(uint256 inAmount, address _base, address _quote) external view override returns (uint256) {
+    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
         uint64 midPrice = uint64(priceStruct.price);
 
@@ -56,12 +56,7 @@ contract PythOracle is IEOracle {
         }
     }
 
-    function getQuotes(uint256 inAmount, address _base, address _quote)
-        external
-        view
-        override
-        returns (uint256, uint256)
-    {
+    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
         PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
         uint256 bidPrice = uint256(int256(priceStruct.price) - int64(priceStruct.conf));
         uint256 askPrice = uint256(int256(priceStruct.price) + int64(priceStruct.conf));
