@@ -427,7 +427,7 @@ contract PythOracleTest is Test {
 
     function _bound(PythStructs.Price memory p) private pure {
         p.price = int64(bound(p.price, 1, type(int64).max));
-        p.conf = uint64(bound(p.conf, 0, uint64(p.price) - 1));
+        p.conf = uint64(bound(p.conf, 0, uint64(p.price) / 20));
         p.expo = int32(bound(p.expo, -16, 16));
     }
 

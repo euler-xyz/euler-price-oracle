@@ -9,6 +9,8 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract PythOracle is IEOracle {
+    uint256 internal constant MAX_CONF_BPS = 500; // confidence interval can be at most 5% of price
+
     IPyth public immutable pyth;
     address public immutable base;
     address public immutable quote;
@@ -92,7 +94,7 @@ contract PythOracle is IEOracle {
             revert Errors.Pyth_InvalidPrice(p.price);
         }
 
-        if (p.conf > uint64(type(int64).max) || int64(p.conf) > p.price) {
+        if (p.conf > uint64(p.price) * MAX_CONF_BPS / 10_000) {
             revert Errors.Pyth_InvalidConfidenceInterval(p.price, p.conf);
         }
 
