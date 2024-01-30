@@ -170,7 +170,8 @@ contract AxiomRouterTest is Test {
         router.govSetFallbackOracle(fallbackOracle);
     }
 
-    function test_IndexEVault_Integrity(address caller, address asset) public {
+    function test_IndexEVault_Integrity(address caller) public {
+        address asset = makeAddr("asset");
         address vault = address(new StubERC4626(asset, 0));
         eFactory.setIsProxy(vault, true);
 

@@ -5,9 +5,7 @@ pragma solidity 0.8.23;
 /// @notice Stores common errors in Oracles.
 /// @dev Collected here to reduce clutter in oracle contracts.
 library Errors {
-    error Chainlink_CallReverted(bytes reason);
     error Chainlink_InvalidAnswer(int256 answer);
-    error Chainlink_RoundIncomplete();
     error EOracle_NotSupported(address base, address quote);
     error EOracle_Overflow();
     error EOracle_TooStale(uint256 staleness, uint256 maxStaleness);

@@ -6,10 +6,13 @@ import {
     CHAINLINK_BTC_ETH_FEED,
     CHAINLINK_USDC_ETH_FEED,
     CHAINLINK_STETH_ETH_FEED,
+    CHAINLINK_ETH_USD_FEED,
     WETH,
     STETH,
     WBTC,
-    USDC
+    USDC,
+    GUSD,
+    DAI
 } from "test/utils/EthereumAddresses.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
@@ -48,5 +51,35 @@ contract ChainlinkOracleForkTest is ForkTest {
     function test_stEthEth_inverse() public {
         oracle = new ChainlinkOracle(WETH, STETH, CHAINLINK_STETH_ETH_FEED, 24 hours, true);
         assertApproxEqRel(oracle.getQuote(1e18, WETH, STETH), 1e18, 0.1e18);
+    }
+
+    function test_ethUsd_USDC() public {
+        oracle = new ChainlinkOracle(WETH, USDC, CHAINLINK_ETH_USD_FEED, 24 hours, false);
+        assertApproxEqRel(oracle.getQuote(1e18, WETH, USDC), 2500e6, 0.1e18);
+    }
+
+    function test_ethUsd_USDC_inverse() public {
+        oracle = new ChainlinkOracle(USDC, WETH, CHAINLINK_ETH_USD_FEED, 24 hours, true);
+        assertApproxEqRel(oracle.getQuote(2500e6, USDC, WETH), 1e18, 0.1e18);
+    }
+
+    function test_ethUsd_DAI() public {
+        oracle = new ChainlinkOracle(WETH, DAI, CHAINLINK_ETH_USD_FEED, 24 hours, false);
+        assertApproxEqRel(oracle.getQuote(1e18, WETH, DAI), 2500e18, 0.1e18);
+    }
+
+    function test_ethUsd_DAI_inverse() public {
+        oracle = new ChainlinkOracle(DAI, WETH, CHAINLINK_ETH_USD_FEED, 24 hours, true);
+        assertApproxEqRel(oracle.getQuote(2500e18, DAI, WETH), 1e18, 0.1e18);
+    }
+
+    function test_ethUsd_GUSD() public {
+        oracle = new ChainlinkOracle(WETH, GUSD, CHAINLINK_ETH_USD_FEED, 24 hours, false);
+        assertApproxEqRel(oracle.getQuote(1e18, WETH, GUSD), 2500e2, 0.1e18);
+    }
+
+    function test_ethUsd_GUSD_inverse() public {
+        oracle = new ChainlinkOracle(GUSD, WETH, CHAINLINK_ETH_USD_FEED, 24 hours, true);
+        assertApproxEqRel(oracle.getQuote(2500e2, GUSD, WETH), 1e18, 0.1e18);
     }
 }

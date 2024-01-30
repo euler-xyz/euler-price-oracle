@@ -7,10 +7,13 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Adapter for Chainlink Push Oracles.
+/// @notice EOracle adapter for Chainlink push-based price feeds.
 contract ChainlinkOracle is IEOracle {
+    /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
+    /// @notice The address of the quote asset corresponding to the feed.
     address public immutable quote;
     /// @notice The address of the Chainlink price feed.
     /// @dev https://docs.chain.link/data-feeds/price-feeds/addresses
@@ -18,57 +21,70 @@ contract ChainlinkOracle is IEOracle {
     /// @notice The maximum allowed age of the latest price update.
     /// @dev Reverts if block.timestamp - updatedAt > maxStaleness.
     uint256 public immutable maxStaleness;
+    /// @notice Whether the feed returns the price of base/quote or quote/base.
     bool public immutable inverse;
-    uint8 internal immutable baseDecimals;
-    uint8 internal immutable quoteDecimals;
+    /// @dev The scale factor used to convert to quote decimals.
+    uint256 internal immutable scaleFactor;
 
+    /// @param _base The address of the base asset corresponding to the feed.
+    /// @param _quote The address of the quote asset corresponding to the feed.
+    /// @param _feed The address of the Chainlink price feed.
+    /// @param _maxStaleness The maximum allowed age of the latest price update.
+    /// @param _inverse Whether the feed returns the price of base/quote or quote/base.
+    /// @dev Base and quote are not required to correspond to the feed assets.
+    /// For example, the ETH/USD feed can be used to price WETH/USDC.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness, bool _inverse) {
         base = _base;
         quote = _quote;
         feed = _feed;
         maxStaleness = _maxStaleness;
         inverse = _inverse;
-        baseDecimals = ERC20(_base).decimals();
-        quoteDecimals = ERC20(_quote).decimals();
+
+        // The scale factor is used to correctly convert decimals.
+        uint8 baseDecimals = ERC20(base).decimals();
+        uint8 quoteDecimals = ERC20(quote).decimals();
+        uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
+        uint8 scaleDecimals;
+        if (inverse) {
+            scaleDecimals = feedDecimals + quoteDecimals - baseDecimals;
+        } else {
+            scaleDecimals = feedDecimals + baseDecimals - quoteDecimals;
+        }
+        scaleFactor = 10 ** scaleDecimals;
     }
 
-    function getQuote(uint256 inAmount, address _base, address _quote) external view virtual returns (uint256) {
+    /// @inheritdoc IEOracle
+    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
         return _getQuote(inAmount, _base, _quote);
     }
 
-    function getQuotes(uint256 inAmount, address _base, address _quote)
-        external
-        view
-        virtual
-        returns (uint256, uint256)
-    {
+    /// @inheritdoc IEOracle
+    /// @dev Does not support true bid-ask pricing.
+    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, _base, _quote);
         return (outAmount, outAmount);
     }
 
-    function description() external view virtual returns (OracleDescription.Description memory) {
+    /// @inheritdoc IEOracle
+    function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.ChainlinkOracle(maxStaleness);
     }
 
+    /// @notice Get the price from the Chainlink feed.
+    /// @param inAmount The absolute amount of `base` to convert.
+    /// @param _base The token that is being priced.
+    /// @param _quote The token that is the unit of account.
+    /// @return outAmount The resulting price from Chainlink.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
 
-        bytes memory feedCalldata = abi.encodeCall(AggregatorV3Interface.latestRoundData, ());
-        (bool success, bytes memory returnData) = feed.staticcall(feedCalldata);
-        if (!success) revert Errors.Chainlink_CallReverted(returnData);
-
-        (, int256 answer,, uint256 updatedAt,) = abi.decode(returnData, (uint80, int256, uint256, uint256, uint80));
-
+        (, int256 answer,, uint256 updatedAt,) = AggregatorV3Interface(feed).latestRoundData();
         if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
-        if (updatedAt == 0) revert Errors.Chainlink_RoundIncomplete();
-
         uint256 staleness = block.timestamp - updatedAt;
-        if (staleness > maxStaleness) {
-            revert Errors.EOracle_TooStale(staleness, maxStaleness);
-        }
+        if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);
 
-        uint256 unitPrice = uint256(answer);
-        if (inverse) return (inAmount * 10 ** quoteDecimals) / unitPrice;
-        else return (inAmount * unitPrice) / 10 ** baseDecimals;
+        uint256 price = uint256(answer);
+        if (inverse) return (inAmount * scaleFactor) / price;
+        else return (inAmount * price) / scaleFactor;
     }
 }

@@ -18,6 +18,7 @@ contract ChainlinkOracleTest is Test {
         bool inverse;
         uint8 baseDecimals;
         uint8 quoteDecimals;
+        uint8 feedDecimals;
     }
 
     struct FuzzableRoundData {
@@ -39,13 +40,33 @@ contract ChainlinkOracleTest is Test {
         assertEq(oracle.inverse(), c.inverse);
     }
 
+    function test_GetQuote_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, address base, uint256 inAmount)
+        public
+    {
+        _deploy(c);
+        vm.assume(base != c.base);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        oracle.getQuote(inAmount, base, c.quote);
+    }
+
+    function test_GetQuote_RevertsWhen_NotSupported_Quote(FuzzableConfig memory c, address quote, uint256 inAmount)
+        public
+    {
+        _deploy(c);
+        vm.assume(quote != c.quote);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        oracle.getQuote(inAmount, c.base, quote);
+    }
+
     function test_GetQuote_RevertsWhen_AggregatorV3Reverts(FuzzableConfig memory c, uint256 inAmount) public {
         _deploy(c);
 
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCallRevert(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), "oops");
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_CallReverted.selector, "oops"));
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -56,7 +77,7 @@ contract ChainlinkOracleTest is Test {
         _prepareValidRoundData(d);
         d.answer = 0;
 
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, 0));
@@ -74,25 +95,9 @@ contract ChainlinkOracleTest is Test {
         chainlinkAnswer = bound(chainlinkAnswer, type(int256).min, -1);
         d.answer = chainlinkAnswer;
 
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        inAmount = bound(inAmount, 1, type(uint128).max);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
-        oracle.getQuote(inAmount, c.base, c.quote);
-    }
-
-    function test_GetQuote_RevertsWhen_RoundIncomplete(
-        FuzzableConfig memory c,
-        FuzzableRoundData memory d,
-        uint256 inAmount
-    ) public {
-        _deploy(c);
-        _prepareValidRoundData(d);
-        d.updatedAt = 0;
-
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-
-        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_RoundIncomplete.selector));
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -106,7 +111,7 @@ contract ChainlinkOracleTest is Test {
         _prepareValidRoundData(d);
         vm.assume(timestamp > d.updatedAt && timestamp - d.updatedAt > c.maxStaleness);
 
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
@@ -116,17 +121,44 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuote_Integrity_CallFeed(FuzzableConfig memory c, uint256 inAmount) public {
+    function test_GetQuote_Integrity(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
+        _prepareValidRoundData(d);
+        vm.assume(!c.inverse);
+        timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
+        inAmount = bound(inAmount, 1, type(uint128).max);
 
-        vm.warp(8);
-        vm.mockCall(
-            c.feed,
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(uint80(0), int256(1), uint256(8), uint256(8), uint80(0))
-        );
-        oracle.getQuote(inAmount, c.base, c.quote);
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.warp(timestamp);
+        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
+        uint256 expectedOutAmount =
+            inAmount * uint256(d.answer) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+        assertEq(outAmount, expectedOutAmount);
+    }
+
+    function test_GetQuote_Integrity_Inverse(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        vm.assume(c.inverse);
+        timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.warp(timestamp);
+        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
+        uint256 expectedOutAmount =
+            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.answer);
+        assertEq(outAmount, expectedOutAmount);
     }
 
     function test_GetQuotes_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, address base, uint256 inAmount)
@@ -149,21 +181,107 @@ contract ChainlinkOracleTest is Test {
         oracle.getQuotes(inAmount, c.base, quote);
     }
 
-    function test_GetQuotes_Integrity(FuzzableConfig memory c, uint256 inAmount) public {
+    function test_GetQuotes_RevertsWhen_AggregatorV3Reverts(FuzzableConfig memory c, uint256 inAmount) public {
         _deploy(c);
-        inAmount = bound(inAmount, 1, uint256(type(uint128).max));
-        vm.warp(8);
-        vm.mockCall(
-            c.feed,
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(uint80(0), int256(1), uint256(8), uint256(8), uint80(0))
-        );
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
 
-        assertEq(outAmount, bidOutAmount);
-        assertEq(bidOutAmount, askOutAmount);
-        assertEq(askOutAmount, outAmount);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.mockCallRevert(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), "oops");
+        vm.expectRevert(abi.encodePacked("oops"));
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_RevertsWhen_ZeroPrice(FuzzableConfig memory c, FuzzableRoundData memory d, uint256 inAmount)
+        public
+    {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        d.answer = 0;
+
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, 0));
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_RevertsWhen_NegativePrice(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        int256 chainlinkAnswer
+    ) public {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        chainlinkAnswer = bound(chainlinkAnswer, type(int256).min, -1);
+        d.answer = chainlinkAnswer;
+
+        inAmount = bound(inAmount, 1, type(uint128).max);
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        vm.assume(timestamp > d.updatedAt && timestamp - d.updatedAt > c.maxStaleness);
+
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.warp(timestamp);
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - d.updatedAt, c.maxStaleness)
+        );
+        oracle.getQuotes(inAmount, c.base, c.quote);
+    }
+
+    function test_GetQuotes_Integrity(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        vm.assume(!c.inverse);
+        timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.warp(timestamp);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
+        uint256 expectedOutAmount =
+            inAmount * uint256(d.answer) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+        assertEq(bidOutAmount, expectedOutAmount);
+        assertEq(askOutAmount, expectedOutAmount);
+    }
+
+    function test_GetQuotes_Integrity_Inverse(
+        FuzzableConfig memory c,
+        FuzzableRoundData memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
+        _deploy(c);
+        _prepareValidRoundData(d);
+        vm.assume(c.inverse);
+        timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
+        vm.warp(timestamp);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
+        uint256 expectedOutAmount =
+            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.answer);
+        assertEq(bidOutAmount, expectedOutAmount);
+        assertEq(askOutAmount, expectedOutAmount);
     }
 
     function test_Description(FuzzableConfig memory c) public {
@@ -185,17 +303,29 @@ contract ChainlinkOracleTest is Test {
         c.feed = boundAddr(c.feed);
         vm.assume(c.base != c.quote && c.quote != c.feed && c.base != c.feed);
 
-        c.baseDecimals = uint8(bound(c.baseDecimals, 0, 24));
-        c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
+        c.maxStaleness = bound(c.maxStaleness, 0, type(uint128).max);
+
+        c.baseDecimals = uint8(bound(c.baseDecimals, 2, 18));
+        c.quoteDecimals = uint8(bound(c.quoteDecimals, 2, 18));
+        c.feedDecimals = uint8(bound(c.feedDecimals, c.inverse ? c.baseDecimals : c.quoteDecimals, 18));
+
+        if (c.inverse) {
+            c.feedDecimals = uint8(bound(c.feedDecimals, c.baseDecimals, 18));
+            vm.assume(c.feedDecimals + c.quoteDecimals - c.baseDecimals < 18);
+        } else {
+            c.feedDecimals = uint8(bound(c.feedDecimals, c.quoteDecimals, 18));
+            vm.assume(c.feedDecimals + c.baseDecimals - c.quoteDecimals < 18);
+        }
 
         vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(c.feedDecimals));
 
         oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.inverse);
     }
 
     function _prepareValidRoundData(FuzzableRoundData memory d) private pure {
-        d.answer = bound(d.answer, 1, int256(type(int128).max));
-        vm.assume(d.updatedAt != 0);
+        d.answer = bound(d.answer, 1, (type(int64).max));
+        d.updatedAt = bound(d.updatedAt, 1, type(uint128).max);
     }
 }
