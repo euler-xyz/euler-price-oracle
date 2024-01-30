@@ -42,9 +42,9 @@ contract ERC4626Oracle is IEOracle {
         return OracleDescription.ERC4626Oracle();
     }
 
-    /// @notice Get a quote by calling the corresponding `convert*` method.
+    /// @notice Get a quote by calling the corresponding `convert*` method on the ERC4626 vault.
     /// @dev Calls `convertToAssets` for share/asset and `convertToShares` for asset/share.
-    /// @param inAmount The absolute amount of `base` to convert.
+    /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced. Either `vault` or `asset`.
     /// @param quote The token that is the unit of account. Either `asset` or `vault`.
     /// @return The converted amount by the vault.

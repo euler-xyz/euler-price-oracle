@@ -72,7 +72,7 @@ contract ChainlinkOracle is IEOracle {
     }
 
     /// @notice Get the price from the Chainlink feed.
-    /// @param inAmount The absolute amount of `base` to convert.
+    /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.
     /// @return The converted amount using the Chainlink feed.
