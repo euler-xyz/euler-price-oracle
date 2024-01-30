@@ -22,9 +22,9 @@ contract UniswapV3Oracle is IEOracle {
     /// ring buffer data structure with maximum size 2^16. This value is approximately 9.1 days.
     uint32 internal constant MAX_TWAP_WINDOW = uint32(type(uint16).max) * uint32(BLOCK_TIME);
     /// @notice One of the tokens in the pool.
-    address public immutable base;
+    address public immutable token0;
     /// @notice The other token in the pool.
-    address public immutable quote;
+    address public immutable token1;
     /// @notice The other token in the pool.
     address public immutable uniswapV3Factory;
     /// @notice The fee tier of the pool.
@@ -39,15 +39,12 @@ contract UniswapV3Oracle is IEOracle {
     /// @dev The oracle will support share/asset and asset/share pricing.
     constructor(address _base, address _quote, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
         if (_twapWindow > MAX_TWAP_WINDOW) revert Errors.UniswapV3_TwapWindowTooLong(_twapWindow, MAX_TWAP_WINDOW);
-
-        base = _base;
-        quote = _quote;
         fee = _fee;
         twapWindow = _twapWindow;
         uniswapV3Factory = _uniswapV3Factory;
 
         // Calculate the pool address without making calling the factory.
-        (address token0, address token1) = _base < _quote ? (_base, _quote) : (_quote, _base);
+        (token0, token1) = _base < _quote ? (_base, _quote) : (_quote, _base);
         bytes32 poolKey = keccak256(abi.encode(token0, token1, _fee));
         bytes32 create2Hash = keccak256(abi.encodePacked(hex"ff", _uniswapV3Factory, poolKey, POOL_INIT_CODE_HASH));
         pool = address(uint160(uint256(create2Hash)));
@@ -63,14 +60,14 @@ contract UniswapV3Oracle is IEOracle {
     }
 
     /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
-        return _getQuote(inAmount, _base, _quote);
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+        return _getQuote(inAmount, base, quote);
     }
 
     /// @inheritdoc IEOracle
     /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, _base, _quote);
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
     }
 
@@ -82,13 +79,13 @@ contract UniswapV3Oracle is IEOracle {
     /// @notice Get a quote by calling the pool's TWAP oracle.
     /// @dev Supports spot pricing if twapWindow=0.
     /// @param inAmount The amount of `base` to convert.
-    /// @param _base The token that is being priced. Either `token0` or `token1`.
-    /// @param _quote The token that is the unit of account. Either `token1` or `token0`.
+    /// @param base The token that is being priced. Either `token0` or `token1`.
+    /// @param quote The token that is the unit of account. Either `token1` or `token0`.
     /// @return The converted amount.
-    function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
         // Accept only token0/token1 and token1/token0.
-        if ((_base != base || _quote != quote) && (_quote != base || _base != quote)) {
-            revert Errors.EOracle_NotSupported(_base, _quote);
+        if ((base != token0 || quote != token1) && (base != token1 || quote != token0)) {
+            revert Errors.EOracle_NotSupported(base, quote);
         }
         // Size limitation enforced by the pool.
         if (inAmount > type(uint128).max) revert Errors.EOracle_Overflow();
@@ -106,6 +103,6 @@ contract UniswapV3Oracle is IEOracle {
             (int56[] memory tickCumulatives,) = IUniswapV3Pool(pool).observe(secondsAgos);
             tick = int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapWindow));
         }
-        return OracleLibrary.getQuoteAtTick(tick, uint128(inAmount), _base, _quote);
+        return OracleLibrary.getQuoteAtTick(tick, uint128(inAmount), base, quote);
     }
 }

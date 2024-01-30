@@ -36,8 +36,8 @@ contract UniswapV3OracleTest is Test {
     function test_Constructor_Integrity(FuzzableConfig memory c) public {
         _bound(c);
         _deploy(c);
-        assertEq(oracle.base(), c.base);
-        assertEq(oracle.quote(), c.quote);
+        assertEq(oracle.token0(), c.base < c.quote ? c.base : c.quote);
+        assertEq(oracle.token1(), c.base < c.quote ? c.quote : c.base);
         assertEq(oracle.uniswapV3Factory(), c.uniswapV3Factory);
         assertEq(oracle.fee(), c.fee);
         assertEq(oracle.twapWindow(), c.twapWindow);
