@@ -18,19 +18,19 @@ contract ChainlinkOracle is IEOracle {
     /// @notice The address of the Chainlink price feed.
     /// @dev https://docs.chain.link/data-feeds/price-feeds/addresses
     address public immutable feed;
-    /// @notice The maximum allowed age of the latest price update.
+    /// @notice The maximum allowed age of the price.
     /// @dev Reverts if block.timestamp - updatedAt > maxStaleness.
     uint256 public immutable maxStaleness;
     /// @notice Whether the feed returns the price of base/quote or quote/base.
     bool public immutable inverse;
-    /// @dev The scale factor used to convert to quote decimals.
+    /// @dev The scale factor used to convert decimals.
     uint256 internal immutable scaleFactor;
 
     /// @notice Deploy a ChainlinkOracle.
     /// @param _base The address of the base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chainlink price feed.
-    /// @param _maxStaleness The maximum allowed age of the latest price update.
+    /// @param _maxStaleness The maximum allowed age of the price.
     /// @param _inverse Whether the feed returns the price of base/quote or quote/base.
     /// @dev Base and quote are not required to correspond to the feed assets.
     /// For example, the ETH/USD feed can be used to price WETH/USDC.
@@ -71,7 +71,7 @@ contract ChainlinkOracle is IEOracle {
         return OracleDescription.ChainlinkOracle(maxStaleness);
     }
 
-    /// @notice Get the price from the Chainlink feed.
+    /// @notice Get the quote from the Chainlink feed.
     /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.

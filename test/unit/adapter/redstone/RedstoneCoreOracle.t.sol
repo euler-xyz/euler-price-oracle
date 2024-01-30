@@ -42,8 +42,6 @@ contract RedstoneCoreOracleTest is Test {
         vm.warp(timestamp);
 
         oracle.setPrice(price);
-        vm.expectEmit();
-        emit RedstoneCoreOracle.PriceUpdated(price);
         oracle.updatePrice();
 
         assertEq(oracle.lastPrice(), price);

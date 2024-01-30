@@ -24,7 +24,7 @@ contract PythOracle is IEOracle {
     /// @notice The id of the feed in the Pyth network.
     /// @dev See https://pyth.network/developers/price-feed-ids.
     bytes32 public immutable feedId;
-    /// @notice The maximum allowed age of the latest price update.
+    /// @notice The maximum allowed age of the price.
     uint256 public immutable maxStaleness;
     /// @notice Whether the feed returns the price of base/quote or quote/base.
     bool public immutable inverse;
@@ -36,7 +36,7 @@ contract PythOracle is IEOracle {
     /// @param _base The address of the base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feedId The id of the feed in the Pyth network.
-    /// @param _maxStaleness The maximum allowed age of the latest price update.
+    /// @param _maxStaleness The maximum allowed age of the price.
     /// @param _inverse Whether the feed returns the price of base/quote or quote/base.
     constructor(address _pyth, address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
         pyth = IPyth(_pyth);
