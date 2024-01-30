@@ -6,28 +6,47 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @title RethOracle
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Adapter for pricing Rocket Pool rETH <-> ETH via the rETH contract.
 contract RethOracle is IEOracle {
+    /// @dev The address of Wrapped Ether.
     address public immutable weth;
+    /// @dev The address of Rocket Pool rETH.
     address public immutable reth;
 
+    /// @notice Deploy a RethOracle.
+    /// @param _weth The address of Wrapped Ether.
+    /// @param _reth The address of Rocket Pool rETH.
+    /// @dev The oracle will support rETH/WETH and WETH/rETH pricing.
     constructor(address _weth, address _reth) {
         weth = _weth;
         reth = _reth;
     }
 
+    /// @inheritdoc IEOracle
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
         return _getQuote(inAmount, base, quote);
     }
 
+    /// @inheritdoc IEOracle
+    /// @dev Does not support true bid-ask pricing.
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
     }
 
+    /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.RethOracle();
     }
 
+    /// @notice Get a quote by querying the exchange rate from the rETH contract.
+    /// @dev Calls `getEthValue` for rETH/WETH and `getRethValue` for WETH/rETH.
+    /// @param inAmount The amount of `base` to convert.
+    /// @param base The token that is being priced. Either rETH or WETH.
+    /// @param quote The token that is the unit of account. Either WETH or rETH.
+    /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
         if (base == reth && quote == weth) {
             return IReth(reth).getEthValue(inAmount);

@@ -15,7 +15,7 @@ contract LidoOracle is IEOracle {
     /// @dev The address of Lido wrapped staked Ether.
     address public immutable wstEth;
 
-    /// @notice Deploy an ERC4626Oracle.
+    /// @notice Deploy a LidoOracle.
     /// @param _stEth The address of Lido staked Ether.
     /// @param _wstEth The address of Lido wrapped staked Ether.
     /// @dev The oracle will support stEth/wstEth and wstEth/stEth pricing.
