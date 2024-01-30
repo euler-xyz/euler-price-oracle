@@ -26,6 +26,7 @@ contract ChainlinkOracle is IEOracle {
     /// @dev The scale factor used to convert to quote decimals.
     uint256 internal immutable scaleFactor;
 
+    /// @notice Deploy a ChainlinkOracle.
     /// @param _base The address of the base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chainlink price feed.
@@ -74,7 +75,7 @@ contract ChainlinkOracle is IEOracle {
     /// @param inAmount The absolute amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.
-    /// @return outAmount The resulting price from Chainlink.
+    /// @return The converted amount using the Chainlink feed.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
 
