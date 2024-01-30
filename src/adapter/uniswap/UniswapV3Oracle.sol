@@ -20,7 +20,7 @@ contract UniswapV3Oracle is IEOracle {
     uint256 internal constant BLOCK_TIME = 12 seconds;
     /// @dev The maximum length of the TWAP window supported by the oracle. The pool stores past observations in a
     /// ring buffer data structure with maximum size 2^16. This value is approximately 9.1 days.
-    uint32 internal constant MAX_TWAP_WINDOW = uint32(2e16 / BLOCK_TIME);
+    uint32 internal constant MAX_TWAP_WINDOW = uint32(type(uint16).max) * uint32(BLOCK_TIME);
     /// @notice One of the tokens in the pool.
     address public immutable base;
     /// @notice The other token in the pool.
