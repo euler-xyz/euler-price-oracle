@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+/// @title OracleDescription
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Stores oracle descriptions for all `IEOracle` implementations.
-/// @dev Collected here to reduce clutter in oracle contracts.
+/// @notice Collects oracle descriptions for EOracles implementations.
 library OracleDescription {
     function ChainlinkOracle(uint256 maxStaleness) internal pure returns (Description memory) {
         return Description({

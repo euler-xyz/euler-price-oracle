@@ -3,6 +3,9 @@ pragma solidity 0.8.23;
 
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @title IEOracle
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Common EOracle interface.
 interface IEOracle {
     /// @notice Describes the properties of the oracle. Intended for off-chain use.
     /// @dev Integrators MUST NOT blindly trust the description as it can be easily spoofed.

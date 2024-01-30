@@ -3,6 +3,9 @@ pragma solidity 0.8.23;
 
 import {GenericFactory} from "@euler-factory/GenericFactory.sol";
 
+/// @title OracleFactory
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Euler Factory for EOracles.
 contract OracleFactory is GenericFactory {
     mapping(address oracle => OracleConfig) oracleLookup;
 

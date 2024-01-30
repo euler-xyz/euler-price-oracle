@@ -6,6 +6,7 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @title SimpleRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Oracle resolver for base-quote pairs.
 contract SimpleRouter is GovEOracle {

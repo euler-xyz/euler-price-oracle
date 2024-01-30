@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+/// @title Denominations
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Common EOracle denominations for assets that are not tokens.
+/// @notice Conventional representation of non-token assets.
 /// @dev Currencies are represented by ISO 4217 numeric codes.
-/// Only the top 10 most traded currencies are listed here, as well as Gold (XAU), Silver (XAG), and No Currency (XXX).
 library Denominations {
     address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address internal constant BTC = 0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB;

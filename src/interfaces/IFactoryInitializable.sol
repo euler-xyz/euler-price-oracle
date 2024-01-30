@@ -1,6 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+/// @title IFactoryInitializable
+/// @author Euler Labs (https://www.eulerlabs.com/)
 interface IFactoryInitializable {
     event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 

@@ -8,6 +8,7 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
+/// @title AxiomRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler Axiom Vaults.
 contract AxiomRouter is GovEOracle {

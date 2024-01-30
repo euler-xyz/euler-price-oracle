@@ -5,6 +5,9 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 
+/// @title GovEOracle
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Governable mixin.
 abstract contract GovEOracle is IEOracle, IFactoryInitializable {
     address public governor;
     bool public initialized;
