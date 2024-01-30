@@ -9,7 +9,7 @@ import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract PythOracle is IEOracle {
-    uint256 internal constant MAX_CONF_BPS = 500; // confidence interval can be at most 5% of price
+    uint256 internal constant MAX_CONF_WIDTH_BPS = 500; // confidence interval can be at most 5% of price
 
     IPyth public immutable pyth;
     address public immutable base;
@@ -41,18 +41,10 @@ contract PythOracle is IEOracle {
 
         if (inverse) {
             int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
-            if (exponent > 0) {
-                return inAmount / (midPrice * 10 ** uint32(exponent));
-            } else {
-                return inAmount * 10 ** uint32(-exponent) / midPrice;
-            }
+            return _calcInversePrice(inAmount, midPrice, exponent);
         } else {
             int32 exponent = priceStruct.expo + int8(quoteDecimals) - int8(baseDecimals);
-            if (exponent > 0) {
-                return inAmount * midPrice * 10 ** uint32(exponent);
-            } else {
-                return inAmount * midPrice / 10 ** uint32(-exponent);
-            }
+            return _calcPrice(inAmount, midPrice, exponent);
         }
     }
 
@@ -63,18 +55,10 @@ contract PythOracle is IEOracle {
 
         if (inverse) {
             int32 exponent = priceStruct.expo - int8(quoteDecimals) + int8(baseDecimals);
-            if (exponent > 0) {
-                return (inAmount / (askPrice * 10 ** uint32(exponent)), inAmount / (bidPrice * 10 ** uint32(exponent)));
-            } else {
-                return (inAmount * 10 ** uint32(-exponent) / askPrice, inAmount * 10 ** uint32(-exponent) / bidPrice);
-            }
+            return (_calcInversePrice(inAmount, askPrice, exponent), _calcInversePrice(inAmount, bidPrice, exponent));
         } else {
             int32 exponent = priceStruct.expo + int8(quoteDecimals) - int8(baseDecimals);
-            if (exponent > 0) {
-                return (inAmount * bidPrice * 10 ** uint32(exponent), inAmount * askPrice * 10 ** uint32(exponent));
-            } else {
-                return (inAmount * bidPrice / 10 ** uint32(-exponent), inAmount * askPrice / 10 ** uint32(-exponent));
-            }
+            return (_calcPrice(inAmount, bidPrice, exponent), _calcPrice(inAmount, askPrice, exponent));
         }
     }
 
@@ -89,7 +73,7 @@ contract PythOracle is IEOracle {
             revert Errors.Pyth_InvalidPrice(p.price);
         }
 
-        if (p.conf > uint64(p.price) * MAX_CONF_BPS / 10_000) {
+        if (p.conf > uint64(p.price) * MAX_CONF_WIDTH_BPS / 10_000) {
             revert Errors.Pyth_InvalidConfidenceInterval(p.price, p.conf);
         }
 
@@ -97,5 +81,21 @@ contract PythOracle is IEOracle {
             revert Errors.Pyth_InvalidExponent(p.expo);
         }
         return p;
+    }
+
+    function _calcInversePrice(uint256 inAmount, uint256 price, int32 exponent) internal pure returns (uint256) {
+        if (exponent > 0) {
+            return (inAmount / (price * 10 ** uint32(exponent)));
+        } else {
+            return (inAmount * 10 ** uint32(-exponent) / price);
+        }
+    }
+
+    function _calcPrice(uint256 inAmount, uint256 price, int32 exponent) internal pure returns (uint256) {
+        if (exponent > 0) {
+            return (inAmount * price * 10 ** uint32(exponent));
+        } else {
+            return (inAmount * price / 10 ** uint32(-exponent));
+        }
     }
 }
