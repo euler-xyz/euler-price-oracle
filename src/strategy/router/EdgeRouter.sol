@@ -78,7 +78,7 @@ contract EdgeRouter is GovEOracle {
 
     /// @notice Set an EOracle as a fallback resolver.
     /// @param _fallbackOracle The address of the EOracle that is called when base/quote is not configured.
-    /// @dev If `fallbackOracle` is `address(0)` then there is no fallback resolver.
+    /// @dev `address(0)` removes the fallback.
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
         fallbackOracle = _fallbackOracle;
         emit FallbackOracleSet(_fallbackOracle);
