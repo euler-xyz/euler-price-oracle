@@ -62,7 +62,7 @@ contract SimpleRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
-        emit SimpleRouter.ConfigUnset(base, quote);
+        emit SimpleRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
         router.govUnsetConfig(base, quote);
 

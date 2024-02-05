@@ -14,7 +14,6 @@ contract SimpleRouter is GovEOracle {
     mapping(address base => mapping(address quote => address)) public oracles;
 
     event ConfigSet(address indexed base, address indexed quote, address indexed oracle);
-    event ConfigUnset(address indexed base, address indexed quote);
     event FallbackOracleSet(address indexed fallbackOracle);
 
     constructor(address _fallbackOracle) {
@@ -28,7 +27,7 @@ contract SimpleRouter is GovEOracle {
 
     function govUnsetConfig(address base, address quote) external onlyGovernor {
         delete oracles[base][quote];
-        emit ConfigUnset(base, quote);
+        emit ConfigSet(base, quote, address(0));
     }
 
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {

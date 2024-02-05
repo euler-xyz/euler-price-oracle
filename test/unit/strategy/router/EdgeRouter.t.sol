@@ -108,7 +108,7 @@ contract EdgeRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
-        emit EdgeRouter.ConfigUnset(base, quote);
+        emit EdgeRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
         router.govUnsetConfig(base, quote);
 
