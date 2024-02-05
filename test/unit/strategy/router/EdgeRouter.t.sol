@@ -10,7 +10,7 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
-import {AxiomRouter} from "src/strategy/router/AxiomRouter.sol";
+import {EdgeRouter} from "src/strategy/router/EdgeRouter.sol";
 
 contract StubERC4626 {
     address public asset;
@@ -42,18 +42,9 @@ contract StubEOracle {
     }
 }
 
-contract StubEFactory {
-    mapping(address => bool) public isProxy;
-
-    function setIsProxy(address x, bool y) public {
-        isProxy[x] = y;
-    }
-}
-
-contract AxiomRouterTest is Test {
+contract EdgeRouterTest is Test {
     address GOVERNOR = makeAddr("GOVERNOR");
-    StubEFactory eFactory;
-    AxiomRouter router;
+    EdgeRouter router;
 
     address WETH = makeAddr("WETH");
     address eWETH;
@@ -66,19 +57,17 @@ contract AxiomRouterTest is Test {
     StubEOracle eOracle;
 
     function setUp() public {
-        eFactory = new StubEFactory();
-        router = new AxiomRouter(address(eFactory));
+        router = new EdgeRouter();
         router.initialize(GOVERNOR);
     }
 
-    function test_Constructor_Integrity(address _eFactory) public {
-        AxiomRouter _router = new AxiomRouter(_eFactory);
-        assertEq(_router.eFactory(), _eFactory);
+    function test_Constructor_Integrity() public {
+        assertEq(router.fallbackOracle(), address(0));
     }
 
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
         vm.expectEmit();
-        emit AxiomRouter.ConfigSet(base, quote, oracle);
+        emit EdgeRouter.ConfigSet(base, quote, oracle);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
@@ -89,12 +78,12 @@ contract AxiomRouterTest is Test {
         public
     {
         vm.expectEmit();
-        emit AxiomRouter.ConfigSet(base, quote, oracleA);
+        emit EdgeRouter.ConfigSet(base, quote, oracleA);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleA);
 
         vm.expectEmit();
-        emit AxiomRouter.ConfigSet(base, quote, oracleB);
+        emit EdgeRouter.ConfigSet(base, quote, oracleB);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleB);
 
@@ -110,6 +99,7 @@ contract AxiomRouterTest is Test {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
+        vm.prank(caller);
         router.govSetConfig(base, quote, oracle);
     }
 
@@ -118,7 +108,7 @@ contract AxiomRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
-        emit AxiomRouter.ConfigUnset(base, quote);
+        emit EdgeRouter.ConfigUnset(base, quote);
         vm.prank(GOVERNOR);
         router.govUnsetConfig(base, quote);
 
@@ -136,7 +126,74 @@ contract AxiomRouterTest is Test {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
+        vm.prank(caller);
         router.govUnsetConfig(base, quote);
+    }
+
+    function test_GovSetVaultResolver_Integrity(address vault, address asset) public {
+        vault = boundAddr(vault);
+        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
+        vm.expectEmit();
+        emit EdgeRouter.VaultResolverSet(vault, asset);
+
+        vm.prank(GOVERNOR);
+        router.govSetVaultResolver(vault);
+
+        assertEq(router.resolvedVaults(vault), asset);
+    }
+
+    function test_GovSetVaultResolver_Integrity_OverwriteOk(address vault, address assetA, address assetB) public {
+        vault = boundAddr(vault);
+        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetA));
+        vm.prank(GOVERNOR);
+        router.govSetVaultResolver(vault);
+
+        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetB));
+        vm.prank(GOVERNOR);
+        router.govSetVaultResolver(vault);
+
+        assertEq(router.resolvedVaults(vault), assetB);
+    }
+
+    function test_GovSetVaultResolver_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
+        vm.assume(caller != GOVERNOR);
+
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
+        vm.prank(caller);
+        router.govSetVaultResolver(vault);
+    }
+
+    function test_GovUnsetVaultResolver_Integrity(address vault, address asset) public {
+        vault = boundAddr(vault);
+        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
+
+        vm.prank(GOVERNOR);
+        router.govSetVaultResolver(vault);
+
+        vm.expectEmit();
+        emit EdgeRouter.VaultResolverSet(vault, address(0));
+        vm.prank(GOVERNOR);
+        router.govUnsetVaultResolver(vault);
+
+        assertEq(router.resolvedVaults(vault), address(0));
+    }
+
+    function test_GovUnsetVaultResolver_NoConfigOk(address vault, address asset) public {
+        vault = boundAddr(vault);
+        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
+
+        vm.prank(GOVERNOR);
+        router.govUnsetVaultResolver(vault);
+
+        assertEq(router.resolvedVaults(vault), address(0));
+    }
+
+    function test_GovUnsetVaultResolver_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
+        vm.assume(caller != GOVERNOR);
+
+        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
+        vm.prank(caller);
+        router.govUnsetVaultResolver(vault);
     }
 
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {
@@ -167,61 +224,8 @@ contract AxiomRouterTest is Test {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
+        vm.prank(caller);
         router.govSetFallbackOracle(fallbackOracle);
-    }
-
-    function test_IndexEVault_Integrity(address caller) public {
-        address asset = makeAddr("asset");
-        address vault = address(new StubERC4626(asset, 0));
-        eFactory.setIsProxy(vault, true);
-
-        vm.prank(caller);
-        router.indexEVault(vault);
-        assertEq(router.nestedVaults(vault), asset);
-    }
-
-    function test_IndexEVault_Integrity_Nested1(address caller) public {
-        address asset = makeAddr("asset");
-        address vault = address(new StubERC4626(asset, 0));
-        address nVault = address(new StubERC4626(vault, 0));
-        eFactory.setIsProxy(vault, true);
-        eFactory.setIsProxy(nVault, true);
-
-        vm.prank(caller);
-        router.indexEVault(nVault);
-        assertEq(router.nestedVaults(vault), asset);
-        assertEq(router.nestedVaults(nVault), vault);
-    }
-
-    function test_IndexEVault_Integrity_Nested5(address caller) public {
-        address asset = makeAddr("asset");
-        address vault = address(new StubERC4626(asset, 0));
-        address nVault = address(new StubERC4626(vault, 0));
-        address nnVault = address(new StubERC4626(nVault, 0));
-        address nnnVault = address(new StubERC4626(nnVault, 0));
-        address nnnnVault = address(new StubERC4626(nnnVault, 0));
-        address nnnnnVault = address(new StubERC4626(nnnnVault, 0));
-        eFactory.setIsProxy(vault, true);
-        eFactory.setIsProxy(nVault, true);
-        eFactory.setIsProxy(nnVault, true);
-        eFactory.setIsProxy(nnnVault, true);
-        eFactory.setIsProxy(nnnnVault, true);
-        eFactory.setIsProxy(nnnnnVault, true);
-
-        vm.prank(caller);
-        router.indexEVault(nnnnnVault);
-        assertEq(router.nestedVaults(vault), asset);
-        assertEq(router.nestedVaults(nVault), vault);
-        assertEq(router.nestedVaults(nnVault), nVault);
-        assertEq(router.nestedVaults(nnnVault), nnVault);
-        assertEq(router.nestedVaults(nnnnVault), nnnVault);
-        assertEq(router.nestedVaults(nnnnnVault), nnnnVault);
-    }
-
-    function test_IndexEVault_Integrity_NotEVault(address caller, address vault) public {
-        vm.prank(caller);
-        router.indexEVault(vault);
-        assertEq(router.nestedVaults(vault), address(0));
     }
 
     function test_GetQuote_Integrity_BaseEqQuote(uint256 inAmount, address base, address oracle) public {
@@ -290,30 +294,24 @@ contract AxiomRouterTest is Test {
         router.getQuote(inAmount, base, quote);
     }
 
-    function test_GetQuote_Properties(uint256 inAmount, uint256 i, uint256 j) public {
+    function test_GetQuote_InverseProperty(uint256 inAmount, uint256 i, uint256 j) public {
         eWETH = address(new StubERC4626(WETH, 1.2e18));
-        eFactory.setIsProxy(eWETH, true);
-
         eeWETH = address(new StubERC4626(eWETH, 1.1e18));
-        eFactory.setIsProxy(eeWETH, true);
-
         eDAI = address(new StubERC4626(DAI, 1.5e18));
-        eFactory.setIsProxy(eDAI, true);
-
         eeDAI = address(new StubERC4626(eDAI, 1.25e18));
-        eFactory.setIsProxy(eeDAI, true);
 
         eOracle = new StubEOracle();
         eOracle.setPrice(WETH, DAI, 2500e18);
         eOracle.setPrice(DAI, WETH, 0.0004e18);
 
-        vm.prank(GOVERNOR);
+        vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
-        vm.prank(GOVERNOR);
         router.govSetConfig(DAI, WETH, address(eOracle));
-
-        router.indexEVault(eeDAI);
-        router.indexEVault(eeWETH);
+        router.govSetVaultResolver(eDAI);
+        router.govSetVaultResolver(eeDAI);
+        router.govSetVaultResolver(eWETH);
+        router.govSetVaultResolver(eeWETH);
+        vm.stopPrank();
 
         address[] memory tokens = new address[](6);
         tokens[0] = WETH;
@@ -335,28 +333,22 @@ contract AxiomRouterTest is Test {
 
     function test_GetQuote_ClosedLoopProperty(uint256 inAmount, LibPRNG.PRNG memory prng) public {
         eWETH = address(new StubERC4626(WETH, 1.2e18));
-        eFactory.setIsProxy(eWETH, true);
-
         eeWETH = address(new StubERC4626(eWETH, 1.1e18));
-        eFactory.setIsProxy(eeWETH, true);
-
         eDAI = address(new StubERC4626(DAI, 1.5e18));
-        eFactory.setIsProxy(eDAI, true);
-
         eeDAI = address(new StubERC4626(eDAI, 1.25e18));
-        eFactory.setIsProxy(eeDAI, true);
 
         eOracle = new StubEOracle();
         eOracle.setPrice(WETH, DAI, 2500e18);
         eOracle.setPrice(DAI, WETH, 0.0004e18);
 
-        vm.prank(GOVERNOR);
+        vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
-        vm.prank(GOVERNOR);
         router.govSetConfig(DAI, WETH, address(eOracle));
-
-        router.indexEVault(eeDAI);
-        router.indexEVault(eeWETH);
+        router.govSetVaultResolver(eDAI);
+        router.govSetVaultResolver(eeDAI);
+        router.govSetVaultResolver(eWETH);
+        router.govSetVaultResolver(eeWETH);
+        vm.stopPrank();
 
         address[] memory tokens = new address[](6);
         tokens[0] = WETH;
