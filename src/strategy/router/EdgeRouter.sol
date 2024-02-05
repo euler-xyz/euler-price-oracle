@@ -10,7 +10,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title EdgeRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Default Oracle resolver for Euler Axiom Vaults.
+/// @notice Default Oracle resolver for Euler Edge.
 contract EdgeRouter is GovEOracle {
     address public fallbackOracle;
     mapping(address base => mapping(address quote => address oracle)) public oracles;
@@ -19,7 +19,7 @@ contract EdgeRouter is GovEOracle {
     event ConfigSet(address indexed base, address indexed quote, address indexed oracle);
     event ConfigUnset(address indexed base, address indexed quote);
     event FallbackOracleSet(address indexed fallbackOracle);
-    event VaultResolverSet(address indexed vault, address indexed asset);
+    event ResolvedVaultSet(address indexed vault, address indexed asset);
 
     function govSetConfig(address base, address quote, address oracle) external onlyGovernor {
         oracles[base][quote] = oracle;
@@ -31,15 +31,15 @@ contract EdgeRouter is GovEOracle {
         emit ConfigUnset(base, quote);
     }
 
-    function govSetVaultResolver(address vault) external onlyGovernor {
+    function govSetResolvedVault(address vault) external onlyGovernor {
         address asset = ERC4626(vault).asset();
         resolvedVaults[vault] = asset;
-        emit VaultResolverSet(vault, asset);
+        emit ResolvedVaultSet(vault, asset);
     }
 
-    function govUnsetVaultResolver(address vault) external onlyGovernor {
+    function govUnsetResolvedVault(address vault) external onlyGovernor {
         delete resolvedVaults[vault];
-        emit VaultResolverSet(vault, address(0));
+        emit ResolvedVaultSet(vault, address(0));
     }
 
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {

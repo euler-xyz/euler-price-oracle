@@ -134,10 +134,10 @@ contract EdgeRouterTest is Test {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
         vm.expectEmit();
-        emit EdgeRouter.VaultResolverSet(vault, asset);
+        emit EdgeRouter.ResolvedVaultSet(vault, asset);
 
         vm.prank(GOVERNOR);
-        router.govSetVaultResolver(vault);
+        router.govSetResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), asset);
     }
@@ -146,11 +146,11 @@ contract EdgeRouterTest is Test {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetA));
         vm.prank(GOVERNOR);
-        router.govSetVaultResolver(vault);
+        router.govSetResolvedVault(vault);
 
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetB));
         vm.prank(GOVERNOR);
-        router.govSetVaultResolver(vault);
+        router.govSetResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), assetB);
     }
@@ -160,7 +160,7 @@ contract EdgeRouterTest is Test {
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
-        router.govSetVaultResolver(vault);
+        router.govSetResolvedVault(vault);
     }
 
     function test_GovUnsetVaultResolver_Integrity(address vault, address asset) public {
@@ -168,12 +168,12 @@ contract EdgeRouterTest is Test {
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
 
         vm.prank(GOVERNOR);
-        router.govSetVaultResolver(vault);
+        router.govSetResolvedVault(vault);
 
         vm.expectEmit();
-        emit EdgeRouter.VaultResolverSet(vault, address(0));
+        emit EdgeRouter.ResolvedVaultSet(vault, address(0));
         vm.prank(GOVERNOR);
-        router.govUnsetVaultResolver(vault);
+        router.govUnsetResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), address(0));
     }
@@ -183,7 +183,7 @@ contract EdgeRouterTest is Test {
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
 
         vm.prank(GOVERNOR);
-        router.govUnsetVaultResolver(vault);
+        router.govUnsetResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), address(0));
     }
@@ -193,7 +193,7 @@ contract EdgeRouterTest is Test {
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
-        router.govUnsetVaultResolver(vault);
+        router.govUnsetResolvedVault(vault);
     }
 
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {
@@ -307,10 +307,10 @@ contract EdgeRouterTest is Test {
         vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
         router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetVaultResolver(eDAI);
-        router.govSetVaultResolver(eeDAI);
-        router.govSetVaultResolver(eWETH);
-        router.govSetVaultResolver(eeWETH);
+        router.govSetResolvedVault(eDAI);
+        router.govSetResolvedVault(eeDAI);
+        router.govSetResolvedVault(eWETH);
+        router.govSetResolvedVault(eeWETH);
         vm.stopPrank();
 
         address[] memory tokens = new address[](6);
@@ -344,10 +344,10 @@ contract EdgeRouterTest is Test {
         vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
         router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetVaultResolver(eDAI);
-        router.govSetVaultResolver(eeDAI);
-        router.govSetVaultResolver(eWETH);
-        router.govSetVaultResolver(eeWETH);
+        router.govSetResolvedVault(eDAI);
+        router.govSetResolvedVault(eeDAI);
+        router.govSetResolvedVault(eWETH);
+        router.govSetResolvedVault(eeWETH);
         vm.stopPrank();
 
         address[] memory tokens = new address[](6);
