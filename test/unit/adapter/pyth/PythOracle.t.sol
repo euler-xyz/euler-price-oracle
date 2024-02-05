@@ -228,8 +228,8 @@ contract PythOracleTest is Test {
 
         inAmount = bound(inAmount, 0, type(uint64).max);
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * uint256(int256(p.price) - int64(p.conf)) / 10 ** uint32(-exponent));
-        assertEq(askOutAmount, inAmount * uint256(int256(p.price) + int64(p.conf)) / 10 ** uint32(-exponent));
+        assertEq(bidOutAmount, inAmount * uint64(p.price) / 10 ** uint32(-exponent));
+        assertEq(askOutAmount, inAmount * uint64(p.price) / 10 ** uint32(-exponent));
     }
 
     function test_GetQuotes_Integrity_PosExpo(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
@@ -248,8 +248,8 @@ contract PythOracleTest is Test {
 
         inAmount = bound(inAmount, 0, type(uint64).max);
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * uint256(int256(p.price) - int64(p.conf)) * 10 ** uint32(exponent));
-        assertEq(askOutAmount, inAmount * uint256(int256(p.price) + int64(p.conf)) * 10 ** uint32(exponent));
+        assertEq(bidOutAmount, inAmount * uint64(p.price) * 10 ** uint32(exponent));
+        assertEq(askOutAmount, inAmount * uint64(p.price) * 10 ** uint32(exponent));
     }
 
     function test_GetQuotes_Integrity_NegExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
@@ -268,8 +268,8 @@ contract PythOracleTest is Test {
 
         inAmount = bound(inAmount, 0, type(uint64).max);
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * 10 ** uint32(-exponent) / uint256(int256(p.price) + int64(p.conf)));
-        assertEq(askOutAmount, inAmount * 10 ** uint32(-exponent) / uint256(int256(p.price) - int64(p.conf)));
+        assertEq(bidOutAmount, inAmount * 10 ** uint32(-exponent) / uint64(p.price));
+        assertEq(askOutAmount, inAmount * 10 ** uint32(-exponent) / uint64(p.price));
     }
 
     function test_GetQuotes_Integrity_PosExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
@@ -288,8 +288,8 @@ contract PythOracleTest is Test {
 
         inAmount = bound(inAmount, 0, type(uint64).max);
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount / (uint256(int256(p.price) + int64(p.conf)) * 10 ** uint32(exponent)));
-        assertEq(askOutAmount, inAmount / (uint256(int256(p.price) - int64(p.conf)) * 10 ** uint32(exponent)));
+        assertEq(bidOutAmount, inAmount / (uint64(p.price) * 10 ** uint32(exponent)));
+        assertEq(askOutAmount, inAmount / (uint64(p.price) * 10 ** uint32(exponent)));
     }
 
     function test_GetQuotes_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {

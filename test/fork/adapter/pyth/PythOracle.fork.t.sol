@@ -42,7 +42,7 @@ contract PythOracleForkTest is ForkTest {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, USDC);
         assertApproxEqRel(bidOutAmount, 2500e6, 0.1e18);
         assertApproxEqRel(askOutAmount, 2500e6, 0.1e18);
-        assertLt(bidOutAmount, askOutAmount);
+        assertEq(bidOutAmount, askOutAmount);
     }
 
     function test_GetQuotes_Integrity_WETH_DAI() public {
@@ -50,7 +50,7 @@ contract PythOracleForkTest is ForkTest {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, DAI);
         assertApproxEqRel(bidOutAmount, 2500e18, 0.1e18);
         assertApproxEqRel(askOutAmount, 2500e18, 0.1e18);
-        assertLt(bidOutAmount, askOutAmount);
+        assertEq(bidOutAmount, askOutAmount);
     }
 
     function test_GetQuotes_Integrity_USDC_WETH_inverse() public {
@@ -58,7 +58,7 @@ contract PythOracleForkTest is ForkTest {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(2500e6, USDC, WETH);
         assertApproxEqRel(bidOutAmount, 1e18, 0.1e18);
         assertApproxEqRel(askOutAmount, 1e18, 0.1e18);
-        assertLt(bidOutAmount, askOutAmount);
+        assertEq(bidOutAmount, askOutAmount);
     }
 
     function test_GetQuotes_Integrity_DAI_WETH() public {
@@ -66,6 +66,6 @@ contract PythOracleForkTest is ForkTest {
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(2500e18, DAI, WETH);
         assertApproxEqRel(bidOutAmount, 1e18, 0.1e18);
         assertApproxEqRel(askOutAmount, 1e18, 0.1e18);
-        assertLt(bidOutAmount, askOutAmount);
+        assertEq(bidOutAmount, askOutAmount);
     }
 }

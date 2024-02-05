@@ -59,7 +59,26 @@ contract PythOracle is IEOracle {
 
     /// @inheritdoc IEOracle
     function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
-        PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
+        return _getQuote(inAmount, _base, _quote);
+    }
+
+    /// @inheritdoc IEOracle
+    /// @dev Does not support true bid-ask pricing.
+    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
+        uint256 outAmount = _getQuote(inAmount, _base, _quote);
+        return (outAmount, outAmount);
+    }
+
+    /// @inheritdoc IEOracle
+    function description() external view returns (OracleDescription.Description memory) {
+        return OracleDescription.PythOracle(maxStaleness);
+    }
+
+    /// @notice Get the Pyth price and transform it to a quote.
+    /// @dev Has 4 branches depending on inversion and the sign of the net exponent.
+    function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
+        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+        PythStructs.Price memory priceStruct = _fetchPriceStruct();
         uint64 midPrice = uint64(priceStruct.price);
         int32 exponent = priceStruct.expo + scaleExponent;
 
@@ -70,34 +89,9 @@ contract PythOracle is IEOracle {
         }
     }
 
-    /// @inheritdoc IEOracle
-    /// @dev Supports bid-ask pricing with the 95% confidence interval from Pyth.
-    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
-        PythStructs.Price memory priceStruct = _fetchPriceStruct(_base, _quote);
-        uint256 bidPrice = uint256(int256(priceStruct.price) - int64(priceStruct.conf));
-        uint256 askPrice = uint256(int256(priceStruct.price) + int64(priceStruct.conf));
-        int32 exponent = priceStruct.expo + scaleExponent;
-
-        if (inverse) {
-            return (
-                _calcOutAmountInverse(inAmount, askPrice, exponent), _calcOutAmountInverse(inAmount, bidPrice, exponent)
-            );
-        } else {
-            return (_calcOutAmount(inAmount, bidPrice, exponent), _calcOutAmount(inAmount, askPrice, exponent));
-        }
-    }
-
-    /// @inheritdoc IEOracle
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.PythOracle(maxStaleness);
-    }
-
     /// @notice Get the latest Pyth price and perform sanity checks.
-    /// @param _base The address of the base asset corresponding to the feed.
-    /// @param _quote The address of the quote asset corresponding to the feed.
-    /// @dev Reverts if base/quote mistamch, price is non-positive, confidence is too wide, or exponent is too large.
-    function _fetchPriceStruct(address _base, address _quote) internal view returns (PythStructs.Price memory) {
-        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+    /// @dev Reverts if price is non-positive, confidence is too wide, or exponent is too large.
+    function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = pyth.getPriceNoOlderThan(feedId, maxStaleness);
         if (p.price <= 0) {
             revert Errors.Pyth_InvalidPrice(p.price);
