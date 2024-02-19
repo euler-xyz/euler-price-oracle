@@ -6,10 +6,10 @@ import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
-/// @title SimpleRouter
+/// @title FallbackRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Oracle resolver with a configurable mapping and optional fallback.
-contract SimpleRouter is GovEOracle {
+contract FallbackRouter is GovEOracle {
     /// @notice The EOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
     address public fallbackOracle;
@@ -27,7 +27,7 @@ contract SimpleRouter is GovEOracle {
     /// @dev If `fallbackOracle` is `address(0)` then there is no fallback resolver.
     event FallbackOracleSet(address indexed fallbackOracle);
 
-    /// @notice Deploy SimpleRouter.
+    /// @notice Deploy FallbackRouter.
     /// @param _fallbackOracle The EOracle to call if base/quote is not configured.
     /// @dev If `_fallbackOracle` is `address(0)` then do not use a fallback.
     constructor(address _fallbackOracle) {
@@ -80,7 +80,7 @@ contract SimpleRouter is GovEOracle {
 
     /// @inheritdoc IEOracle
     function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.SimpleRouter(governor);
+        return OracleDescription.FallbackRouter(governor);
     }
 
     /// @notice Resolve the EOracle to call for a given base/quote pair.

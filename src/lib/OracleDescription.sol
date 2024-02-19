@@ -65,7 +65,7 @@ library OracleDescription {
         });
     }
 
-    function SimpleRouter(address governor) internal pure returns (Description memory) {
+    function FallbackRouter(address governor) internal pure returns (Description memory) {
         return Description({
             algorithm: Algorithm.UNKNOWN,
             authority: Authority.GOVERNED,
@@ -73,7 +73,7 @@ library OracleDescription {
             requestModel: RequestModel.INTERNAL,
             variant: Variant.STRATEGY,
             configuration: Configuration({maxStaleness: 0, governor: governor, supportsBidAskSpread: false}),
-            name: "SimpleRouter"
+            name: "FallbackRouter"
         });
     }
 

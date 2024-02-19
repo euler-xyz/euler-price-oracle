@@ -6,15 +6,15 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
-import {SimpleRouter} from "src/strategy/router/SimpleRouter.sol";
+import {FallbackRouter} from "src/strategy/router/FallbackRouter.sol";
 
-contract SimpleRouterTest is Test {
+contract FallbackRouterTest is Test {
     address internal GOVERNOR = makeAddr("GOVERNOR");
     address internal INITIAL_FALLBACK_ORACLE = makeAddr("INITIAL_FALLBACK_ORACLE");
-    SimpleRouter private router;
+    FallbackRouter private router;
 
     function setUp() public {
-        router = new SimpleRouter(INITIAL_FALLBACK_ORACLE);
+        router = new FallbackRouter(INITIAL_FALLBACK_ORACLE);
         router.initialize(GOVERNOR);
     }
 
@@ -33,12 +33,12 @@ contract SimpleRouterTest is Test {
         public
     {
         vm.expectEmit();
-        emit SimpleRouter.ConfigSet(base, quote, oracleA);
+        emit FallbackRouter.ConfigSet(base, quote, oracleA);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleA);
 
         vm.expectEmit();
-        emit SimpleRouter.ConfigSet(base, quote, oracleB);
+        emit FallbackRouter.ConfigSet(base, quote, oracleB);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleB);
 
@@ -62,7 +62,7 @@ contract SimpleRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
-        emit SimpleRouter.ConfigSet(base, quote, address(0));
+        emit FallbackRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
         router.govUnsetConfig(base, quote);
 
