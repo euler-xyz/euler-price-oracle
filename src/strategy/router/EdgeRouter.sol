@@ -32,7 +32,7 @@ contract EdgeRouter is GovEOracle {
     /// @param fallbackOracle The address of the EOracle that is called when base/quote is not configured.
     /// @dev If `fallbackOracle` is `address(0)` then there is no fallback resolver.
     event FallbackOracleSet(address indexed fallbackOracle);
-    /// @notice Mark an ERC4626 vault to be resolved to its `asset` via its `conver*` methods.
+    /// @notice Mark an ERC4626 vault to be resolved to its `asset` via its `convert*` methods.
     /// @param vault The address of the ERC4626 vault.
     /// @param asset The address of the vault's asset.
     /// @dev If `asset` is `address(0)` then the configuration was removed.
