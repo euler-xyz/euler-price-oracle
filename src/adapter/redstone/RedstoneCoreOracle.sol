@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
@@ -13,7 +13,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @notice Adapter for Redstone pull-based price feeds.
 /// @dev To use the oracle, fetch the update data off-chain,
 /// call `updatePrice` to update `lastPrice` and then call `getQuote`.
-contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, IEOracle {
+contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed.
@@ -62,19 +62,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, IEOracle {
         lastUpdatedAt = uint32(block.timestamp);
     }
 
-    /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
-        return _getQuote(inAmount, _base, _quote);
-    }
-
-    /// @inheritdoc IEOracle
-    /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, _base, _quote);
-        return (outAmount, outAmount);
-    }
-
-    /// @inheritdoc IEOracle
     function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.RedstoneCoreOracle(maxStaleness);
     }
@@ -84,7 +71,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, IEOracle {
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.
     /// @return The converted amount using the Redstone feed.
-    function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
+    function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
         uint256 staleness = block.timestamp - lastUpdatedAt;
         if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);

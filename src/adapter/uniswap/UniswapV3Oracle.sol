@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
@@ -11,7 +11,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Uniswap V3's TWAP oracle.
 /// @dev This oracle supports quoting token0/token1 and token1/token0 of the given pool.
-contract UniswapV3Oracle is IEOracle {
+contract UniswapV3Oracle is BaseAdapter {
     /// @dev A salt used to calculate the pool address Uniswap V3 factory.
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
     /// @dev The lower bound for the duration between consecutive blocks. On Ethereum, the block time is fixed at 12 seconds.
@@ -59,19 +59,6 @@ contract UniswapV3Oracle is IEOracle {
         }
     }
 
-    /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _getQuote(inAmount, base, quote);
-    }
-
-    /// @inheritdoc IEOracle
-    /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, base, quote);
-        return (outAmount, outAmount);
-    }
-
-    /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.UniswapV3Oracle();
     }
@@ -82,7 +69,7 @@ contract UniswapV3Oracle is IEOracle {
     /// @param base The token that is being priced. Either `token0` or `token1`.
     /// @param quote The token that is the unit of account. Either `token1` or `token0`.
     /// @return The converted amount.
-    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         // Accept only token0/token1 and token1/token0.
         if ((base != token0 || quote != token1) && (base != token1 || quote != token0)) {
             revert Errors.EOracle_NotSupported(base, quote);

@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
@@ -11,7 +11,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @notice Adapter for pricing ERC4626 share tokens. The prices returned by this adapter
 /// may be manipulable. Check the implementation of the vault.
 /// @dev Calls `convertToAssets` or `convertToShares` on the ERC4626 vault.
-contract ERC4626Oracle is IEOracle {
+contract ERC4626Oracle is BaseAdapter {
     /// @notice The address of the ERC4626 vault.
     address public immutable vault;
     /// @notice The address of the vault's underlying token.
@@ -25,19 +25,6 @@ contract ERC4626Oracle is IEOracle {
         asset = ERC4626(_vault).asset();
     }
 
-    /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _getQuote(inAmount, base, quote);
-    }
-
-    /// @inheritdoc IEOracle
-    /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, base, quote);
-        return (outAmount, outAmount);
-    }
-
-    /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.ERC4626Oracle();
     }
@@ -48,7 +35,7 @@ contract ERC4626Oracle is IEOracle {
     /// @param base The token that is being priced. Either `vault` or `asset`.
     /// @param quote The token that is the unit of account. Either `asset` or `vault`.
     /// @return The converted amount by the vault.
-    function _getQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         if (base == vault && quote == asset) {
             return ERC4626(vault).convertToAssets(inAmount);
         } else if (base == asset && quote == vault) {

@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
@@ -12,7 +12,7 @@ import {OracleDescription} from "src/lib/OracleDescription.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice EOracle adapter for Pyth pull-based price feeds.
 /// @dev Supports bid-ask pricing with the 95% confidence interval from Pyth.
-contract PythOracle is IEOracle {
+contract PythOracle is BaseAdapter {
     /// @dev The confidence interval can be at most 10% wide.
     uint256 internal constant MAX_CONF_WIDTH_BPS = 500;
     /// @notice The address of the Pyth oracle proxy.
@@ -57,26 +57,13 @@ contract PythOracle is IEOracle {
         IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
     }
 
-    /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address _base, address _quote) external view returns (uint256) {
-        return _getQuote(inAmount, _base, _quote);
-    }
-
-    /// @inheritdoc IEOracle
-    /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address _base, address _quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, _base, _quote);
-        return (outAmount, outAmount);
-    }
-
-    /// @inheritdoc IEOracle
     function description() external view returns (OracleDescription.Description memory) {
         return OracleDescription.PythOracle(maxStaleness);
     }
 
     /// @notice Get the Pyth price and transform it to a quote.
     /// @dev Has 4 branches depending on inversion and the sign of the net exponent.
-    function _getQuote(uint256 inAmount, address _base, address _quote) internal view returns (uint256) {
+    function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
         PythStructs.Price memory priceStruct = _fetchPriceStruct();
         uint64 midPrice = uint64(priceStruct.price);

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title RethOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Rocket Pool rETH <-> ETH via the rETH contract.
-contract RethOracle is IEOracle {
+contract RethOracle is BaseAdapter {
     /// @dev The address of Wrapped Ether.
     address public immutable weth;
     /// @dev The address of Rocket Pool rETH.
@@ -24,19 +24,6 @@ contract RethOracle is IEOracle {
         reth = _reth;
     }
 
-    /// @inheritdoc IEOracle
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _getQuote(inAmount, base, quote);
-    }
-
-    /// @inheritdoc IEOracle
-    /// @dev Does not support true bid-ask pricing.
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        uint256 outAmount = _getQuote(inAmount, base, quote);
-        return (outAmount, outAmount);
-    }
-
-    /// @inheritdoc IEOracle
     function description() external pure returns (OracleDescription.Description memory) {
         return OracleDescription.RethOracle();
     }
@@ -47,7 +34,7 @@ contract RethOracle is IEOracle {
     /// @param base The token that is being priced. Either rETH or WETH.
     /// @param quote The token that is the unit of account. Either WETH or rETH.
     /// @return The converted amount.
-    function _getQuote(uint256 inAmount, address base, address quote) private view returns (uint256) {
+    function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         if (base == reth && quote == weth) {
             return IReth(reth).getEthValue(inAmount);
         } else if (base == weth && quote == reth) {
