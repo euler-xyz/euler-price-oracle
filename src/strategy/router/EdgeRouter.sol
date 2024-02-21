@@ -52,7 +52,7 @@ contract EdgeRouter is GovEOracle {
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
     /// @dev Callable only by the governor.
-    function govUnsetConfig(address base, address quote) external onlyGovernor {
+    function govClearConfig(address base, address quote) external onlyGovernor {
         delete oracles[base][quote];
         emit ConfigSet(base, quote, address(0));
     }
@@ -71,7 +71,7 @@ contract EdgeRouter is GovEOracle {
     /// @notice Clear the configuration for internal pricing resolution for a vault.
     /// @param vault The address of the ERC4626 vault.
     /// @dev Callable only by the governor.
-    function govUnsetResolvedVault(address vault) external onlyGovernor {
+    function govClearResolvedVault(address vault) external onlyGovernor {
         delete resolvedVaults[vault];
         emit ResolvedVaultSet(vault, address(0));
     }

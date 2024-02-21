@@ -57,30 +57,30 @@ contract FallbackRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
     }
 
-    function test_GovUnsetConfig_Integrity(address base, address quote, address oracle) public {
+    function test_GovClearConfig_Integrity(address base, address quote, address oracle) public {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
         emit FallbackRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
 
         assertEq(router.oracles(base, quote), address(0));
     }
 
-    function test_GovUnsetConfig_NoConfigOk(address base, address quote) public {
+    function test_GovClearConfig_NoConfigOk(address base, address quote) public {
         vm.prank(GOVERNOR);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
 
         assertEq(router.oracles(base, quote), address(0));
     }
 
-    function test_GovUnsetConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
+    function test_GovClearConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
     }
 
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {

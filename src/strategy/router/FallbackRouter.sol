@@ -49,7 +49,7 @@ contract FallbackRouter is GovEOracle {
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
     /// @dev Callable only by the governor.
-    function govUnsetConfig(address base, address quote) external onlyGovernor {
+    function govClearConfig(address base, address quote) external onlyGovernor {
         delete oracles[base][quote];
         emit ConfigSet(base, quote, address(0));
     }

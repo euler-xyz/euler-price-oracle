@@ -103,31 +103,31 @@ contract EdgeRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
     }
 
-    function test_GovUnsetConfig_Integrity(address base, address quote, address oracle) public {
+    function test_GovClearConfig_Integrity(address base, address quote, address oracle) public {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
         emit EdgeRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
 
         assertEq(router.oracles(base, quote), address(0));
     }
 
-    function test_GovUnsetConfig_NoConfigOk(address base, address quote) public {
+    function test_GovClearConfig_NoConfigOk(address base, address quote) public {
         vm.prank(GOVERNOR);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
 
         assertEq(router.oracles(base, quote), address(0));
     }
 
-    function test_GovUnsetConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
+    function test_GovClearConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
-        router.govUnsetConfig(base, quote);
+        router.govClearConfig(base, quote);
     }
 
     function test_GovSetVaultResolver_Integrity(address vault, address asset) public {
@@ -163,7 +163,7 @@ contract EdgeRouterTest is Test {
         router.govSetResolvedVault(vault);
     }
 
-    function test_GovUnsetVaultResolver_Integrity(address vault, address asset) public {
+    function test_GovClearResolvedVault_Integrity(address vault, address asset) public {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
 
@@ -173,27 +173,27 @@ contract EdgeRouterTest is Test {
         vm.expectEmit();
         emit EdgeRouter.ResolvedVaultSet(vault, address(0));
         vm.prank(GOVERNOR);
-        router.govUnsetResolvedVault(vault);
+        router.govClearResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), address(0));
     }
 
-    function test_GovUnsetVaultResolver_NoConfigOk(address vault, address asset) public {
+    function test_GovClearResolvedVault_NoConfigOk(address vault, address asset) public {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
 
         vm.prank(GOVERNOR);
-        router.govUnsetResolvedVault(vault);
+        router.govClearResolvedVault(vault);
 
         assertEq(router.resolvedVaults(vault), address(0));
     }
 
-    function test_GovUnsetVaultResolver_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
+    function test_GovClearResolvedVault_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
-        router.govUnsetResolvedVault(vault);
+        router.govClearResolvedVault(vault);
     }
 
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {
