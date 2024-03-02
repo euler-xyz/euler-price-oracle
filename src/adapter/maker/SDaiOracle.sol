@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.23;
+
+import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {IPot} from "src/adapter/maker/IPot.sol";
+import {Errors} from "src/lib/Errors.sol";
+import {OracleDescription} from "src/lib/OracleDescription.sol";
+
+/// @title SDaiOracle
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Adapter for pricing Maker sDAI <-> DAI via the DSR Pot contract.
+contract SDaiOracle is BaseAdapter {
+    /// @dev The address of the DSR Pot contract.
+    address public immutable dsrPot;
+    /// @dev The address of the DAI token.
+    address public immutable dai;
+    /// @dev The address of the sDAI token.
+    address public immutable sDai;
+
+    /// @notice Deploy an SDaiOracle.
+    /// @param _dai The address of the DAI token.
+    /// @param _sDai The address of the sDAI token.
+    /// @dev The oracle will support sDAI/DAI and DAI/sDAI pricing.
+    constructor(address _dai, address _sDai) {
+        dai = _dai;
+        sDai = _sDai;
+    }
+
+    function description() external pure returns (OracleDescription.Description memory) {
+        return OracleDescription.LidoOracle();
+    }
+
+    /// @notice Get a quote by querying the exchange rate from the DSR Pot contract.
+    /// @dev Calls `chi`, the interest rate accumulator, to get the exchange rate.
+    /// @param inAmount The amount of `base` to convert.
+    /// @param base The token that is being priced. Either `sDai` or `dai`.
+    /// @param quote The token that is the unit of account. Either `dai` or `sDai`.
+    /// @return The converted amount.
+    function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
+        uint256 rate = IPot(dsrPot).chi();
+        if (base == sDai && quote == dai) {
+            return inAmount * rate / 1e27;
+        } else if (base == dai && quote == sDai) {
+            return inAmount * 1e27 / rate;
+        }
+        revert Errors.EOracle_NotSupported(base, quote);
+    }
+}
