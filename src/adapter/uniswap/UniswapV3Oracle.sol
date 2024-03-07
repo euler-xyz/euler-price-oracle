@@ -66,7 +66,7 @@ contract UniswapV3Oracle is BaseAdapter {
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         // Accept only token0/token1 and token1/token0.
-        if ((base != token0 || quote != token1) && (base != token1 || quote != token0)) {
+        if (!((base == token0 && quote == token1) || (base == token1 && quote == token0))) {
             revert Errors.EOracle_NotSupported(base, quote);
         }
         // Size limitation enforced by the pool.

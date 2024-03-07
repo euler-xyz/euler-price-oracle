@@ -15,9 +15,6 @@
 [submodule "lib/euler-factory"]
 	path = lib/euler-factory
 	url = https://github.com/euler-xyz/euler-factory
-[submodule "lib/euler-vault"]
-	path = lib/euler-vault
-	url = https://github.com/euler-xyz/euler-vault
 [submodule "lib/redstone-oracles-monorepo"]
 	path = lib/redstone-oracles-monorepo
 	url = https://github.com/redstone-finance/redstone-oracles-monorepo

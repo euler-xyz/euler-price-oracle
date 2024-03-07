@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
-import {EFactory} from "@euler-vault/EFactory/EFactory.sol";
 import {GovEOracle} from "src/GovEOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";

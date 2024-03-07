@@ -5,7 +5,6 @@ import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
-import {EFactory} from "@euler-vault/EFactory/EFactory.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
