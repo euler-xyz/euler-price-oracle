@@ -13,11 +13,6 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 Code: [IEOracle.sol](../src/interfaces/IEOracle.sol)
 ```solidity
 interface IEOracle {
-    /// @notice Describes the properties of the oracle. Intended for off-chain use.
-    /// @dev Integrators MUST NOT blindly trust the description as it can be easily spoofed.
-    /// @dev Integrators SHOULD check the chain of trust in the official Euler Oracle Factory.
-    function description() external view returns (OracleDescription.Description memory description);
-
     /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price spread
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.
@@ -55,61 +50,6 @@ Oracles MUST implement `description`, `getQuote` and `getQuotes` as defined by t
 ### `getQuotes`
 - MUST return the bid amount and ask amount of `quote` that is price-equivalent to `inAmount` of `base` by accounting for spread due to slippage, fees or other on-chain conditions.
 - SHOULD return a zero-spread price if the external system does not support spread quotes.
-
-### `description`
-```solidity
-function description() external view returns (Description memory);
-```
-- MUST NOT revert. 
-- MUST faithfully represent the properties and configuration of the EOracle. 
-- MUST reflect changes to the EOracle's properties as a result of governance or other mechanisms.
-
-### `Description` schema
-```solidity
-enum Variant {ADAPTER, STRATEGY}
-enum Authority {GOVERNED, FINALIZED}
-enum Upgradeability {UPGRADEABLE, IMMUTABLE}
-enum Algorithm {SPOT, MEDIAN, ... , OTHER}
-enum PaymentModel {FREE, SUBSCRIPTION, PER_REQUEST, OTHER}
-enum RequestModel {PUSH, PULL, SIGNATURE, INTERNAL, OTHER}
-
-struct Configuration {
-    uint256 maxStaleness;
-    address governor;
-    bool supportsBidAskSpread;
-}
-
-struct Description {
-    Algorithm algorithm;
-    Authority authority;
-    PaymentModel paymentModel;
-    RequestModel requestModel;
-    Variant variant;
-    Configuration configuration;
-    string name;
-}
-```
-> Some definitions are redacted for brevity. See [src/lib/OracleDescription.sol](src/lib/OracleDescription.sol) for all definitions.
-- `variant` MUST NOT change throughout the lifecycle of the EOracle.
-- `authority` MUST reflect the current governance state of the EOracle as defined in the [Euler Vaults whitepaper.](https://github.com/euler-xyz/euler-vaults-docs/blob/master/whitepaper.md#governed-vs-finalised)
-- `upgradeability` MUST reflect the deployment configuration in the EOracleFactory as defined in the [Euler Vaults whitepaper.](https://github.com/euler-xyz/euler-vaults-docs/blob/master/whitepaper.md#upgradeable-vs-immutable)
-- `algorithm` MUST be the pricing algorithm implemented by the connected external oracle if the EOracle is an adapter.
-- `algorithm` MUST be the aggregation algorithm internally implemented by the strategy if the EOracle is a strategy.
-- `paymentModel` MUST reflect either the external oracle's payment model if the EOracle is an adapter.
-- `paymentModel` MUST reflect the strategy's payment model if the EOracle is a strategy.
-- `requestModel` MUST be 
-    - `PUSH` if price updates are periodically updated on-chain without caller intent.
-    - `PULL` if the caller has to make a transaction to request an up-to-date price to be pushed on-chain at a later block.
-    - `SIGNATURE` if the price is ingested as part of data that is signed off-chain by a trusted party and verified at the point of execution.
-    - `INTERNAL` if the EOracle is a strategy or an adapter whose pricing logic is fully internalized.
-- `Configuration.maxStaleness` MUST be the maximum age in seconds of the price accepted by the EOracle. A value of 0 means that the price is updated every block.
-- `Configuration.governor` MUST be `address(0)` if `authority` is `FINALIZED` or else the governor address as defined in the [Euler Vaults whitepaper.](https://github.com/euler-xyz/euler-vaults-docs/blob/master/whitepaper.md#governed-vs-finalised)
-- `Configuration.supportsBidAskSpread` MUST be `true` if the EOracle natively supports quotes with bid-ask spreads. If this is `false`, then `getQuotes(in,b,q)` MUST return `(getQuote(in,b,q), getQuote(in,b,q))`.
-- An EOracle MAY use the enum member `OTHER` whenever none of the other members accurately describe its properties.
-- `name` MUST NOT change throughout the lifecycle of the EOracle.
-- `name` SHOULD be a short string that describes the EOracle. EOracles are free to choose the format.
-- `name` is RECOMMENDED to include the common name of the external system that is queried by adapters (e.g. "Chainlink").
-
 
 ## Denominations
 Source: [src/lib/Denominations.sol](src/lib/Denominations.sol)

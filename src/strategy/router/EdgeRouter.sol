@@ -6,7 +6,6 @@ import {EFactory} from "@euler-vault/EFactory/EFactory.sol";
 import {GovEOracle} from "src/GovEOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title EdgeRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -98,11 +97,6 @@ contract EdgeRouter is GovEOracle {
         (inAmount, base, quote, oracle) = _resolveOracle(inAmount, base, quote);
         if (base == quote) return (inAmount, inAmount);
         return IEOracle(oracle).getQuotes(inAmount, base, quote);
-    }
-
-    /// @inheritdoc IEOracle
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.EdgeRouter(governor);
     }
 
     /// @notice Resolve the EOracle to call for a given base/quote pair.

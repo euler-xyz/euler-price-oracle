@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IStEth} from "src/adapter/lido/IStEth.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title LidoOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -22,10 +21,6 @@ contract LidoOracle is BaseAdapter {
     constructor(address _stEth, address _wstEth) {
         stEth = _stEth;
         wstEth = _wstEth;
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.LidoOracle();
     }
 
     /// @notice Get a quote by querying the exchange rate from the stEth contract.

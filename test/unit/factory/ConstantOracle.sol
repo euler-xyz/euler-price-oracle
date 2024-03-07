@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {GovEOracle} from "src/GovEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ConstantOracle is GovEOracle {
     uint256 public constant PRECISION = 10 ** 27;
@@ -25,10 +24,6 @@ contract ConstantOracle is GovEOracle {
     function getQuotes(uint256 _inAmount, address _base, address _quote) external pure returns (uint256, uint256) {
         uint256 outAmount = _getQuote(_inAmount, _base, _quote);
         return (outAmount, outAmount);
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.LidoOracle();
     }
 
     function UNPACK() internal pure returns (address base, address quote) {

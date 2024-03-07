@@ -5,7 +5,6 @@ import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -60,10 +59,6 @@ contract ChainlinkOracle is BaseAdapter {
             scaleFactor = 10 ** uint8(-scaleDecimals);
             scaleNumerator = !inverse;
         }
-    }
-
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.ChainlinkOracle(maxStaleness);
     }
 
     /// @notice Get the quote from the Chainlink feed.

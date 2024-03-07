@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IPot} from "src/adapter/maker/IPot.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title SDaiOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -24,10 +23,6 @@ contract SDaiOracle is BaseAdapter {
     constructor(address _dai, address _sDai) {
         dai = _dai;
         sDai = _sDai;
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.LidoOracle();
     }
 
     /// @notice Get a quote by querying the exchange rate from the DSR Pot contract.
