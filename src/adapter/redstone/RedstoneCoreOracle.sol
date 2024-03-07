@@ -6,7 +6,6 @@ import {PrimaryProdDataServiceConsumerBase} from
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title RedstoneCoreOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -60,10 +59,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         if (price > type(uint224).max) revert Errors.EOracle_Overflow();
         lastPrice = uint224(price);
         lastUpdatedAt = uint32(block.timestamp);
-    }
-
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.RedstoneCoreOracle(maxStaleness);
     }
 
     /// @notice Get the quote from the Redstone feed.

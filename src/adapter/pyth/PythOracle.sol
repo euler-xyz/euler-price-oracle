@@ -6,7 +6,6 @@ import {PythStructs} from "@pyth/PythStructs.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title PythOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -55,10 +54,6 @@ contract PythOracle is BaseAdapter {
     /// @dev The required fee can be computed by calling `getUpdateFee` on Pyth with the length of the `updateData` array.
     function updatePrice(bytes[] calldata updateData) external payable {
         IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
-    }
-
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.PythOracle(maxStaleness);
     }
 
     /// @notice Get the Pyth price and transform it to a quote.

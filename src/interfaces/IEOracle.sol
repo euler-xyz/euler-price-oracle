@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {OracleDescription} from "src/lib/OracleDescription.sol";
-
 /// @title IEOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Common EOracle interface.
 interface IEOracle {
-    /// @notice Describes the properties of the oracle. Intended for off-chain use.
-    /// @dev Integrators MUST NOT blindly trust the description as it can be easily spoofed.
-    /// @dev Integrators SHOULD check the chain of trust in the official Euler Oracle Factory.
-    function description() external view returns (OracleDescription.Description memory description);
-
     /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price spread
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.

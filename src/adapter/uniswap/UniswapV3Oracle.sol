@@ -5,7 +5,6 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title UniswapV3Oracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -57,10 +56,6 @@ contract UniswapV3Oracle is BaseAdapter {
             IUniswapV3Pool(pool).increaseObservationCardinalityNext(requiredObservationCardinality);
             // TWAP pricing may revert while the observation buffer is growing to its new cardinality.
         }
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.UniswapV3Oracle();
     }
 
     /// @notice Get a quote by calling the pool's TWAP oracle.

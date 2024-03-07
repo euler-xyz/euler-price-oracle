@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title RethOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -22,10 +21,6 @@ contract RethOracle is BaseAdapter {
     constructor(address _weth, address _reth) {
         weth = _weth;
         reth = _reth;
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.RethOracle();
     }
 
     /// @notice Get a quote by querying the exchange rate from the rETH contract.

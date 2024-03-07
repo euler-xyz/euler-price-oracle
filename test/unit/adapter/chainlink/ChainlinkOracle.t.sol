@@ -7,7 +7,6 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract ChainlinkOracleTest is Test {
     struct FuzzableConfig {
@@ -282,19 +281,6 @@ contract ChainlinkOracleTest is Test {
             inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.answer);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
-    }
-
-    function test_Description(FuzzableConfig memory c) public {
-        _deploy(c);
-        OracleDescription.Description memory desc = oracle.description();
-        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.VWAP));
-        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.IMMUTABLE));
-        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.FREE));
-        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.PUSH));
-        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.ADAPTER));
-        assertEq(desc.configuration.maxStaleness, c.maxStaleness);
-        assertEq(desc.configuration.governor, address(0));
-        assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 
     function _deploy(FuzzableConfig memory c) private {

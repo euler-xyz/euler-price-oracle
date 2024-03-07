@@ -39,8 +39,6 @@
 * [EOracle Specification](#eoracle-specification)
     * [Definitions](#definitions)
     * [Methods](#methods)
-        * [`description`](#description)
-        * [`Description` schema](#description-schema)
         * [`getQuote` and `getQuotes`](#getquote-and-getquotes)
         * [`getQuote`](#getquote)
         * [`getQuotes`](#getquotes)
@@ -56,7 +54,6 @@
 ## Interface
 Euler Oracles conform to the shared `IEOracle` interface.
 ```solidity
-function description() external view returns (OracleDescription.Description memory description);
 function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount);
 function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
 ```

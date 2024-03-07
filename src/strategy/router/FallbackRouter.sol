@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {GovEOracle} from "src/GovEOracle.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title FallbackRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -76,11 +75,6 @@ contract FallbackRouter is GovEOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         address oracle = _resolveOracle(base, quote);
         return IEOracle(oracle).getQuotes(inAmount, base, quote);
-    }
-
-    /// @inheritdoc IEOracle
-    function description() external view returns (OracleDescription.Description memory) {
-        return OracleDescription.FallbackRouter(governor);
     }
 
     /// @notice Resolve the EOracle to call for a given base/quote pair.

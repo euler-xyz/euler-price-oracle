@@ -4,10 +4,8 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {GovEOracle} from "src/GovEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 contract TestOracle is GovEOracle {
-    function description() external pure returns (OracleDescription.Description memory) {}
     function getQuote(uint256, address, address) external pure returns (uint256) {}
     function getQuotes(uint256, address, address) external pure returns (uint256, uint256) {}
 }

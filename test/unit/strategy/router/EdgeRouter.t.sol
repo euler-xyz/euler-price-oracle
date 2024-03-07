@@ -9,7 +9,6 @@ import {EFactory} from "@euler-vault/EFactory/EFactory.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IEOracle} from "src/interfaces/IEOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 import {EdgeRouter} from "src/strategy/router/EdgeRouter.sol";
 
 contract StubERC4626 {
@@ -369,18 +368,6 @@ contract EdgeRouterTest is Test {
             inAmount = router.getQuote(inAmount, tokens[i], tokens[j]);
         }
         assertApproxEqRel(initInAmount, inAmount, 0.00000001e18);
-    }
-
-    function test_Description() public {
-        OracleDescription.Description memory desc = router.description();
-        assertEq(uint8(desc.algorithm), uint8(OracleDescription.Algorithm.UNKNOWN));
-        assertEq(uint8(desc.authority), uint8(OracleDescription.Authority.GOVERNED));
-        assertEq(uint8(desc.paymentModel), uint8(OracleDescription.PaymentModel.UNKNOWN));
-        assertEq(uint8(desc.requestModel), uint8(OracleDescription.RequestModel.INTERNAL));
-        assertEq(uint8(desc.variant), uint8(OracleDescription.Variant.STRATEGY));
-        assertEq(desc.configuration.maxStaleness, 0);
-        assertEq(desc.configuration.governor, GOVERNOR);
-        assertEq(desc.configuration.supportsBidAskSpread, false);
     }
 
     function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {

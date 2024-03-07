@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {OracleDescription} from "src/lib/OracleDescription.sol";
 
 /// @title ERC4626Oracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -23,10 +22,6 @@ contract ERC4626Oracle is BaseAdapter {
     constructor(address _vault) {
         vault = _vault;
         asset = ERC4626(_vault).asset();
-    }
-
-    function description() external pure returns (OracleDescription.Description memory) {
-        return OracleDescription.ERC4626Oracle();
     }
 
     /// @notice Get a quote by calling the corresponding `convert*` method on the ERC4626 vault.
