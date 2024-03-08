@@ -33,8 +33,8 @@ library Errors {
     /// @notice Pyth returned an out-of-range value for the price.
     /// @param price The "price" parameter in the price struct.
     error Pyth_InvalidPrice(int64 price);
-    /// @notice The length of the TWAP window exceeds the maximum.
-    /// @param twapWindow The length of the TWAP window.
-    /// @param maxTwapWindow The maximum allowed TWAP length.
-    error UniswapV3_TwapWindowTooLong(uint32 twapWindow, uint32 maxTwapWindow);
+    /// @notice The length of the TWAP window is too small or too large.
+    error UniswapV3_InvalidTwapWindow();
+    /// @notice Wrapped UniswapV3 error
+    error UniswapV3_ObserveError(bytes data);
 }
