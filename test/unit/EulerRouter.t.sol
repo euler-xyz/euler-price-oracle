@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
-import {EdgeRouter} from "src/strategy/router/EdgeRouter.sol";
+import {EulerRouter} from "src/EulerRouter.sol";
 
 contract StubERC4626 {
     address public asset;
@@ -40,9 +39,9 @@ contract StubPriceOracle {
     }
 }
 
-contract EdgeRouterTest is Test {
+contract EulerRouterTest is Test {
     address GOVERNOR = makeAddr("GOVERNOR");
-    EdgeRouter router;
+    EulerRouter router;
 
     address WETH = makeAddr("WETH");
     address eWETH;
@@ -55,8 +54,7 @@ contract EdgeRouterTest is Test {
     StubPriceOracle eOracle;
 
     function setUp() public {
-        router = new EdgeRouter();
-        router.initialize(GOVERNOR);
+        router = new EulerRouter(GOVERNOR);
     }
 
     function test_Constructor_Integrity() public {
@@ -65,7 +63,7 @@ contract EdgeRouterTest is Test {
 
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
         vm.expectEmit();
-        emit EdgeRouter.ConfigSet(base, quote, oracle);
+        emit EulerRouter.ConfigSet(base, quote, oracle);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
@@ -76,12 +74,12 @@ contract EdgeRouterTest is Test {
         public
     {
         vm.expectEmit();
-        emit EdgeRouter.ConfigSet(base, quote, oracleA);
+        emit EulerRouter.ConfigSet(base, quote, oracleA);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleA);
 
         vm.expectEmit();
-        emit EdgeRouter.ConfigSet(base, quote, oracleB);
+        emit EulerRouter.ConfigSet(base, quote, oracleB);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleB);
 
@@ -106,7 +104,7 @@ contract EdgeRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
 
         vm.expectEmit();
-        emit EdgeRouter.ConfigSet(base, quote, address(0));
+        emit EulerRouter.ConfigSet(base, quote, address(0));
         vm.prank(GOVERNOR);
         router.govClearConfig(base, quote);
 
@@ -132,7 +130,7 @@ contract EdgeRouterTest is Test {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
         vm.expectEmit();
-        emit EdgeRouter.ResolvedVaultSet(vault, asset);
+        emit EulerRouter.ResolvedVaultSet(vault, asset);
 
         vm.prank(GOVERNOR);
         router.govSetResolvedVault(vault);
@@ -169,7 +167,7 @@ contract EdgeRouterTest is Test {
         router.govSetResolvedVault(vault);
 
         vm.expectEmit();
-        emit EdgeRouter.ResolvedVaultSet(vault, address(0));
+        emit EulerRouter.ResolvedVaultSet(vault, address(0));
         vm.prank(GOVERNOR);
         router.govClearResolvedVault(vault);
 
@@ -382,8 +380,6 @@ contract EdgeRouterTest is Test {
         router.transferGovernance(newGovernor);
 
         assertEq(router.governor(), newGovernor);
-        assertTrue(router.governed());
-        assertFalse(router.finalized());
     }
 
     function test_TransferGovernance_Integrity_ZeroAddress() public {
@@ -391,8 +387,6 @@ contract EdgeRouterTest is Test {
         router.transferGovernance(address(0));
 
         assertEq(router.governor(), address(0));
-        assertFalse(router.governed());
-        assertTrue(router.finalized());
     }
 
     function test_RenounceGovernance_RevertsWhen_CallerNotGovernor(address caller) public {
@@ -407,8 +401,6 @@ contract EdgeRouterTest is Test {
         router.renounceGovernance();
 
         assertEq(router.governor(), address(0));
-        assertFalse(router.governed());
-        assertTrue(router.finalized());
     }
 
     function _shuffle(LibPRNG.PRNG memory prng, address[] memory a) private pure {
