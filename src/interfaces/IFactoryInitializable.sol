@@ -3,11 +3,11 @@ pragma solidity 0.8.23;
 
 /// @title IFactoryInitializable
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Interface for EOracles that are initializable by EFactory.
+/// @notice Interface for PriceOracles that are initializable by EFactory.
 interface IFactoryInitializable {
     event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
-    /// @notice Initialize the EOracle.
+    /// @notice Initialize the PriceOracle.
     /// @param _governor The address of the initial governor.
     /// @dev Sets the governor. Can be called only once.
     function initialize(address _governor) external;

@@ -35,6 +35,6 @@ contract LidoOracle is BaseAdapter {
         } else if (base == wstEth && quote == stEth) {
             return IStEth(stEth).getPooledEthByShares(inAmount);
         }
-        revert Errors.EOracle_NotSupported(base, quote);
+        revert Errors.PriceOracle_NotSupported(base, quote);
     }
 }

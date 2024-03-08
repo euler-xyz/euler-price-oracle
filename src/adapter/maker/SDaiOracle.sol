@@ -38,6 +38,6 @@ contract SDaiOracle is BaseAdapter {
         } else if (base == dai && quote == sDai) {
             return inAmount * 1e27 / rate;
         }
-        revert Errors.EOracle_NotSupported(base, quote);
+        revert Errors.PriceOracle_NotSupported(base, quote);
     }
 }

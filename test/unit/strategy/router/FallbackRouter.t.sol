@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {FallbackRouter} from "src/strategy/router/FallbackRouter.sol";
 
@@ -124,7 +124,7 @@ contract FallbackRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
-        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(outAmount));
+        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(outAmount));
         uint256 actualOutAmount = router.getQuote(inAmount, base, quote);
         assertEq(actualOutAmount, outAmount);
     }
@@ -135,7 +135,9 @@ contract FallbackRouterTest is Test {
         address quote,
         uint256 outAmount
     ) public {
-        vm.mockCall(INITIAL_FALLBACK_ORACLE, abi.encodeWithSelector(IEOracle.getQuote.selector), abi.encode(outAmount));
+        vm.mockCall(
+            INITIAL_FALLBACK_ORACLE, abi.encodeWithSelector(IPriceOracle.getQuote.selector), abi.encode(outAmount)
+        );
         uint256 actualOutAmount = router.getQuote(inAmount, base, quote);
         assertEq(actualOutAmount, outAmount);
     }
@@ -144,7 +146,7 @@ contract FallbackRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetFallbackOracle(address(0));
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         router.getQuote(inAmount, base, quote);
     }
 
@@ -160,7 +162,7 @@ contract FallbackRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
-        vm.mockCall(oracle, abi.encodeWithSelector(IEOracle.getQuotes.selector), abi.encode(bid, ask));
+        vm.mockCall(oracle, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(bid, ask));
         (uint256 actualBid, uint256 actualAsk) = router.getQuotes(inAmount, base, quote);
         assertEq(actualBid, bid);
         assertEq(actualAsk, ask);
@@ -173,7 +175,9 @@ contract FallbackRouterTest is Test {
         uint256 bid,
         uint256 ask
     ) public {
-        vm.mockCall(INITIAL_FALLBACK_ORACLE, abi.encodeWithSelector(IEOracle.getQuotes.selector), abi.encode(bid, ask));
+        vm.mockCall(
+            INITIAL_FALLBACK_ORACLE, abi.encodeWithSelector(IPriceOracle.getQuotes.selector), abi.encode(bid, ask)
+        );
         (uint256 actualBid, uint256 actualAsk) = router.getQuotes(inAmount, base, quote);
         assertEq(actualBid, bid);
         assertEq(actualAsk, ask);
@@ -183,7 +187,7 @@ contract FallbackRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetFallbackOracle(address(0));
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         router.getQuotes(inAmount, base, quote);
     }
 

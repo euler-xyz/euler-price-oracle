@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-/// @title IEOracle
+/// @title IPriceOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Common EOracle interface.
-interface IEOracle {
+/// @notice Common PriceOracle interface.
+interface IPriceOracle {
     /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price spread
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.

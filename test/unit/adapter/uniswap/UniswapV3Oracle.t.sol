@@ -64,7 +64,7 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
         vm.assume(base != c.base);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuote(inAmount, base, c.quote);
     }
 
@@ -75,7 +75,7 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
         vm.assume(quote != c.quote);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuote(inAmount, c.base, quote);
     }
 
@@ -83,7 +83,7 @@ contract UniswapV3OracleTest is Test {
         _bound(c);
         _deploy(c);
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_Overflow.selector));
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -94,7 +94,7 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
         vm.assume(base != c.base);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuotes(inAmount, base, c.quote);
     }
 
@@ -105,7 +105,7 @@ contract UniswapV3OracleTest is Test {
         _deploy(c);
         vm.assume(quote != c.quote);
         inAmount = bound(inAmount, 0, uint256(type(uint128).max));
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuotes(inAmount, c.base, quote);
     }
 
@@ -113,7 +113,7 @@ contract UniswapV3OracleTest is Test {
         _bound(c);
         _deploy(c);
         inAmount = bound(inAmount, uint256(type(uint128).max) + 1, type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_Overflow.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_Overflow.selector));
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 

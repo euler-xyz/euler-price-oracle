@@ -61,10 +61,10 @@ contract UniswapV3Oracle is BaseAdapter {
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         // Accept only token0/token1 and token1/token0.
         if (!((base == token0 && quote == token1) || (base == token1 && quote == token0))) {
-            revert Errors.EOracle_NotSupported(base, quote);
+            revert Errors.PriceOracle_NotSupported(base, quote);
         }
         // Size limitation enforced by the pool.
-        if (inAmount > type(uint128).max) revert Errors.EOracle_Overflow();
+        if (inAmount > type(uint128).max) revert Errors.PriceOracle_Overflow();
 
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = twapWindow;

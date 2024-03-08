@@ -8,7 +8,7 @@ import {Errors} from "src/lib/Errors.sol";
 
 /// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice EOracle adapter for Chainlink push-based price feeds.
+/// @notice PriceOracle adapter for Chainlink push-based price feeds.
 contract ChainlinkOracle is BaseAdapter {
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
@@ -67,12 +67,12 @@ contract ChainlinkOracle is BaseAdapter {
     /// @param _quote The token that is the unit of account.
     /// @return The converted amount using the Chainlink feed.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
-        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
 
         (, int256 answer,, uint256 updatedAt,) = AggregatorV3Interface(feed).latestRoundData();
         if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
         uint256 staleness = block.timestamp - updatedAt;
-        if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);
+        if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 
         uint256 price = uint256(answer);
         if (scaleNumerator) return (inAmount * scaleFactor) / price;

@@ -25,7 +25,7 @@ contract LidoOracleTest is Test {
         vm.assume(base != WSTETH);
         address quote = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -33,7 +33,7 @@ contract LidoOracleTest is Test {
         vm.assume(base != STETH);
         address quote = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -41,7 +41,7 @@ contract LidoOracleTest is Test {
         vm.assume(quote != WSTETH);
         address base = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -49,7 +49,7 @@ contract LidoOracleTest is Test {
         vm.assume(quote != STETH);
         address base = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -57,7 +57,7 @@ contract LidoOracleTest is Test {
         address base = STETH;
         address quote = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -65,7 +65,7 @@ contract LidoOracleTest is Test {
         address base = WSTETH;
         address quote = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -105,7 +105,7 @@ contract LidoOracleTest is Test {
         vm.assume(base != WSTETH);
         address quote = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -113,7 +113,7 @@ contract LidoOracleTest is Test {
         vm.assume(base != STETH);
         address quote = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -121,7 +121,7 @@ contract LidoOracleTest is Test {
         vm.assume(quote != WSTETH);
         address base = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -129,7 +129,7 @@ contract LidoOracleTest is Test {
         vm.assume(quote != STETH);
         address base = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -137,7 +137,7 @@ contract LidoOracleTest is Test {
         address base = STETH;
         address quote = STETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -145,7 +145,7 @@ contract LidoOracleTest is Test {
         address base = WSTETH;
         address quote = WSTETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 

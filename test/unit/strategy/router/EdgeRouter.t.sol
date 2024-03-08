@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {EdgeRouter} from "src/strategy/router/EdgeRouter.sol";
 
@@ -28,7 +28,7 @@ contract StubERC4626 {
     }
 }
 
-contract StubEOracle {
+contract StubPriceOracle {
     mapping(address => mapping(address => uint256)) prices;
 
     function setPrice(address base, address quote, uint256 price) external {
@@ -52,7 +52,7 @@ contract EdgeRouterTest is Test {
     address eDAI;
     address eeDAI;
 
-    StubEOracle eOracle;
+    StubPriceOracle eOracle;
 
     function setUp() public {
         router = new EdgeRouter();
@@ -249,7 +249,7 @@ contract EdgeRouterTest is Test {
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(
-            oracle, abi.encodeWithSelector(IEOracle.getQuote.selector, inAmount, base, quote), abi.encode(outAmount)
+            oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quote), abi.encode(outAmount)
         );
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
@@ -275,7 +275,7 @@ contract EdgeRouterTest is Test {
 
         vm.mockCall(
             fallbackOracle,
-            abi.encodeWithSelector(IEOracle.getQuote.selector, inAmount, base, quote),
+            abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quote),
             abi.encode(outAmount)
         );
         uint256 _outAmount = router.getQuote(inAmount, base, quote);
@@ -288,7 +288,7 @@ contract EdgeRouterTest is Test {
         vm.assume(base != quote);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         router.getQuote(inAmount, base, quote);
     }
 
@@ -298,7 +298,7 @@ contract EdgeRouterTest is Test {
         eDAI = address(new StubERC4626(DAI, 1.5e18));
         eeDAI = address(new StubERC4626(eDAI, 1.25e18));
 
-        eOracle = new StubEOracle();
+        eOracle = new StubPriceOracle();
         eOracle.setPrice(WETH, DAI, 2500e18);
         eOracle.setPrice(DAI, WETH, 0.0004e18);
 
@@ -335,7 +335,7 @@ contract EdgeRouterTest is Test {
         eDAI = address(new StubERC4626(DAI, 1.5e18));
         eeDAI = address(new StubERC4626(eDAI, 1.25e18));
 
-        eOracle = new StubEOracle();
+        eOracle = new StubPriceOracle();
         eOracle.setPrice(WETH, DAI, 2500e18);
         eOracle.setPrice(DAI, WETH, 0.0004e18);
 

@@ -9,7 +9,7 @@ import {Errors} from "src/lib/Errors.sol";
 
 /// @title PythOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice EOracle adapter for Pyth pull-based price feeds.
+/// @notice PriceOracle adapter for Pyth pull-based price feeds.
 /// @dev Supports bid-ask pricing with the 95% confidence interval from Pyth.
 contract PythOracle is BaseAdapter {
     /// @dev The confidence interval can be at most 10% wide.
@@ -59,7 +59,7 @@ contract PythOracle is BaseAdapter {
     /// @notice Get the Pyth price and transform it to a quote.
     /// @dev Has 4 branches depending on inversion and the sign of the net exponent.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
-        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
         PythStructs.Price memory priceStruct = _fetchPriceStruct();
         uint64 midPrice = uint64(priceStruct.price);
         int32 exponent = priceStruct.expo + scaleExponent;

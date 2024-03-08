@@ -40,14 +40,14 @@ contract ERC4626OracleTest is Test {
     function test_GetQuote_RevertsWhen_InvalidAsset(FuzzableConfig memory c, uint256 inAmount, address asset) public {
         _deploy(c);
         vm.assume(asset != c.asset);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, asset, c.vault));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, asset, c.vault));
         oracle.getQuote(inAmount, asset, c.vault);
     }
 
     function test_GetQuote_RevertsWhen_InvalidShare(FuzzableConfig memory c, uint256 inAmount, address vault) public {
         _deploy(c);
         vm.assume(vault != c.vault);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.asset, vault));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.asset, vault));
         oracle.getQuote(inAmount, c.asset, vault);
     }
 

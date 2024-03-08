@@ -55,7 +55,7 @@ contract RedstoneCoreOracleTest is Test {
         vm.warp(timestamp);
 
         oracle.setPrice(price);
-        vm.expectRevert(Errors.EOracle_Overflow.selector);
+        vm.expectRevert(Errors.PriceOracle_Overflow.selector);
         oracle.updatePrice();
 
         assertEq(oracle.lastPrice(), 0);
@@ -82,14 +82,14 @@ contract RedstoneCoreOracleTest is Test {
     function test_GetQuote_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
         _deploy(c);
         vm.assume(base != c.base);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuote(inAmount, base, c.quote);
     }
 
     function test_GetQuote_RevertsWhen_InvalidQuote(FuzzableConfig memory c, uint256 inAmount, address quote) public {
         _deploy(c);
         vm.assume(quote != c.quote);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuote(inAmount, c.base, quote);
     }
 
@@ -109,7 +109,7 @@ contract RedstoneCoreOracleTest is Test {
 
         vm.warp(timestamp);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
+            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
         );
         oracle.getQuote(inAmount, c.base, c.quote);
     }
@@ -135,14 +135,14 @@ contract RedstoneCoreOracleTest is Test {
     function test_GetQuotes_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
         _deploy(c);
         vm.assume(base != c.base);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuotes(inAmount, base, c.quote);
     }
 
     function test_GetQuotes_RevertsWhen_InvalidQuote(FuzzableConfig memory c, uint256 inAmount, address quote) public {
         _deploy(c);
         vm.assume(quote != c.quote);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuotes(inAmount, c.base, quote);
     }
 
@@ -162,7 +162,7 @@ contract RedstoneCoreOracleTest is Test {
 
         vm.warp(timestamp);
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
+            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - initTimestamp, c.maxStaleness)
         );
         oracle.getQuotes(inAmount, c.base, c.quote);
     }

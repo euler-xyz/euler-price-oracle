@@ -45,7 +45,7 @@ contract ChainlinkOracleTest is Test {
         _deploy(c);
         vm.assume(base != c.base);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuote(inAmount, base, c.quote);
     }
 
@@ -55,7 +55,7 @@ contract ChainlinkOracleTest is Test {
         _deploy(c);
         vm.assume(quote != c.quote);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuote(inAmount, c.base, quote);
     }
 
@@ -115,7 +115,7 @@ contract ChainlinkOracleTest is Test {
         vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - d.updatedAt, c.maxStaleness)
+            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - d.updatedAt, c.maxStaleness)
         );
         oracle.getQuote(inAmount, c.base, c.quote);
     }
@@ -166,7 +166,7 @@ contract ChainlinkOracleTest is Test {
         _deploy(c);
         vm.assume(base != c.base);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuotes(inAmount, base, c.quote);
     }
 
@@ -176,7 +176,7 @@ contract ChainlinkOracleTest is Test {
         _deploy(c);
         vm.assume(quote != c.quote);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuotes(inAmount, c.base, quote);
     }
 
@@ -236,7 +236,7 @@ contract ChainlinkOracleTest is Test {
         vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.EOracle_TooStale.selector, timestamp - d.updatedAt, c.maxStaleness)
+            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - d.updatedAt, c.maxStaleness)
         );
         oracle.getQuotes(inAmount, c.base, c.quote);
     }

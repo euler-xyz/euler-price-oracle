@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {IEOracle} from "src/interfaces/IEOracle.sol";
+import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {IFactoryInitializable} from "src/interfaces/IFactoryInitializable.sol";
 
-/// @title GovEOracle
+/// @title GovPriceOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Governable mixin.
-abstract contract GovEOracle is IEOracle, IFactoryInitializable {
+abstract contract GovPriceOracle is IPriceOracle, IFactoryInitializable {
     address public governor;
     bool public initialized;
 

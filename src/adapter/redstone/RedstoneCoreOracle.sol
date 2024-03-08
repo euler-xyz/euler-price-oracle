@@ -56,7 +56,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Validation logic inherited from PrimaryProdDataServiceConsumerBase.
     function updatePrice() external {
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
-        if (price > type(uint224).max) revert Errors.EOracle_Overflow();
+        if (price > type(uint224).max) revert Errors.PriceOracle_Overflow();
         lastPrice = uint224(price);
         lastUpdatedAt = uint32(block.timestamp);
     }
@@ -67,9 +67,9 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @param _quote The token that is the unit of account.
     /// @return The converted amount using the Redstone feed.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
-        if (_base != base || _quote != quote) revert Errors.EOracle_NotSupported(_base, _quote);
+        if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
         uint256 staleness = block.timestamp - lastUpdatedAt;
-        if (staleness > maxStaleness) revert Errors.EOracle_TooStale(staleness, maxStaleness);
+        if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 
         if (inverse) return (inAmount * scaleFactor) / lastPrice;
         else return (inAmount * lastPrice) / scaleFactor;

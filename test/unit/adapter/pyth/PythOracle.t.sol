@@ -113,14 +113,14 @@ contract PythOracleTest is Test {
     function test_GetQuote_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
         _deploy(c);
         vm.assume(base != c.base);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuote(inAmount, base, c.quote);
     }
 
     function test_GetQuote_RevertsWhen_InvalidQuote(FuzzableConfig memory c, uint256 inAmount, address quote) public {
         _deploy(c);
         vm.assume(quote != c.quote);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuote(inAmount, c.base, quote);
     }
 
@@ -294,14 +294,14 @@ contract PythOracleTest is Test {
     function test_GetQuotes_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
         _deploy(c);
         vm.assume(base != c.base);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, c.quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, c.quote));
         oracle.getQuotes(inAmount, base, c.quote);
     }
 
     function test_GetQuotes_RevertsWhen_InvalidQuote(FuzzableConfig memory c, uint256 inAmount, address quote) public {
         _deploy(c);
         vm.assume(quote != c.quote);
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, c.base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.base, quote));
         oracle.getQuotes(inAmount, c.base, quote);
     }
 

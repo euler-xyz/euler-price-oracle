@@ -25,7 +25,7 @@ contract RethOracleTest is Test {
         vm.assume(base != RETH);
         address quote = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -33,7 +33,7 @@ contract RethOracleTest is Test {
         vm.assume(base != WETH);
         address quote = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -41,7 +41,7 @@ contract RethOracleTest is Test {
         vm.assume(quote != RETH);
         address base = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -49,7 +49,7 @@ contract RethOracleTest is Test {
         vm.assume(quote != WETH);
         address base = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -57,7 +57,7 @@ contract RethOracleTest is Test {
         address base = WETH;
         address quote = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -65,7 +65,7 @@ contract RethOracleTest is Test {
         address base = RETH;
         address quote = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuote(inAmount, base, quote);
     }
 
@@ -105,7 +105,7 @@ contract RethOracleTest is Test {
         vm.assume(base != RETH);
         address quote = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -113,7 +113,7 @@ contract RethOracleTest is Test {
         vm.assume(base != WETH);
         address quote = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -121,7 +121,7 @@ contract RethOracleTest is Test {
         vm.assume(quote != RETH);
         address base = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -129,7 +129,7 @@ contract RethOracleTest is Test {
         vm.assume(quote != WETH);
         address base = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -137,7 +137,7 @@ contract RethOracleTest is Test {
         address base = WETH;
         address quote = WETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 
@@ -145,7 +145,7 @@ contract RethOracleTest is Test {
         address base = RETH;
         address quote = RETH;
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EOracle_NotSupported.selector, base, quote));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         oracle.getQuotes(inAmount, base, quote);
     }
 

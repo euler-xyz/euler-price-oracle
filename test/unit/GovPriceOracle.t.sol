@@ -2,15 +2,15 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {GovEOracle} from "src/GovEOracle.sol";
+import {GovPriceOracle} from "src/GovPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-contract TestOracle is GovEOracle {
+contract TestOracle is GovPriceOracle {
     function getQuote(uint256, address, address) external pure returns (uint256) {}
     function getQuotes(uint256, address, address) external pure returns (uint256, uint256) {}
 }
 
-contract GovEOracleTest is Test {
+contract GovPriceOracleTest is Test {
     TestOracle internal oracle;
 
     function setUp() public {

@@ -36,6 +36,6 @@ contract ERC4626Oracle is BaseAdapter {
         } else if (base == asset && quote == vault) {
             return ERC4626(vault).convertToShares(inAmount);
         }
-        revert Errors.EOracle_NotSupported(base, quote);
+        revert Errors.PriceOracle_NotSupported(base, quote);
     }
 }
