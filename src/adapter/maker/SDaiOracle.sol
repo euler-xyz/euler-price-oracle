@@ -9,20 +9,22 @@ import {Errors} from "src/lib/Errors.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Maker sDAI <-> DAI via the DSR Pot contract.
 contract SDaiOracle is BaseAdapter {
-    /// @dev The address of the DSR Pot contract.
-    address public immutable dsrPot;
     /// @dev The address of the DAI token.
     address public immutable dai;
     /// @dev The address of the sDAI token.
     address public immutable sDai;
+    /// @dev The address of the DSR Pot contract.
+    address public immutable dsrPot;
 
     /// @notice Deploy an SDaiOracle.
     /// @param _dai The address of the DAI token.
     /// @param _sDai The address of the sDAI token.
+    /// @param _dsrPot The address of the DSR Pot contract.
     /// @dev The oracle will support sDAI/DAI and DAI/sDAI pricing.
-    constructor(address _dai, address _sDai) {
+    constructor(address _dai, address _sDai, address _dsrPot) {
         dai = _dai;
         sDai = _sDai;
+        dsrPot = _dsrPot;
     }
 
     /// @notice Get a quote by querying the exchange rate from the DSR Pot contract.
