@@ -36,7 +36,9 @@ contract UniswapV3Oracle is BaseAdapter {
     /// @param _base The address of the ERC4626 vault.
     /// @dev The oracle will support share/asset and asset/share pricing.
     constructor(address _base, address _quote, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
-        if (_twapWindow < MIN_TWAP_WINDOW || _twapWindow > MAX_TWAP_WINDOW) revert Errors.UniswapV3_InvalidTwapWindow();
+        if (_twapWindow < MIN_TWAP_WINDOW || _twapWindow > MAX_TWAP_WINDOW) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
         fee = _fee;
         twapWindow = _twapWindow;
         (token0, token1) = _base < _quote ? (_base, _quote) : (_quote, _base);
