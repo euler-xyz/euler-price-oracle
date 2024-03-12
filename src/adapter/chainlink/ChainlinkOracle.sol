@@ -70,7 +70,7 @@ contract ChainlinkOracle is BaseAdapter {
         if (_base != base || _quote != quote) revert Errors.PriceOracle_NotSupported(_base, _quote);
 
         (, int256 answer,, uint256 updatedAt,) = AggregatorV3Interface(feed).latestRoundData();
-        if (answer <= 0) revert Errors.Chainlink_InvalidAnswer(answer);
+        if (answer <= 0) revert Errors.PriceOracle_InvalidAnswer();
         uint256 staleness = block.timestamp - updatedAt;
         if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 
