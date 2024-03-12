@@ -79,7 +79,7 @@ contract ChainlinkOracleTest is Test {
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, 0));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -96,7 +96,7 @@ contract ChainlinkOracleTest is Test {
 
         inAmount = bound(inAmount, 1, type(uint128).max);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -200,7 +200,7 @@ contract ChainlinkOracleTest is Test {
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, 0));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -217,7 +217,7 @@ contract ChainlinkOracleTest is Test {
 
         inAmount = bound(inAmount, 1, type(uint128).max);
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.Chainlink_InvalidAnswer.selector, chainlinkAnswer));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 

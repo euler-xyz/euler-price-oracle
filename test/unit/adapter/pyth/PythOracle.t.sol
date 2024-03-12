@@ -132,7 +132,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidPrice.selector, p.price));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -147,7 +147,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidPrice.selector, p.price));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -162,7 +162,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidConfidenceInterval.selector, p.price, p.conf));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -177,7 +177,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidConfidenceInterval.selector, p.price, p.conf));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -192,7 +192,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidExponent.selector, p.expo));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -207,7 +207,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidExponent.selector, p.expo));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
@@ -313,7 +313,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidPrice.selector, p.price));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -328,7 +328,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidPrice.selector, p.price));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -343,7 +343,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidConfidenceInterval.selector, p.price, p.conf));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -358,7 +358,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidConfidenceInterval.selector, p.price, p.conf));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -373,7 +373,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidExponent.selector, p.expo));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
@@ -388,7 +388,7 @@ contract PythOracleTest is Test {
         vm.mockCall(
             PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
         );
-        vm.expectRevert(abi.encodeWithSelector(Errors.Pyth_InvalidExponent.selector, p.expo));
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 

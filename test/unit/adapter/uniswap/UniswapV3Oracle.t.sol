@@ -46,14 +46,14 @@ contract UniswapV3OracleTest is Test {
     function test_Constructor_RevertsWhen_TwapWindowTooShort(FuzzableConfig memory c) public {
         _bound(c);
         c.twapWindow = uint32(bound(c.twapWindow, 0, 59));
-        vm.expectRevert(Errors.UniswapV3_InvalidTwapWindow.selector);
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
         _deploy(c);
     }
 
     function test_Constructor_RevertsWhen_TwapWindowTooLong(FuzzableConfig memory c) public {
         _bound(c);
         c.twapWindow = uint32(bound(c.twapWindow, 786421, type(uint32).max));
-        vm.expectRevert(Errors.UniswapV3_InvalidTwapWindow.selector);
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
         _deploy(c);
     }
 

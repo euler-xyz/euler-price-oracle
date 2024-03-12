@@ -76,15 +76,15 @@ contract PythOracle is BaseAdapter {
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = pyth.getPriceNoOlderThan(feedId, maxStaleness);
         if (p.price <= 0) {
-            revert Errors.Pyth_InvalidPrice(p.price);
+            revert Errors.PriceOracle_InvalidAnswer();
         }
 
         if (p.conf > uint64(p.price) * MAX_CONF_WIDTH_BPS / 10_000) {
-            revert Errors.Pyth_InvalidConfidenceInterval(p.price, p.conf);
+            revert Errors.PriceOracle_InvalidAnswer();
         }
 
         if (p.expo > 16 || p.expo < -16) {
-            revert Errors.Pyth_InvalidExponent(p.expo);
+            revert Errors.PriceOracle_InvalidAnswer();
         }
         return p;
     }
