@@ -16,5 +16,5 @@ abstract contract BaseAdapter is IPriceOracle {
         return (outAmount, outAmount);
     }
 
-    function _getQuote(uint256 inAmount, address, address) internal view virtual returns (uint256);
+    function _getQuote(uint256, address, address) internal view virtual returns (uint256);
 }
