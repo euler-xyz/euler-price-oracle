@@ -194,7 +194,7 @@ contract RedstoneCoreOracleTest is Test {
 
         c.baseDecimals = uint8(bound(c.baseDecimals, 0, 24));
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
-        c.maxStaleness = uint32(bound(c.maxStaleness, 0, 24 hours));
+        c.maxStaleness = uint32(bound(c.maxStaleness, 3 minutes, 24 hours));
 
         vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
