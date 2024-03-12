@@ -33,6 +33,22 @@ contract RedstoneCoreOracleTest is Test {
         assertEq(oracle.lastUpdatedAt(), 0);
     }
 
+    function test_Constructor_RevertsWhen_MaxStalenessLt3Min(FuzzableConfig memory c) public {
+        c.base = boundAddr(c.base);
+        c.quote = boundAddr(c.quote);
+        vm.assume(c.base != c.quote);
+
+        c.baseDecimals = uint8(bound(c.baseDecimals, 0, 24));
+        c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
+        c.maxStaleness = uint32(bound(c.maxStaleness, 0, 3 minutes - 1));
+
+        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new RedstoneCoreOracleHarness(c.base, c.quote, c.feedId, c.maxStaleness, c.inverse);
+    }
+
     function test_UpdatePrice_Integrity(FuzzableConfig memory c, uint256 timestamp, uint256 price) public {
         _deploy(c);
         timestamp = bound(timestamp, c.maxStaleness + 1, type(uint32).max);
