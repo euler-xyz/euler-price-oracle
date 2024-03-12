@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
 import {ERC20} from "@solady/tokens/ERC20.sol";
@@ -42,6 +43,10 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Base and quote are not required to correspond to the feed assets.
     /// For example, the ETH/USD feed can be used to price WETH/USDC.
     constructor(address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
+        if (_maxStaleness < RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_DELAY_SECONDS) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+        
         base = _base;
         quote = _quote;
         feedId = _feedId;
@@ -55,6 +60,9 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice Ingest a signed update message and cache it on the contract.
     /// @dev Validation logic inherited from PrimaryProdDataServiceConsumerBase.
     function updatePrice() external {
+        // Use the cache if the previous price is still fresh.
+        if (block.timestamp < lastUpdatedAt + maxStaleness) return;
+
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price > type(uint224).max) revert Errors.PriceOracle_Overflow();
         lastPrice = uint224(price);
