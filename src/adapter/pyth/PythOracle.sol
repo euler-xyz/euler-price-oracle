@@ -12,8 +12,8 @@ import {Errors} from "src/lib/Errors.sol";
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 /// @dev Supports bid-ask pricing with the 95% confidence interval from Pyth.
 contract PythOracle is BaseAdapter {
-    /// @dev The confidence interval can be at most 10% wide.
-    uint256 internal constant MAX_CONF_WIDTH_BPS = 500;
+    /// @dev The confidence interval can be at most (-5%,+5%) wide.
+    uint256 internal constant MAX_CONF_WIDTH = 500;
     /// @notice The address of the Pyth oracle proxy.
     IPyth public immutable pyth;
     /// @notice The address of the base asset corresponding to the feed.
@@ -75,15 +75,7 @@ contract PythOracle is BaseAdapter {
     /// @dev Reverts if price is non-positive, confidence is too wide, or exponent is too large.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = pyth.getPriceNoOlderThan(feedId, maxStaleness);
-        if (p.price <= 0) {
-            revert Errors.PriceOracle_InvalidAnswer();
-        }
-
-        if (p.conf > uint64(p.price) * MAX_CONF_WIDTH_BPS / 10_000) {
-            revert Errors.PriceOracle_InvalidAnswer();
-        }
-
-        if (p.expo > 16 || p.expo < -16) {
+        if (p.price <= 0 || p.conf > uint64(p.price) * MAX_CONF_WIDTH / 10_000 || p.expo > 16 || p.expo < -16) {
             revert Errors.PriceOracle_InvalidAnswer();
         }
         return p;
