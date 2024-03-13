@@ -12,9 +12,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
-[submodule "lib/euler-factory"]
-	path = lib/euler-factory
-	url = https://github.com/euler-xyz/euler-factory
 [submodule "lib/redstone-oracles-monorepo"]
 	path = lib/redstone-oracles-monorepo
 	url = https://github.com/redstone-finance/redstone-oracles-monorepo
