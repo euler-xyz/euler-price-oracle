@@ -15,7 +15,7 @@ contract PythOracle is BaseAdapter {
     /// @dev The confidence interval can be at most (-5%,+5%) wide.
     uint256 internal constant MAX_CONF_WIDTH = 500;
     /// @notice The address of the Pyth oracle proxy.
-    IPyth public immutable pyth;
+    address public immutable pyth;
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed.
@@ -38,7 +38,7 @@ contract PythOracle is BaseAdapter {
     /// @param _maxStaleness The maximum allowed age of the price.
     /// @param _inverse Whether the feed returns the price of base/quote or quote/base.
     constructor(address _pyth, address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness, bool _inverse) {
-        pyth = IPyth(_pyth);
+        pyth = _pyth;
         base = _base;
         quote = _quote;
         feedId = _feedId;
@@ -64,17 +64,14 @@ contract PythOracle is BaseAdapter {
         uint64 midPrice = uint64(priceStruct.price);
         int32 exponent = priceStruct.expo + scaleExponent;
 
-        if (inverse) {
-            return _calcOutAmountInverse(inAmount, midPrice, exponent);
-        } else {
-            return _calcOutAmount(inAmount, midPrice, exponent);
-        }
+        if (inverse) return _calcOutAmountInverse(inAmount, midPrice, exponent);
+        else return _calcOutAmount(inAmount, midPrice, exponent);
     }
 
     /// @notice Get the latest Pyth price and perform sanity checks.
     /// @dev Reverts if price is non-positive, confidence is too wide, or exponent is too large.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
-        PythStructs.Price memory p = pyth.getPriceNoOlderThan(feedId, maxStaleness);
+        PythStructs.Price memory p = IPyth(pyth).getPriceNoOlderThan(feedId, maxStaleness);
         if (p.price <= 0 || p.conf > uint64(p.price) * MAX_CONF_WIDTH / 10_000 || p.expo > 16 || p.expo < -16) {
             revert Errors.PriceOracle_InvalidAnswer();
         }

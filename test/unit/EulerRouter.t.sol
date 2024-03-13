@@ -35,6 +35,14 @@ contract StubPriceOracle {
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
+        return _calcQuote(inAmount, base, quote);
+    }
+
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
+        return (_calcQuote(inAmount, base, quote), _calcQuote(inAmount, base, quote));
+    }
+
+    function _calcQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
         return inAmount * prices[base][quote] / 1e18;
     }
 }
@@ -249,10 +257,103 @@ contract EulerRouterTest is Test {
         vm.mockCall(
             oracle, abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quote), abi.encode(outAmount)
         );
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(IPriceOracle.getQuotes.selector, inAmount, base, quote),
+            abi.encode(outAmount, outAmount)
+        );
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
+
         uint256 _outAmount = router.getQuote(inAmount, base, quote);
         assertEq(_outAmount, outAmount);
+        (uint256 bidOutAmount, uint256 askOutAmount) = router.getQuotes(inAmount, base, quote);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
+    }
+
+    function test_GetQuote_Integrity_BaseIsVault(
+        uint256 inAmount,
+        address base,
+        address baseAsset,
+        address quote,
+        address oracle,
+        uint256 outAmount
+    ) public {
+        base = boundAddr(base);
+        baseAsset = boundAddr(baseAsset);
+        quote = boundAddr(quote);
+        oracle = boundAddr(oracle);
+        vm.assume(
+            base != baseAsset && base != quote && base != oracle && baseAsset != quote && baseAsset != oracle
+                && quote != oracle
+        );
+        inAmount = bound(inAmount, 1, type(uint128).max);
+        vm.prank(GOVERNOR);
+        router.govSetConfig(baseAsset, quote, oracle);
+
+        vm.mockCall(base, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(baseAsset));
+        vm.mockCall(base, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(inAmount));
+        vm.prank(GOVERNOR);
+        router.govSetResolvedVault(base);
+
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, baseAsset, quote),
+            abi.encode(outAmount)
+        );
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(IPriceOracle.getQuotes.selector, inAmount, baseAsset, quote),
+            abi.encode(outAmount, outAmount)
+        );
+        uint256 _outAmount = router.getQuote(inAmount, base, quote);
+        assertEq(_outAmount, outAmount);
+        (uint256 bidOutAmount, uint256 askOutAmount) = router.getQuotes(inAmount, base, quote);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
+    }
+
+    function test_GetQuote_Integrity_QuoteIsVault(
+        uint256 inAmount,
+        address base,
+        address quoteAsset,
+        address quote,
+        address oracle,
+        uint256 outAmount
+    ) public {
+        base = boundAddr(base);
+        quoteAsset = boundAddr(quoteAsset);
+        quote = boundAddr(quote);
+        oracle = boundAddr(oracle);
+        vm.assume(
+            base != quoteAsset && base != quote && base != oracle && quoteAsset != quote && quoteAsset != oracle
+                && quote != oracle
+        );
+        inAmount = bound(inAmount, 1, type(uint128).max);
+        vm.prank(GOVERNOR);
+        router.govSetConfig(base, quoteAsset, oracle);
+
+        vm.mockCall(quote, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(quoteAsset));
+        vm.mockCall(quote, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(inAmount));
+        vm.prank(GOVERNOR);
+        router.govSetResolvedVault(quote);
+
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quoteAsset),
+            abi.encode(outAmount)
+        );
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(IPriceOracle.getQuotes.selector, inAmount, base, quoteAsset),
+            abi.encode(outAmount, outAmount)
+        );
+        uint256 _outAmount = router.getQuote(inAmount, base, quote);
+        assertEq(_outAmount, outAmount);
+        (uint256 bidOutAmount, uint256 askOutAmount) = router.getQuotes(inAmount, base, quote);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
     }
 
     function test_GetQuote_Integrity_NoOracleButHasFallback(
@@ -276,8 +377,16 @@ contract EulerRouterTest is Test {
             abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quote),
             abi.encode(outAmount)
         );
+        vm.mockCall(
+            fallbackOracle,
+            abi.encodeWithSelector(IPriceOracle.getQuotes.selector, inAmount, base, quote),
+            abi.encode(outAmount, outAmount)
+        );
         uint256 _outAmount = router.getQuote(inAmount, base, quote);
         assertEq(_outAmount, outAmount);
+        (uint256 bidOutAmount, uint256 askOutAmount) = router.getQuotes(inAmount, base, quote);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
     }
 
     function test_GetQuote_RevertsWhen_NoOracleNoFallback(uint256 inAmount, address base, address quote) public {
@@ -288,6 +397,8 @@ contract EulerRouterTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
         router.getQuote(inAmount, base, quote);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
+        router.getQuotes(inAmount, base, quote);
     }
 
     function test_GetQuote_InverseProperty(uint256 inAmount, uint256 i, uint256 j) public {
@@ -323,8 +434,13 @@ contract EulerRouterTest is Test {
 
         uint256 outAmount_ij = router.getQuote(inAmount, tokens[i], tokens[j]);
         uint256 outAmount_ij_ji = router.getQuote(outAmount_ij, tokens[j], tokens[i]);
-
         assertApproxEqAbs(outAmount_ij_ji, inAmount, 10);
+
+        (uint256 bidOutAmount_ij, uint256 askOutAmount_ij) = router.getQuotes(inAmount, tokens[i], tokens[j]);
+        uint256 bidOutAmount_ij_ji = router.getQuote(bidOutAmount_ij, tokens[j], tokens[i]);
+        uint256 askOutAmount_ij_ji = router.getQuote(askOutAmount_ij, tokens[j], tokens[i]);
+        assertApproxEqAbs(bidOutAmount_ij_ji, inAmount, 10);
+        assertApproxEqAbs(askOutAmount_ij_ji, inAmount, 10);
     }
 
     function test_GetQuote_ClosedLoopProperty(uint256 inAmount, LibPRNG.PRNG memory prng) public {

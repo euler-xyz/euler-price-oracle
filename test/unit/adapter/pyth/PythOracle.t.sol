@@ -392,16 +392,39 @@ contract PythOracleTest is Test {
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
-    function test_UpdatePrice_Integrity(address caller, bytes[] calldata updateData, uint256 value) public {
-        vm.skip(true);
+    function test_UpdatePrice_Integrity(
+        FuzzableConfig memory c,
+        address caller,
+        bytes[] calldata updateData,
+        uint256 value
+    ) public {
+        _deploy(c);
         caller = boundAddr(caller);
         vm.deal(caller, value);
-        vm.mockCall(PYTH, value, abi.encodeWithSelector(IPyth.updatePriceFeeds.selector), "");
+        vm.mockCall(PYTH, abi.encodeWithSelector(IPyth.updatePriceFeeds.selector, updateData), "");
+
         vm.prank(caller);
         oracle.updatePrice{value: value}(updateData);
         assertEq(caller.balance, 0);
+        assertEq(address(oracle).balance, value);
+    }
+
+    function test_UpdatePrice_RevertsWhen_PythCallReverts(
+        FuzzableConfig memory c,
+        address caller,
+        bytes[] calldata updateData,
+        uint256 value
+    ) public {
+        _deploy(c);
+        caller = boundAddr(caller);
+        vm.deal(caller, value);
+        vm.mockCallRevert(PYTH, abi.encodeWithSelector(IPyth.updatePriceFeeds.selector, updateData), "oops");
+
+        vm.expectRevert();
+        vm.prank(caller);
+        oracle.updatePrice{value: value}(updateData);
+        assertEq(caller.balance, value);
         assertEq(address(oracle).balance, 0);
-        assertEq(PYTH.balance, value);
     }
 
     function _deploy(FuzzableConfig memory c) private {
