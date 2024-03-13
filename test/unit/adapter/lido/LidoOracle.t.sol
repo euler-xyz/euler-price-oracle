@@ -70,16 +70,16 @@ contract LidoOracleTest is Test {
     }
 
     function test_GetQuote_RevertsWhen_StEth_WstEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
     function test_GetQuote_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, WSTETH, STETH);
     }
 
@@ -150,16 +150,16 @@ contract LidoOracleTest is Test {
     }
 
     function test_GetQuotes_RevertsWhen_StEth_WstEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getSharesByPooledEth.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, STETH, WSTETH);
     }
 
     function test_GetQuotes_RevertsWhen_WstEth_StEth_WstEthCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "");
+        vm.mockCallRevert(STETH, abi.encodeWithSelector(IStEth.getPooledEthByShares.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, WSTETH, STETH);
     }
 

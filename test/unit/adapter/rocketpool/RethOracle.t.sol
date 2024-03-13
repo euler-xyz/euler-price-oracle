@@ -70,16 +70,16 @@ contract RethOracleTest is Test {
     }
 
     function test_GetQuote_RevertsWhen_Weth_Reth_RethCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), "");
+        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, WETH, RETH);
     }
 
     function test_GetQuote_RevertsWhen_Reth_Weth_RethCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "");
+        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, RETH, WETH);
     }
 
@@ -150,16 +150,16 @@ contract RethOracleTest is Test {
     }
 
     function test_GetQuotes_RevertsWhen_Weth_Reth_RethCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), "");
+        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getRethValue.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, WETH, RETH);
     }
 
     function test_GetQuotes_RevertsWhen_Reth_Weth_RethCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "");
+        vm.mockCallRevert(RETH, abi.encodeWithSelector(IReth.getEthValue.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, RETH, WETH);
     }
 

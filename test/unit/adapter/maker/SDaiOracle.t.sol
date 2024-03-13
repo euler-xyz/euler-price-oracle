@@ -72,16 +72,16 @@ contract SDaiOracleTest is Test {
     }
 
     function test_GetQuote_RevertsWhen_SDai_Dai_DsrPotCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "");
+        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, SDAI, DAI);
     }
 
     function test_GetQuote_RevertsWhen_Dai_SDai_DsrPotCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "");
+        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, DAI, SDAI);
     }
 
@@ -154,16 +154,16 @@ contract SDaiOracleTest is Test {
     }
 
     function test_GetQuotes_RevertsWhen_SDai_Dai_DsrPotCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "");
+        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, SDAI, DAI);
     }
 
     function test_GetQuotes_RevertsWhen_Dai_SDai_DsrPotCallReverts(uint256 inAmount) public {
-        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "");
+        vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, DAI, SDAI);
     }
 

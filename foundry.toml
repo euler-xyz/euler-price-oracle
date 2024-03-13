@@ -8,7 +8,8 @@ optimizer = true
 optimizer_runs = 100_000
 
 [profile.coverage]
-optimizer = false
+optimizer = true
+optimizer_runs = 100_000
 no_match_contract = "Fork"
 
 [fuzz]
