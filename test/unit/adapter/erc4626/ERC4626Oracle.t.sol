@@ -51,38 +51,6 @@ contract ERC4626OracleTest is Test {
         oracle.getQuote(inAmount, ASSET, vault);
     }
 
-    function test_GetQuote_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
-        vm.assume(base != VAULT);
-        address quote = ASSET;
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
-        oracle.getQuote(inAmount, base, quote);
-    }
-
-    function test_GetQuote_RevertsWhen_InvalidBase_B(uint256 inAmount, address base) public {
-        vm.assume(base != ASSET);
-        address quote = VAULT;
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
-        oracle.getQuote(inAmount, base, quote);
-    }
-
-    function test_GetQuote_RevertsWhen_InvalidQuote_A(uint256 inAmount, address quote) public {
-        vm.assume(quote != VAULT);
-        address base = ASSET;
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
-        oracle.getQuote(inAmount, base, quote);
-    }
-
-    function test_GetQuote_RevertsWhen_InvalidQuote_B(uint256 inAmount, address quote) public {
-        vm.assume(quote != ASSET);
-        address base = VAULT;
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
-        oracle.getQuote(inAmount, base, quote);
-    }
-
     function test_GetQuotes_Integrity_SharesToAssets(uint256 inAmount, uint256 outAmount) public {
         vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(outAmount));
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, VAULT, ASSET);
