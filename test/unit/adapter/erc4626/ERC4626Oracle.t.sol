@@ -8,76 +8,72 @@ import {ERC4626Oracle} from "src/adapter/erc4626/ERC4626Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract ERC4626OracleTest is Test {
-    struct FuzzableConfig {
-        address vault;
-        address asset;
-    }
+    address internal VAULT = makeAddr("VAULT");
+    address internal ASSET = makeAddr("ASSET");
 
     ERC4626Oracle oracle;
 
-    function test_Constructor_Integrity(FuzzableConfig memory c) public {
-        _deploy(c);
-        assertEq(oracle.vault(), c.vault);
-        assertEq(oracle.asset(), c.asset);
+    function setUp() public {
+        vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(ASSET));
+        oracle = new ERC4626Oracle(VAULT);
     }
 
-    function test_GetQuote_Integrity_SharesToAssets(FuzzableConfig memory c, uint256 inAmount, uint256 outAmount)
-        public
-    {
-        _deploy(c);
-        vm.mockCall(c.vault, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(outAmount));
-        assertEq(oracle.getQuote(inAmount, c.vault, c.asset), outAmount);
+    function test_Constructor_Integrity() public {
+        assertEq(oracle.vault(), VAULT);
+        assertEq(oracle.asset(), ASSET);
     }
 
-    function test_GetQuote_Integrity_AssetsToShares(FuzzableConfig memory c, uint256 inAmount, uint256 outAmount)
-        public
-    {
-        _deploy(c);
-        vm.mockCall(c.vault, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(outAmount));
-        assertEq(oracle.getQuote(inAmount, c.asset, c.vault), outAmount);
+    function test_Constructor_RevertsWhen_AssetCallFails() public {
+        vm.mockCallRevert(VAULT, abi.encodeWithSelector(ERC4626.asset.selector), "oops");
+        vm.expectRevert(abi.encodePacked("oops"));
+        oracle = new ERC4626Oracle(VAULT);
     }
 
-    function test_GetQuote_RevertsWhen_InvalidAsset(FuzzableConfig memory c, uint256 inAmount, address asset) public {
-        _deploy(c);
-        vm.assume(asset != c.asset);
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, asset, c.vault));
-        oracle.getQuote(inAmount, asset, c.vault);
+    function test_GetQuote_Integrity_SharesToAssets(uint256 inAmount, uint256 outAmount) public {
+        vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(outAmount));
+        assertEq(oracle.getQuote(inAmount, VAULT, ASSET), outAmount);
     }
 
-    function test_GetQuote_RevertsWhen_InvalidShare(FuzzableConfig memory c, uint256 inAmount, address vault) public {
-        _deploy(c);
-        vm.assume(vault != c.vault);
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, c.asset, vault));
-        oracle.getQuote(inAmount, c.asset, vault);
+    function test_GetQuote_Integrity_AssetsToShares(uint256 inAmount, uint256 outAmount) public {
+        vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(outAmount));
+        assertEq(oracle.getQuote(inAmount, ASSET, VAULT), outAmount);
     }
 
-    function test_GetQuotes_Integrity_SharesToAssets(FuzzableConfig memory c, uint256 inAmount, uint256 outAmount)
-        public
-    {
-        _deploy(c);
-        vm.mockCall(c.vault, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(outAmount));
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.vault, c.asset);
+    function test_GetQuote_RevertsWhen_InvalidAsset(uint256 inAmount, address asset) public {
+        vm.assume(asset != ASSET);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, asset, VAULT));
+        oracle.getQuote(inAmount, asset, VAULT);
+    }
+
+    function test_GetQuote_RevertsWhen_InvalidShare(uint256 inAmount, address vault) public {
+        vm.assume(vault != VAULT);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, ASSET, vault));
+        oracle.getQuote(inAmount, ASSET, vault);
+    }
+
+    function test_GetQuotes_Integrity_SharesToAssets(uint256 inAmount, uint256 outAmount) public {
+        vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(outAmount));
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, VAULT, ASSET);
         assertEq(bidOutAmount, outAmount);
         assertEq(askOutAmount, outAmount);
     }
 
-    function test_GetQuotes_Integrity_AssetsToShares(FuzzableConfig memory c, uint256 inAmount, uint256 outAmount)
-        public
-    {
-        _deploy(c);
-        vm.mockCall(c.vault, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(outAmount));
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.asset, c.vault);
+    function test_GetQuotes_Integrity_AssetsToShares(uint256 inAmount, uint256 outAmount) public {
+        vm.mockCall(VAULT, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(outAmount));
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, ASSET, VAULT);
         assertEq(bidOutAmount, outAmount);
         assertEq(askOutAmount, outAmount);
     }
 
-    function _deploy(FuzzableConfig memory c) private {
-        c.vault = boundAddr(c.vault);
-        c.asset = boundAddr(c.asset);
-        vm.assume(c.vault != c.asset);
+    function test_GetQuotes_RevertsWhen_InvalidAsset(uint256 inAmount, address asset) public {
+        vm.assume(asset != ASSET);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, asset, VAULT));
+        oracle.getQuotes(inAmount, asset, VAULT);
+    }
 
-        vm.mockCall(c.vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(c.asset));
-
-        oracle = new ERC4626Oracle(c.vault);
+    function test_GetQuotes_RevertsWhen_InvalidShare(uint256 inAmount, address vault) public {
+        vm.assume(vault != VAULT);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, ASSET, vault));
+        oracle.getQuotes(inAmount, ASSET, vault);
     }
 }

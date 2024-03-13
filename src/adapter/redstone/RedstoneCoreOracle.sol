@@ -46,7 +46,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         if (_maxStaleness < RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_DELAY_SECONDS) {
             revert Errors.PriceOracle_InvalidConfiguration();
         }
-        
+
         base = _base;
         quote = _quote;
         feedId = _feedId;

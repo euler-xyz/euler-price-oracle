@@ -34,11 +34,10 @@ contract SDaiOracle is BaseAdapter {
     /// @param quote The token that is the unit of account. Either `dai` or `sDai`.
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
-        uint256 rate = IPot(dsrPot).chi();
         if (base == sDai && quote == dai) {
-            return inAmount * rate / 1e27;
+            return inAmount * IPot(dsrPot).chi() / 1e27;
         } else if (base == dai && quote == sDai) {
-            return inAmount * 1e27 / rate;
+            return inAmount * 1e27 / IPot(dsrPot).chi();
         }
         revert Errors.PriceOracle_NotSupported(base, quote);
     }
