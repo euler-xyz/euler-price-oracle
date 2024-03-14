@@ -20,13 +20,18 @@ contract UniswapV3Oracle is BaseAdapter {
     address public immutable tokenB;
     /// @notice The fee tier of the pool.
     uint24 public immutable fee;
-    /// @notice The length of the
+    /// @notice The desired length of the twap window.
     uint32 public immutable twapWindow;
     /// @notice The address of the Uniswap V3 pool.
     address public immutable pool;
 
     /// @notice Deploy a UniswapV3Oracle.
     /// @dev The oracle will support tokenA/tokenB and tokenB/tokenA pricing.
+    /// @param _tokenA One of the tokens in the pool.
+    /// @param _tokenB The other token in the pool.
+    /// @param _fee The fee tier of the pool.
+    /// @param _twapWindow The desired length of the twap window.
+    /// @param _uniswapV3Factory The address of the Uniswap V3 Factory.
     constructor(address _tokenA, address _tokenB, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
         if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
         tokenA = _tokenA;
