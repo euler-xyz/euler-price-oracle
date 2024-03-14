@@ -4,11 +4,12 @@ pragma solidity 0.8.23;
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {Governable} from "src/lib/Governable.sol";
 
 /// @title EulerRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler lending products.
-contract EulerRouter is IPriceOracle {
+contract EulerRouter is Governable, IPriceOracle {
     /// @notice The PriceOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
     address public fallbackOracle;
@@ -18,8 +19,6 @@ contract EulerRouter is IPriceOracle {
     /// @dev During resolution the vault is substituted with its asset.
     /// The `inAmount` is augmented by the vault's `convert*` function.
     mapping(address vault => address asset) public resolvedVaults;
-    /// @notice The active governor address. If `address(0)` then the role is renounced.
-    address public governor;
 
     /// @notice Configure an PriceOracle to resolve base/quote.
     /// @param base The address of the base token.
@@ -36,16 +35,10 @@ contract EulerRouter is IPriceOracle {
     /// @param asset The address of the vault's asset.
     /// @dev If `asset` is `address(0)` then the configuration was removed.
     event ResolvedVaultSet(address indexed vault, address indexed asset);
-    /// @notice Set the governor of the contract.
-    /// @param oldGovernor The address of the previous governor.
-    /// @param newGovernor The address of the newly appointed governor.
-    event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
     /// @notice Deploy EulerRouter.
     /// @param _governor The address of the governor.
-    constructor(address _governor) {
-        _setGovernor(_governor);
-    }
+    constructor(address _governor) Governable(_governor) {}
 
     /// @notice Configure an PriceOracle to resolve base/quote.
     /// @param base The address of the base token.
@@ -91,19 +84,6 @@ contract EulerRouter is IPriceOracle {
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
         fallbackOracle = _fallbackOracle;
         emit FallbackOracleSet(_fallbackOracle);
-    }
-
-    /// @notice Transfer the governor role to another address.
-    /// @param newGovernor The address of the next governor.
-    /// @dev Can only be called by the current governor.
-    function transferGovernance(address newGovernor) external onlyGovernor {
-        _setGovernor(newGovernor);
-    }
-
-    /// @notice Renounce the governor role.
-    /// @dev Sets governor to address(0), effectively removing governance.
-    function renounceGovernance() external onlyGovernor {
-        _setGovernor(address(0));
     }
 
     /// @inheritdoc IPriceOracle
@@ -165,21 +145,5 @@ contract EulerRouter is IPriceOracle {
         oracle = fallbackOracle;
         if (oracle == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return (inAmount, base, quote, oracle);
-    }
-
-    /// @notice Set the governor address.
-    /// @param newGovernor The address of the new governor.
-    function _setGovernor(address newGovernor) internal {
-        address oldGovernor = governor;
-        governor = newGovernor;
-        emit GovernorSet(oldGovernor, newGovernor);
-    }
-
-    /// @notice Restrict access to the governor.
-    modifier onlyGovernor() {
-        if (msg.sender != governor) {
-            revert Errors.Governance_CallerNotGovernor();
-        }
-        _;
     }
 }
