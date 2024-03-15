@@ -5,29 +5,27 @@ import {Errors} from "src/lib/Errors.sol";
 import {Governable} from "src/lib/Governable.sol";
 
 contract FeedRegistry is Governable {
-    address public immutable quote;
-    mapping(bytes32 feedId => address base) public feeds;
+    mapping(address base => mapping(address quote => bytes32 feedId)) public feeds;
 
-    event FeedSet(bytes32 indexed feedId, address indexed base);
+    event FeedSet(address indexed base, address indexed quote, bytes32 indexed feedId);
 
-    constructor(address _governor, address _quote) Governable(_governor) {
-        quote = _quote;
-    }
+    constructor(address _governor) Governable(_governor) {}
 
-    function setFeeds(bytes32[] calldata feedIds, address[] calldata bases) external onlyGovernor {
-        _setFeeds(feedIds, bases);
-    }
-
-    function _setFeeds(bytes32[] calldata _feedIds, address[] calldata _bases) internal {
-        if (_feedIds.length != _bases.length) revert Errors.PriceOracle_InvalidConfiguration();
-        for (uint256 i = 0; i < _feedIds.length; ++i) {
-            _setFeed(_feedIds[i], _bases[i]);
+    function setFeeds(address[] calldata bases, address[] calldata quotes, bytes32[] calldata feedIds)
+        external
+        onlyGovernor
+    {
+        if (bases.length != quotes.length || quotes.length != feedIds.length) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+        for (uint256 i = 0; i < bases.length; ++i) {
+            _setFeed(bases[i], quotes[i], feedIds[i]);
         }
     }
 
-    function _setFeed(bytes32 _feedId, address _base) internal {
-        if (feeds[_feedId] != address(0)) revert Errors.PriceOracle_InvalidConfiguration();
-        feeds[_feedId] = _base;
-        emit FeedSet(_feedId, _base);
+    function _setFeed(address _base, address _quote, bytes32 _feedId) internal {
+        if (feeds[_base][_quote] != 0) revert Errors.PriceOracle_InvalidConfiguration();
+        feeds[_base][_quote] = _feedId;
+        emit FeedSet(_base, _quote, _feedId);
     }
 }
