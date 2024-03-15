@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {ERC4626} from "@solady/tokens/ERC4626.sol";
+import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {Governable} from "src/lib/Governable.sol";
@@ -57,7 +57,7 @@ contract EulerRouter is Governable, IPriceOracle {
     /// Only configure internal pricing after verifying that the implementation of
     /// `convertToAssets` and `convertToShares` cannot be manipulated.
     function govSetResolvedVault(address vault, bool set) external onlyGovernor {
-        address asset = set ? ERC4626(vault).asset() : address(0);
+        address asset = set ? IERC4626(vault).asset() : address(0);
         resolvedVaults[vault] = asset;
         emit ResolvedVaultSet(vault, asset);
     }
@@ -116,13 +116,13 @@ contract EulerRouter is Governable, IPriceOracle {
         // 2. Recursively resolve `base`.
         address baseAsset = resolvedVaults[base];
         if (baseAsset != address(0)) {
-            inAmount = ERC4626(base).convertToAssets(inAmount);
+            inAmount = IERC4626(base).convertToAssets(inAmount);
             return _resolveOracle(inAmount, baseAsset, quote);
         }
         // 3. Recursively resolve `quote`.
         address quoteAsset = resolvedVaults[quote];
         if (quoteAsset != address(0)) {
-            inAmount = ERC4626(quote).convertToShares(inAmount);
+            inAmount = IERC4626(quote).convertToShares(inAmount);
             return _resolveOracle(inAmount, base, quoteAsset);
         }
         // 4. Return the fallback or revert if not configured.

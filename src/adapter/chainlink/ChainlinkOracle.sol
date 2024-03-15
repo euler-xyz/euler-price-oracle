@@ -2,9 +2,8 @@
 pragma solidity 0.8.23;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
-import {Errors} from "src/lib/Errors.sol";
 
 /// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)

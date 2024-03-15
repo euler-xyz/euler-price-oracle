@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 
 abstract contract BaseAdapter is IPriceOracle {
     /// @inheritdoc IPriceOracle

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 import {IPot} from "src/adapter/maker/IPot.sol";
-import {Errors} from "src/lib/Errors.sol";
 
 /// @title SDaiOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)

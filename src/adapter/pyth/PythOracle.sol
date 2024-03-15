@@ -4,8 +4,7 @@ pragma solidity 0.8.23;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 
 /// @title PythOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)

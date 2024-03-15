@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC4626} from "@solady/tokens/ERC4626.sol";
+import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
@@ -109,7 +109,7 @@ contract EulerRouterTest is Test {
 
     function test_GovSetVaultResolver_Integrity(address vault, address asset) public {
         vault = boundAddr(vault);
-        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
+        vm.mockCall(vault, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
         vm.expectEmit();
         emit EulerRouter.ResolvedVaultSet(vault, asset);
 
@@ -121,11 +121,11 @@ contract EulerRouterTest is Test {
 
     function test_GovSetVaultResolver_Integrity_OverwriteOk(address vault, address assetA, address assetB) public {
         vault = boundAddr(vault);
-        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetA));
+        vm.mockCall(vault, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(assetA));
         vm.prank(GOVERNOR);
         router.govSetResolvedVault(vault, true);
 
-        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetB));
+        vm.mockCall(vault, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(assetB));
         vm.prank(GOVERNOR);
         router.govSetResolvedVault(vault, true);
 
@@ -232,8 +232,8 @@ contract EulerRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetConfig(baseAsset, quote, oracle);
 
-        vm.mockCall(base, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(baseAsset));
-        vm.mockCall(base, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(inAmount));
+        vm.mockCall(base, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(baseAsset));
+        vm.mockCall(base, abi.encodeWithSelector(IERC4626.convertToAssets.selector, inAmount), abi.encode(inAmount));
         vm.prank(GOVERNOR);
         router.govSetResolvedVault(base, true);
 
@@ -274,8 +274,8 @@ contract EulerRouterTest is Test {
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quoteAsset, oracle);
 
-        vm.mockCall(quote, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(quoteAsset));
-        vm.mockCall(quote, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(inAmount));
+        vm.mockCall(quote, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(quoteAsset));
+        vm.mockCall(quote, abi.encodeWithSelector(IERC4626.convertToShares.selector, inAmount), abi.encode(inAmount));
         vm.prank(GOVERNOR);
         router.govSetResolvedVault(quote, true);
 

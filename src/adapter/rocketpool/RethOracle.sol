@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 import {IReth} from "src/adapter/rocketpool/IReth.sol";
-import {Errors} from "src/lib/Errors.sol";
 
 /// @title RethOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
