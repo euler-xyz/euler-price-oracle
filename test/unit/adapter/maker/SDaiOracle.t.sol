@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
@@ -17,7 +17,7 @@ contract SDaiOracleTest is Test {
         oracle = new SDaiOracle(DAI, SDAI, POT);
     }
 
-    function test_Constructor_Integrity() public view {
+    function test_Constructor_Integrity() public {
         assertEq(oracle.dai(), DAI);
         assertEq(oracle.sDai(), SDAI);
         assertEq(oracle.dsrPot(), POT);

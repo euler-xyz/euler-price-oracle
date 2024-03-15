@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {UNISWAP_V3_FACTORY, UNISWAP_V3_USDC_WETH_500, USDC, WETH} from "test/utils/EthereumAddresses.sol";

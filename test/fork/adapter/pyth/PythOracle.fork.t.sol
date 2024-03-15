@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {PYTH, PYTH_ETH_USD_FEED, PYTH_GUSD_USD_FEED, WETH, USDC, DAI, GUSD} from "test/utils/EthereumAddresses.sol";
