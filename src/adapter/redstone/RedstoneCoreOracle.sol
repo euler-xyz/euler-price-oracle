@@ -18,7 +18,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice The address of the quote asset corresponding to the feed.
     address public immutable quote;
     /// @notice The identifier of the price feed.
-    /// @dev See https://pyth.network/developers/price-feed-ids.
+    /// @dev See https://app.redstone.finance/#/app/data-services/redstone-primary-prod
     bytes32 public immutable feedId;
     /// @notice The maximum allowed age of the price.
     uint256 public immutable maxStaleness;
