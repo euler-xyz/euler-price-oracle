@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -43,8 +43,8 @@ contract ChainlinkOracle is BaseAdapter {
         inverse = _inverse;
 
         // The scale factor is used to correctly convert decimals.
-        int8 baseDecimals = int8(ERC20(base).decimals());
-        int8 quoteDecimals = int8(ERC20(quote).decimals());
+        int8 baseDecimals = int8(IERC20(base).decimals());
+        int8 quoteDecimals = int8(IERC20(quote).decimals());
         int8 feedDecimals = int8(AggregatorV3Interface(feed).decimals());
         int8 scaleDecimals;
         if (inverse) {

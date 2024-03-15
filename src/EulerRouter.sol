@@ -4,11 +4,12 @@ pragma solidity 0.8.23;
 import {ERC4626} from "@solady/tokens/ERC4626.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {Governable} from "src/lib/Governable.sol";
 
 /// @title EulerRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler lending products.
-contract EulerRouter is IPriceOracle {
+contract EulerRouter is Governable, IPriceOracle {
     /// @notice The PriceOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
     address public fallbackOracle;
@@ -18,16 +19,14 @@ contract EulerRouter is IPriceOracle {
     /// @dev During resolution the vault is substituted with its asset.
     /// The `inAmount` is augmented by the vault's `convert*` function.
     mapping(address vault => address asset) public resolvedVaults;
-    /// @notice The active governor address. If `address(0)` then the role is renounced.
-    address public governor;
 
-    /// @notice Configure an PriceOracle to resolve base/quote.
+    /// @notice Configure a PriceOracle to resolve base/quote.
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
     /// @param oracle The address of the PriceOracle that resolves base/quote.
     /// @dev If `oracle` is `address(0)` then the base/quote configuration was removed.
     event ConfigSet(address indexed base, address indexed quote, address indexed oracle);
-    /// @notice Set an PriceOracle as a fallback resolver.
+    /// @notice Set a PriceOracle as a fallback resolver.
     /// @param fallbackOracle The address of the PriceOracle that is called when base/quote is not configured.
     /// @dev If `fallbackOracle` is `address(0)` then there is no fallback resolver.
     event FallbackOracleSet(address indexed fallbackOracle);
@@ -36,18 +35,12 @@ contract EulerRouter is IPriceOracle {
     /// @param asset The address of the vault's asset.
     /// @dev If `asset` is `address(0)` then the configuration was removed.
     event ResolvedVaultSet(address indexed vault, address indexed asset);
-    /// @notice Set the governor of the contract.
-    /// @param oldGovernor The address of the previous governor.
-    /// @param newGovernor The address of the newly appointed governor.
-    event GovernorSet(address indexed oldGovernor, address indexed newGovernor);
 
     /// @notice Deploy EulerRouter.
     /// @param _governor The address of the governor.
-    constructor(address _governor) {
-        _setGovernor(_governor);
-    }
+    constructor(address _governor) Governable(_governor) {}
 
-    /// @notice Configure an PriceOracle to resolve base/quote.
+    /// @notice Configure a PriceOracle to resolve base/quote.
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
     /// @param oracle The address of the PriceOracle that resolves base/quote.
@@ -57,53 +50,24 @@ contract EulerRouter is IPriceOracle {
         emit ConfigSet(base, quote, oracle);
     }
 
-    /// @notice Clear the configuration for base/quote.
-    /// @param base The address of the base token.
-    /// @param quote The address of the quote token.
-    /// @dev Callable only by the governor.
-    function govClearConfig(address base, address quote) external onlyGovernor {
-        delete oracles[base][quote];
-        emit ConfigSet(base, quote, address(0));
-    }
-
     /// @notice Configure an ERC4626 vault to use internal pricing via `convert*` methods.
     /// @param vault The address of the ERC4626 vault.
+    /// @param set True to configure the vault, false to clear the record.
     /// @dev Callable only by the governor. Vault must be ERC4626.
     /// Only configure internal pricing after verifying that the implementation of
     /// `convertToAssets` and `convertToShares` cannot be manipulated.
-    function govSetResolvedVault(address vault) external onlyGovernor {
-        address asset = ERC4626(vault).asset();
+    function govSetResolvedVault(address vault, bool set) external onlyGovernor {
+        address asset = set ? ERC4626(vault).asset() : address(0);
         resolvedVaults[vault] = asset;
         emit ResolvedVaultSet(vault, asset);
     }
 
-    /// @notice Clear the configuration for internal pricing resolution for a vault.
-    /// @param vault The address of the ERC4626 vault.
-    /// @dev Callable only by the governor.
-    function govClearResolvedVault(address vault) external onlyGovernor {
-        delete resolvedVaults[vault];
-        emit ResolvedVaultSet(vault, address(0));
-    }
-
-    /// @notice Set an PriceOracle as a fallback resolver.
+    /// @notice Set a PriceOracle as a fallback resolver.
     /// @param _fallbackOracle The address of the PriceOracle that is called when base/quote is not configured.
     /// @dev `address(0)` removes the fallback.
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
         fallbackOracle = _fallbackOracle;
         emit FallbackOracleSet(_fallbackOracle);
-    }
-
-    /// @notice Transfer the governor role to another address.
-    /// @param newGovernor The address of the next governor.
-    /// @dev Can only be called by the current governor.
-    function transferGovernance(address newGovernor) external onlyGovernor {
-        _setGovernor(newGovernor);
-    }
-
-    /// @notice Renounce the governor role.
-    /// @dev Sets governor to address(0), effectively removing governance.
-    function renounceGovernance() external onlyGovernor {
-        _setGovernor(address(0));
     }
 
     /// @inheritdoc IPriceOracle
@@ -128,7 +92,7 @@ contract EulerRouter is IPriceOracle {
     /// @param quote The token that is the unit of account.
     /// @dev Implements the following recursive resolution logic:
     /// 1. Check the base case: `base == quote` and terminate if true.
-    /// 2. If an PriceOracle is configured for base/quote in the `oracles` mapping,
+    /// 2. If a PriceOracle is configured for base/quote in the `oracles` mapping,
     ///    return it without transforming the other variables.
     /// 3. If `base` is configured as an ERC4626 vault with internal pricing,
     ///    transform inAmount by calling `convertToAssets` and recurse by substituting `asset` for `base`.
@@ -137,7 +101,7 @@ contract EulerRouter is IPriceOracle {
     /// 5. If there is a fallback oracle, return it without transforming the other variables, else revert.
     /// @return The resolved inAmount.
     /// @return The resolved base.
-    /// @return The resolved base.
+    /// @return The resolved quote.
     /// @return The resolved PriceOracle to call.
     function _resolveOracle(uint256 inAmount, address base, address quote)
         internal
@@ -165,21 +129,5 @@ contract EulerRouter is IPriceOracle {
         oracle = fallbackOracle;
         if (oracle == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return (inAmount, base, quote, oracle);
-    }
-
-    /// @notice Set the governor address.
-    /// @param newGovernor The address of the new governor.
-    function _setGovernor(address newGovernor) internal {
-        address oldGovernor = governor;
-        governor = newGovernor;
-        emit GovernorSet(oldGovernor, newGovernor);
-    }
-
-    /// @notice Restrict access to the governor.
-    modifier onlyGovernor() {
-        if (msg.sender != governor) {
-            revert Errors.Governance_CallerNotGovernor();
-        }
-        _;
     }
 }

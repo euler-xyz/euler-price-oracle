@@ -16,7 +16,7 @@ contract LidoOracleTest is Test {
         oracle = new LidoOracle(STETH, WSTETH);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(oracle.stEth(), STETH);
         assertEq(oracle.wstEth(), WSTETH);
     }

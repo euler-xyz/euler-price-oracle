@@ -43,7 +43,6 @@ contract UniswapV3Oracle is BaseAdapter {
     }
 
     /// @notice Get a quote by calling the pool's TWAP oracle.
-    /// @dev Supports spot pricing if twapWindow=0.
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced. Either `tokenA` or `tokenB`.
     /// @param quote The token that is the unit of account. Either `tokenB` or `tokenA`.

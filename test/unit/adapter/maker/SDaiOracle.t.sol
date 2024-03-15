@@ -17,7 +17,7 @@ contract SDaiOracleTest is Test {
         oracle = new SDaiOracle(DAI, SDAI, POT);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(oracle.dai(), DAI);
         assertEq(oracle.sDai(), SDAI);
         assertEq(oracle.dsrPot(), POT);

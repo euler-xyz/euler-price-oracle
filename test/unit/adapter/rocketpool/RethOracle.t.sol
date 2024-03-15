@@ -16,7 +16,7 @@ contract RethOracleTest is Test {
         oracle = new RethOracle(WETH, RETH);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(oracle.weth(), WETH);
         assertEq(oracle.reth(), RETH);
     }

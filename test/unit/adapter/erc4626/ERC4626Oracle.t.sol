@@ -18,7 +18,7 @@ contract ERC4626OracleTest is Test {
         oracle = new ERC4626Oracle(VAULT);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(oracle.vault(), VAULT);
         assertEq(oracle.asset(), ASSET);
     }

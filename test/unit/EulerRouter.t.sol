@@ -65,7 +65,7 @@ contract EulerRouterTest is Test {
         router = new EulerRouter(GOVERNOR);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(router.fallbackOracle(), address(0));
     }
 
@@ -107,33 +107,6 @@ contract EulerRouterTest is Test {
         router.govSetConfig(base, quote, oracle);
     }
 
-    function test_GovClearConfig_Integrity(address base, address quote, address oracle) public {
-        vm.prank(GOVERNOR);
-        router.govSetConfig(base, quote, oracle);
-
-        vm.expectEmit();
-        emit EulerRouter.ConfigSet(base, quote, address(0));
-        vm.prank(GOVERNOR);
-        router.govClearConfig(base, quote);
-
-        assertEq(router.oracles(base, quote), address(0));
-    }
-
-    function test_GovClearConfig_NoConfigOk(address base, address quote) public {
-        vm.prank(GOVERNOR);
-        router.govClearConfig(base, quote);
-
-        assertEq(router.oracles(base, quote), address(0));
-    }
-
-    function test_GovClearConfig_RevertsWhen_CallerNotGovernor(address caller, address base, address quote) public {
-        vm.assume(caller != GOVERNOR);
-
-        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
-        vm.prank(caller);
-        router.govClearConfig(base, quote);
-    }
-
     function test_GovSetVaultResolver_Integrity(address vault, address asset) public {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
@@ -141,7 +114,7 @@ contract EulerRouterTest is Test {
         emit EulerRouter.ResolvedVaultSet(vault, asset);
 
         vm.prank(GOVERNOR);
-        router.govSetResolvedVault(vault);
+        router.govSetResolvedVault(vault, true);
 
         assertEq(router.resolvedVaults(vault), asset);
     }
@@ -150,11 +123,11 @@ contract EulerRouterTest is Test {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetA));
         vm.prank(GOVERNOR);
-        router.govSetResolvedVault(vault);
+        router.govSetResolvedVault(vault, true);
 
         vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(assetB));
         vm.prank(GOVERNOR);
-        router.govSetResolvedVault(vault);
+        router.govSetResolvedVault(vault, true);
 
         assertEq(router.resolvedVaults(vault), assetB);
     }
@@ -164,40 +137,7 @@ contract EulerRouterTest is Test {
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
-        router.govSetResolvedVault(vault);
-    }
-
-    function test_GovClearResolvedVault_Integrity(address vault, address asset) public {
-        vault = boundAddr(vault);
-        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
-
-        vm.prank(GOVERNOR);
-        router.govSetResolvedVault(vault);
-
-        vm.expectEmit();
-        emit EulerRouter.ResolvedVaultSet(vault, address(0));
-        vm.prank(GOVERNOR);
-        router.govClearResolvedVault(vault);
-
-        assertEq(router.resolvedVaults(vault), address(0));
-    }
-
-    function test_GovClearResolvedVault_NoConfigOk(address vault, address asset) public {
-        vault = boundAddr(vault);
-        vm.mockCall(vault, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(asset));
-
-        vm.prank(GOVERNOR);
-        router.govClearResolvedVault(vault);
-
-        assertEq(router.resolvedVaults(vault), address(0));
-    }
-
-    function test_GovClearResolvedVault_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
-        vm.assume(caller != GOVERNOR);
-
-        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
-        vm.prank(caller);
-        router.govClearResolvedVault(vault);
+        router.govSetResolvedVault(vault, true);
     }
 
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {
@@ -232,7 +172,7 @@ contract EulerRouterTest is Test {
         router.govSetFallbackOracle(fallbackOracle);
     }
 
-    function test_GetQuote_Integrity_BaseEqQuote(uint256 inAmount, address base, address oracle) public {
+    function test_GetQuote_Integrity_BaseEqQuote(uint256 inAmount, address base, address oracle) public view {
         base = boundAddr(base);
         oracle = boundAddr(oracle);
         vm.assume(base != oracle);
@@ -295,7 +235,7 @@ contract EulerRouterTest is Test {
         vm.mockCall(base, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(baseAsset));
         vm.mockCall(base, abi.encodeWithSelector(ERC4626.convertToAssets.selector, inAmount), abi.encode(inAmount));
         vm.prank(GOVERNOR);
-        router.govSetResolvedVault(base);
+        router.govSetResolvedVault(base, true);
 
         vm.mockCall(
             oracle,
@@ -337,7 +277,7 @@ contract EulerRouterTest is Test {
         vm.mockCall(quote, abi.encodeWithSelector(ERC4626.asset.selector), abi.encode(quoteAsset));
         vm.mockCall(quote, abi.encodeWithSelector(ERC4626.convertToShares.selector, inAmount), abi.encode(inAmount));
         vm.prank(GOVERNOR);
-        router.govSetResolvedVault(quote);
+        router.govSetResolvedVault(quote, true);
 
         vm.mockCall(
             oracle,
@@ -414,10 +354,10 @@ contract EulerRouterTest is Test {
         vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
         router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetResolvedVault(eDAI);
-        router.govSetResolvedVault(eeDAI);
-        router.govSetResolvedVault(eWETH);
-        router.govSetResolvedVault(eeWETH);
+        router.govSetResolvedVault(eDAI, true);
+        router.govSetResolvedVault(eeDAI, true);
+        router.govSetResolvedVault(eWETH, true);
+        router.govSetResolvedVault(eeWETH, true);
         vm.stopPrank();
 
         address[] memory tokens = new address[](6);
@@ -456,10 +396,10 @@ contract EulerRouterTest is Test {
         vm.startPrank(GOVERNOR);
         router.govSetConfig(WETH, DAI, address(eOracle));
         router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetResolvedVault(eDAI);
-        router.govSetResolvedVault(eeDAI);
-        router.govSetResolvedVault(eWETH);
-        router.govSetResolvedVault(eeWETH);
+        router.govSetResolvedVault(eDAI, true);
+        router.govSetResolvedVault(eeDAI, true);
+        router.govSetResolvedVault(eWETH, true);
+        router.govSetResolvedVault(eeWETH, true);
         vm.stopPrank();
 
         address[] memory tokens = new address[](6);
@@ -501,20 +441,6 @@ contract EulerRouterTest is Test {
     function test_TransferGovernance_Integrity_ZeroAddress() public {
         vm.prank(GOVERNOR);
         router.transferGovernance(address(0));
-
-        assertEq(router.governor(), address(0));
-    }
-
-    function test_RenounceGovernance_RevertsWhen_CallerNotGovernor(address caller) public {
-        vm.assume(caller != GOVERNOR);
-        vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
-        vm.prank(caller);
-        router.renounceGovernance();
-    }
-
-    function test_RenounceGovernance_Integrity() public {
-        vm.prank(GOVERNOR);
-        router.renounceGovernance();
 
         assertEq(router.governor(), address(0));
     }

@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
@@ -303,8 +303,8 @@ contract ChainlinkOracleTest is Test {
             vm.assume(c.feedDecimals + c.baseDecimals - c.quoteDecimals < 18);
         }
 
-        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(c.feedDecimals));
 
         oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.inverse);

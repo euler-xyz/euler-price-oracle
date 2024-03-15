@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -29,10 +29,10 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     uint256 internal immutable scaleFactor;
     /// @notice The last updated price.
     /// @dev This gets updated after calling `updatePrice`.
-    uint224 public lastPrice;
+    uint208 public lastPrice;
     /// @notice The timestamp of the last update.
     /// @dev Gets updated ot `block.timestamp` after calling `updatePrice`.
-    uint32 public lastUpdatedAt;
+    uint48 public lastUpdatedAt;
 
     /// @notice Deploy a RedstoneCoreOracle.
     /// @param _base The address of the base asset corresponding to the feed.
@@ -53,7 +53,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         maxStaleness = _maxStaleness;
         inverse = _inverse;
 
-        uint8 decimals = ERC20(inverse ? _quote : _base).decimals();
+        uint8 decimals = IERC20(inverse ? _quote : _base).decimals();
         scaleFactor = 10 ** decimals;
     }
 
@@ -64,9 +64,9 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         if (block.timestamp < lastUpdatedAt + maxStaleness) return;
 
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
-        if (price > type(uint224).max) revert Errors.PriceOracle_Overflow();
-        lastPrice = uint224(price);
-        lastUpdatedAt = uint32(block.timestamp);
+        if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
+        lastPrice = uint208(price);
+        lastUpdatedAt = uint48(block.timestamp);
     }
 
     /// @notice Get the quote from the Redstone feed.
