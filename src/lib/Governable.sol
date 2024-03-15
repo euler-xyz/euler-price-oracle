@@ -26,12 +26,6 @@ abstract contract Governable {
         _setGovernor(newGovernor);
     }
 
-    /// @notice Renounce the governor role.
-    /// @dev Sets governor to address(0), effectively removing governance.
-    function renounceGovernance() external onlyGovernor {
-        _setGovernor(address(0));
-    }
-
     /// @notice Restrict access to the governor.
     modifier onlyGovernor() {
         if (msg.sender != governor) {

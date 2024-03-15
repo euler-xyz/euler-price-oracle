@@ -14,7 +14,7 @@ contract RethOracleForkTest is ForkTest {
         oracle = new RethOracle(WETH, RETH);
     }
 
-    function test_GetQuote_Integrity() public {
+    function test_GetQuote_Integrity() public view {
         uint256 wethReth = oracle.getQuote(1e18, WETH, RETH);
         assertApproxEqRel(wethReth, 0.9e18, 0.1e18);
 
@@ -22,7 +22,7 @@ contract RethOracleForkTest is ForkTest {
         assertApproxEqRel(rethWeth, 1.1e18, 0.1e18);
     }
 
-    function test_GetQuotes_Integrity() public {
+    function test_GetQuotes_Integrity() public view {
         (uint256 wethRethBid, uint256 wethRethAsk) = oracle.getQuotes(1e18, WETH, RETH);
         assertApproxEqRel(wethRethBid, 0.9e18, 0.1e18);
         assertApproxEqRel(wethRethAsk, 0.9e18, 0.1e18);

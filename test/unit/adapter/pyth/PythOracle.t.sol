@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -429,8 +429,8 @@ contract PythOracleTest is Test {
 
     function _deploy(FuzzableConfig memory c) private {
         _bound(c);
-        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
         oracle = new PythOracle(PYTH, c.base, c.quote, c.feedId, c.maxStaleness, c.inverse);
     }
 

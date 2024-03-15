@@ -15,9 +15,6 @@ interface IFactoryInitializable {
     /// @param newGovernor The address of the next governor.
     /// @dev Can only be called by the current governor.
     function transferGovernance(address newGovernor) external;
-    /// @notice Remove the governor.
-    /// @dev Sets governor to address(0), effectively removing governance.
-    function renounceGovernance() external;
     /// @notice Check whether the contract has been initialized.
     /// @return Whether `initialize` has been called.
     function initialized() external view returns (bool);

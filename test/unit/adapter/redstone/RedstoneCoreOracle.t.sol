@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {RedstoneCoreOracleHarness} from "test/utils/RedstoneCoreOracleHarness.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
@@ -42,8 +42,8 @@ contract RedstoneCoreOracleTest is Test {
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
         c.maxStaleness = uint32(bound(c.maxStaleness, 0, 3 minutes - 1));
 
-        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
 
         vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
         new RedstoneCoreOracleHarness(c.base, c.quote, c.feedId, c.maxStaleness, c.inverse);
@@ -51,8 +51,8 @@ contract RedstoneCoreOracleTest is Test {
 
     function test_UpdatePrice_Integrity(FuzzableConfig memory c, uint256 timestamp, uint256 price) public {
         _deploy(c);
-        timestamp = bound(timestamp, c.maxStaleness + 1, type(uint32).max);
-        price = bound(price, 0, type(uint224).max);
+        timestamp = bound(timestamp, c.maxStaleness + 1, type(uint48).max);
+        price = bound(price, 0, type(uint208).max);
 
         vm.warp(timestamp);
 
@@ -65,8 +65,8 @@ contract RedstoneCoreOracleTest is Test {
 
     function test_UpdatePrice_Overflow(FuzzableConfig memory c, uint256 timestamp, uint256 price) public {
         _deploy(c);
-        timestamp = bound(timestamp, c.maxStaleness + 1, type(uint32).max);
-        price = bound(price, uint256(type(uint224).max) + 1, type(uint256).max);
+        timestamp = bound(timestamp, c.maxStaleness + 1, type(uint48).max);
+        price = bound(price, uint256(type(uint208).max) + 1, type(uint256).max);
 
         vm.warp(timestamp);
 
@@ -88,7 +88,7 @@ contract RedstoneCoreOracleTest is Test {
         _deploy(c);
         inAmount = bound(inAmount, 0, type(uint128).max);
         price = bound(price, 1, type(uint128).max);
-        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint32).max - c.maxStaleness);
+        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint48).max - c.maxStaleness);
         tsGetQuote = bound(tsGetQuote, tsUpdatePrice, tsUpdatePrice + c.maxStaleness);
 
         vm.warp(tsUpdatePrice);
@@ -126,8 +126,8 @@ contract RedstoneCoreOracleTest is Test {
         _deploy(c);
         inAmount = bound(inAmount, 0, type(uint128).max);
         price = bound(price, 1, type(uint128).max);
-        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint32).max - c.maxStaleness - 1);
-        tsGetQuote = bound(tsGetQuote, tsUpdatePrice + c.maxStaleness + 1, type(uint32).max);
+        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint48).max - c.maxStaleness - 1);
+        tsGetQuote = bound(tsGetQuote, tsUpdatePrice + c.maxStaleness + 1, type(uint48).max);
 
         vm.warp(tsUpdatePrice);
         oracle.setPrice(price);
@@ -150,7 +150,7 @@ contract RedstoneCoreOracleTest is Test {
         _deploy(c);
         inAmount = bound(inAmount, 0, type(uint128).max);
         price = bound(price, 1, type(uint128).max);
-        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint32).max - c.maxStaleness);
+        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint48).max - c.maxStaleness);
         tsGetQuote = bound(tsGetQuote, tsUpdatePrice, tsUpdatePrice + c.maxStaleness);
 
         vm.warp(tsUpdatePrice);
@@ -189,8 +189,8 @@ contract RedstoneCoreOracleTest is Test {
         _deploy(c);
         inAmount = bound(inAmount, 0, type(uint128).max);
         price = bound(price, 1, type(uint128).max);
-        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint32).max - c.maxStaleness - 1);
-        tsGetQuote = bound(tsGetQuote, tsUpdatePrice + c.maxStaleness + 1, type(uint32).max);
+        tsUpdatePrice = bound(tsUpdatePrice, c.maxStaleness + 1, type(uint48).max - c.maxStaleness - 1);
+        tsGetQuote = bound(tsGetQuote, tsUpdatePrice + c.maxStaleness + 1, type(uint48).max);
 
         vm.warp(tsUpdatePrice);
         oracle.setPrice(price);
@@ -212,8 +212,8 @@ contract RedstoneCoreOracleTest is Test {
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 24));
         c.maxStaleness = uint32(bound(c.maxStaleness, 3 minutes, 24 hours));
 
-        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
 
         oracle = new RedstoneCoreOracleHarness(c.base, c.quote, c.feedId, c.maxStaleness, c.inverse);
     }

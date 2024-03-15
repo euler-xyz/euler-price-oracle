@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -44,8 +44,8 @@ contract PythOracle is BaseAdapter {
         feedId = _feedId;
         maxStaleness = _maxStaleness;
         inverse = _inverse;
-        uint8 baseDecimals = ERC20(_base).decimals();
-        uint8 quoteDecimals = ERC20(_quote).decimals();
+        uint8 baseDecimals = IERC20(_base).decimals();
+        uint8 quoteDecimals = IERC20(_quote).decimals();
         scaleExponent = inverse ? int8(baseDecimals) - int8(quoteDecimals) : int8(quoteDecimals) - int8(baseDecimals);
     }
 
