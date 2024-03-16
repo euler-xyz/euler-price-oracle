@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
@@ -25,8 +25,8 @@ contract RethOracle is BaseAdapter {
     /// @notice Get a quote by querying the exchange rate from the rETH contract.
     /// @dev Calls `getEthValue` for rETH/WETH and `getRethValue` for WETH/rETH.
     /// @param inAmount The amount of `base` to convert.
-    /// @param base The token that is being priced. Either rETH or WETH.
-    /// @param quote The token that is the unit of account. Either WETH or rETH.
+    /// @param base The token that is being priced. Either `rETH` or `WETH`.
+    /// @param quote The token that is the unit of account. Either `WETH` or `rETH`.
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         if (base == reth && quote == weth) {

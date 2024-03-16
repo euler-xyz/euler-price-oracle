@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
@@ -14,7 +14,6 @@ contract ChainlinkOracleTest is Test {
         address quote;
         address feed;
         uint256 maxStaleness;
-        bool inverse;
         uint8 baseDecimals;
         uint8 quoteDecimals;
         uint8 feedDecimals;
@@ -36,7 +35,6 @@ contract ChainlinkOracleTest is Test {
         assertEq(oracle.quote(), c.quote);
         assertEq(oracle.feed(), c.feed);
         assertEq(oracle.maxStaleness(), c.maxStaleness);
-        assertEq(oracle.inverse(), c.inverse);
     }
 
     function test_GetQuote_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, address base, uint256 inAmount)
@@ -128,7 +126,6 @@ contract ChainlinkOracleTest is Test {
     ) public {
         _deploy(c);
         _prepareValidRoundData(d);
-        vm.assume(!c.inverse);
         timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
@@ -136,7 +133,7 @@ contract ChainlinkOracleTest is Test {
         vm.warp(timestamp);
         uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
-            inAmount * uint256(d.answer) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+            (inAmount * uint256(d.answer) * 10 ** c.quoteDecimals) / 10 ** (c.feedDecimals + c.baseDecimals);
         assertEq(outAmount, expectedOutAmount);
     }
 
@@ -148,15 +145,14 @@ contract ChainlinkOracleTest is Test {
     ) public {
         _deploy(c);
         _prepareValidRoundData(d);
-        vm.assume(c.inverse);
         timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.warp(timestamp);
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
+        uint256 outAmount = oracle.getQuote(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
-            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.answer);
+            (inAmount * 10 ** (c.feedDecimals + c.baseDecimals)) / (uint256(d.answer) * 10 ** c.quoteDecimals);
         assertEq(outAmount, expectedOutAmount);
     }
 
@@ -249,7 +245,6 @@ contract ChainlinkOracleTest is Test {
     ) public {
         _deploy(c);
         _prepareValidRoundData(d);
-        vm.assume(!c.inverse);
         timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
@@ -257,7 +252,7 @@ contract ChainlinkOracleTest is Test {
         vm.warp(timestamp);
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
-            inAmount * uint256(d.answer) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+            (inAmount * uint256(d.answer) * 10 ** c.quoteDecimals) / 10 ** (c.feedDecimals + c.baseDecimals);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
@@ -270,15 +265,14 @@ contract ChainlinkOracleTest is Test {
     ) public {
         _deploy(c);
         _prepareValidRoundData(d);
-        vm.assume(c.inverse);
         timestamp = bound(timestamp, d.updatedAt, d.updatedAt + c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector), abi.encode(d));
         vm.warp(timestamp);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
-            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.answer);
+            (inAmount * 10 ** (c.feedDecimals + c.baseDecimals)) / (uint256(d.answer) * 10 ** c.quoteDecimals);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
@@ -293,21 +287,13 @@ contract ChainlinkOracleTest is Test {
 
         c.baseDecimals = uint8(bound(c.baseDecimals, 2, 18));
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 2, 18));
-        c.feedDecimals = uint8(bound(c.feedDecimals, c.inverse ? c.baseDecimals : c.quoteDecimals, 18));
-
-        if (c.inverse) {
-            c.feedDecimals = uint8(bound(c.feedDecimals, c.baseDecimals, 18));
-            vm.assume(c.feedDecimals + c.quoteDecimals - c.baseDecimals < 18);
-        } else {
-            c.feedDecimals = uint8(bound(c.feedDecimals, c.quoteDecimals, 18));
-            vm.assume(c.feedDecimals + c.baseDecimals - c.quoteDecimals < 18);
-        }
+        c.feedDecimals = uint8(bound(c.feedDecimals, 2, 18));
 
         vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
         vm.mockCall(c.feed, abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(c.feedDecimals));
 
-        oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness, c.inverse);
+        oracle = new ChainlinkOracle(c.base, c.quote, c.feed, c.maxStaleness);
     }
 
     function _prepareValidRoundData(FuzzableRoundData memory d) private pure {
