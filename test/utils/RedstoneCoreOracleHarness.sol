@@ -6,8 +6,8 @@ import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 contract RedstoneCoreOracleHarness is RedstoneCoreOracle {
     uint256 price;
 
-    constructor(address _base, address _quote, bytes32 _feedId, uint32 _maxStaleness, bool _inverse)
-        RedstoneCoreOracle(_base, _quote, _feedId, _maxStaleness, _inverse)
+    constructor(address _base, address _quote, bytes32 _feedId, uint32 _maxStaleness)
+        RedstoneCoreOracle(_base, _quote, _feedId, _maxStaleness)
     {}
 
     function setPrice(uint256 _price) external {
