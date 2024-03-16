@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {FeedRegistry} from "src/FeedRegistry.sol";
-import {Errors} from "src/lib/Errors.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
+import {IAdapterFactory} from "src/interfaces/IAdapterFactory.sol";
+import {Errors} from "src/lib/Errors.sol";
 
-contract PythFactory is FeedRegistry {
+contract PythFactory is FeedRegistry, IAdapterFactory {
     address public immutable pyth;
 
     struct DeploymentInfo {
@@ -19,15 +20,12 @@ contract PythFactory is FeedRegistry {
         pyth = _pyth;
     }
 
-    function deploy(address base, address quote, uint256 maxStaleness) external returns (address) {
+    function deploy(address base, address quote, bytes calldata extraData) external returns (address) {
+        uint256 maxStaleness = abi.decode(extraData, (uint256));
         bytes32 feedId = feeds[base][quote];
         if (feedId == 0) revert Errors.PriceOracle_InvalidConfiguration();
-        address oracle = address(new PythOracle(pyth, base, quote, feedId, maxStaleness, false));
+        address oracle = address(new PythOracle(pyth, base, quote, feedId, maxStaleness));
         deployments[oracle] = DeploymentInfo(msg.sender, uint48(block.timestamp));
         return oracle;
-    }
-
-    function isDeployer(address oracle) external view returns (bool) {
-        return deployments[oracle].deployer != address(0);
     }
 }
