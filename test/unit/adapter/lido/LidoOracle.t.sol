@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
@@ -16,7 +16,7 @@ contract LidoOracleTest is Test {
         oracle = new LidoOracle(STETH, WSTETH);
     }
 
-    function test_Constructor_Integrity() public {
+    function test_Constructor_Integrity() public view {
         assertEq(oracle.stEth(), STETH);
         assertEq(oracle.wstEth(), WSTETH);
     }

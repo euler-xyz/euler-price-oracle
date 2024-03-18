@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
 import {STETH, WSTETH} from "test/utils/EthereumAddresses.sol";
@@ -14,7 +14,7 @@ contract LidoOracleForkTest is ForkTest {
         oracle = new LidoOracle(STETH, WSTETH);
     }
 
-    function test_GetQuote_Integrity() public {
+    function test_GetQuote_Integrity() public view {
         uint256 stEthWstEth = oracle.getQuote(1e18, STETH, WSTETH);
         assertApproxEqRel(stEthWstEth, 0.85e18, 0.1e18);
 
@@ -22,7 +22,7 @@ contract LidoOracleForkTest is ForkTest {
         assertApproxEqRel(wstEthStEth, 1.15e18, 0.1e18);
     }
 
-    function test_GetQuotes_Integrity() public {
+    function test_GetQuotes_Integrity() public view {
         (uint256 stEthWstEthBid, uint256 stEthWstEthAsk) = oracle.getQuotes(1e18, STETH, WSTETH);
         assertApproxEqRel(stEthWstEthBid, 0.85e18, 0.1e18);
         assertApproxEqRel(stEthWstEthAsk, 0.85e18, 0.1e18);

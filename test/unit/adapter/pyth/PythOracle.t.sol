@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {ERC20} from "@solady/tokens/ERC20.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -15,7 +16,6 @@ contract PythOracleTest is Test {
         address quote;
         bytes32 feedId;
         uint256 maxStaleness;
-        bool inverse;
         uint8 baseDecimals;
         uint8 quoteDecimals;
     }
@@ -31,83 +31,111 @@ contract PythOracleTest is Test {
         assertEq(oracle.quote(), c.quote);
         assertEq(oracle.feedId(), c.feedId);
         assertEq(oracle.maxStaleness(), c.maxStaleness);
-        assertEq(oracle.inverse(), c.inverse);
     }
 
-    function test_GetQuote_Integrity_NegExpo(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Concrete(FuzzableConfig memory c) public {
         _bound(c);
-        c.inverse = false;
+        c.baseDecimals = 18;
+        c.quoteDecimals = 6;
         _deploy(c);
 
-        _bound(p);
-        int32 exponent = p.expo + int8(c.quoteDecimals) - int8(c.baseDecimals);
-        vm.assume(exponent <= 0);
         vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 4000, conf: 1, expo: 0, publishTime: 0}))
         );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        assertEq(outAmount, inAmount * uint64(p.price) / 10 ** uint32(-exponent));
+        assertEq(oracle.getQuote(1e18, c.base, c.quote), 4000e6);
+        assertEq(oracle.getQuote(4000e6, c.quote, c.base), 1e18);
     }
 
-    function test_GetQuote_Integrity_PosExpo(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Concrete_2(FuzzableConfig memory c) public {
         _bound(c);
-        c.inverse = false;
+        c.baseDecimals = 18;
+        c.quoteDecimals = 6;
         _deploy(c);
 
-        _bound(p);
-        int32 exponent = p.expo + int8(c.quoteDecimals) - int8(c.baseDecimals);
-        vm.assume(exponent > 0);
         vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 40, conf: 1, expo: 2, publishTime: 0}))
         );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        assertEq(outAmount, inAmount * uint64(p.price) * 10 ** uint32(exponent));
+        assertEq(oracle.getQuote(1e18, c.base, c.quote), 4000e6);
+        assertEq(oracle.getQuote(4000e6, c.quote, c.base), 1e18);
     }
 
-    function test_GetQuote_Integrity_NegExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Concrete_3(FuzzableConfig memory c) public {
         _bound(c);
-        c.inverse = true;
+        c.baseDecimals = 18;
+        c.quoteDecimals = 6;
         _deploy(c);
 
-        _bound(p);
-        int32 exponent = p.expo - int8(c.quoteDecimals) + int8(c.baseDecimals);
-        vm.assume(exponent <= 0);
         vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 40, conf: 1, expo: 16, publishTime: 0}))
         );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        assertEq(outAmount, inAmount * 10 ** uint32(-exponent) / uint64(p.price));
+        assertEq(oracle.getQuote(1e18, c.base, c.quote), 40e22);
+        assertEq(oracle.getQuote(40e22, c.quote, c.base), 1e18);
     }
 
-    function test_GetQuote_Integrity_PosExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Concrete_4(FuzzableConfig memory c) public {
         _bound(c);
-        c.inverse = true;
+        c.baseDecimals = 18;
+        c.quoteDecimals = 6;
         _deploy(c);
 
-        _bound(p);
-        int32 exponent = p.expo - int8(c.quoteDecimals) + int8(c.baseDecimals);
-        vm.assume(exponent > 0);
         vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 400000, conf: 1, expo: -2, publishTime: 0}))
         );
+        assertEq(oracle.getQuote(1e18, c.base, c.quote), 4000e6);
+        assertEq(oracle.getQuote(4000e6, c.quote, c.base), 1e18);
+    }
 
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
-        assertEq(outAmount, inAmount / (uint64(p.price) * 10 ** uint32(exponent)));
+    function test_GetQuote_Integrity_Concrete_5(FuzzableConfig memory c) public {
+        _bound(c);
+        c.baseDecimals = 18;
+        c.quoteDecimals = 6;
+        _deploy(c);
+
+        vm.mockCall(
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 40e16, conf: 1, expo: -16, publishTime: 0}))
+        );
+        assertEq(oracle.getQuote(1e18, c.base, c.quote), 40e6);
+        assertEq(oracle.getQuote(40e6, c.quote, c.base), 1e18);
+    }
+
+    function test_GetQuote_Integrity_Concrete_6(FuzzableConfig memory c) public {
+        _bound(c);
+        c.baseDecimals = 6;
+        c.quoteDecimals = 18;
+        _deploy(c);
+
+        vm.mockCall(
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 40e16, conf: 1, expo: -16, publishTime: 0}))
+        );
+        assertEq(oracle.getQuote(1e6, c.base, c.quote), 40e18);
+        assertEq(oracle.getQuote(40e18, c.quote, c.base), 1e6);
+    }
+
+    function test_GetQuote_Integrity_Concrete_7(FuzzableConfig memory c) public {
+        _bound(c);
+        c.baseDecimals = 2;
+        c.quoteDecimals = 18;
+        _deploy(c);
+
+        vm.mockCall(
+            PYTH,
+            abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness),
+            abi.encode(PythStructs.Price({price: 4, conf: 0, expo: 3, publishTime: 0}))
+        );
+        assertEq(oracle.getQuote(1e2, c.base, c.quote), 4000e18);
+        assertEq(oracle.getQuote(4000e18, c.quote, c.base), 1e2);
     }
 
     function test_GetQuote_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
@@ -209,86 +237,6 @@ contract PythOracleTest is Test {
         );
         vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
         oracle.getQuote(inAmount, c.base, c.quote);
-    }
-
-    function test_GetQuotes_Integrity_NegExpo(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
-        _bound(c);
-        c.inverse = false;
-        _deploy(c);
-
-        _bound(p);
-        int32 exponent = p.expo + int8(c.quoteDecimals) - int8(c.baseDecimals);
-        vm.assume(exponent <= 0);
-        vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
-        );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * uint64(p.price) / 10 ** uint32(-exponent));
-        assertEq(askOutAmount, inAmount * uint64(p.price) / 10 ** uint32(-exponent));
-    }
-
-    function test_GetQuotes_Integrity_PosExpo(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
-        _bound(c);
-        c.inverse = false;
-        _deploy(c);
-
-        _bound(p);
-        int32 exponent = p.expo + int8(c.quoteDecimals) - int8(c.baseDecimals);
-        vm.assume(exponent > 0);
-        vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
-        );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * uint64(p.price) * 10 ** uint32(exponent));
-        assertEq(askOutAmount, inAmount * uint64(p.price) * 10 ** uint32(exponent));
-    }
-
-    function test_GetQuotes_Integrity_NegExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
-        _bound(c);
-        c.inverse = true;
-        _deploy(c);
-
-        _bound(p);
-        int32 exponent = p.expo - int8(c.quoteDecimals) + int8(c.baseDecimals);
-        vm.assume(exponent <= 0);
-        vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
-        );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount * 10 ** uint32(-exponent) / uint64(p.price));
-        assertEq(askOutAmount, inAmount * 10 ** uint32(-exponent) / uint64(p.price));
-    }
-
-    function test_GetQuotes_Integrity_PosExpo_Inv(FuzzableConfig memory c, PythStructs.Price memory p, uint256 inAmount)
-        public
-    {
-        _bound(c);
-        c.inverse = true;
-        _deploy(c);
-
-        _bound(p);
-        int32 exponent = p.expo - int8(c.quoteDecimals) + int8(c.baseDecimals);
-        vm.assume(exponent > 0);
-        vm.mockCall(
-            PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, c.feedId, c.maxStaleness), abi.encode(p)
-        );
-
-        inAmount = bound(inAmount, 0, type(uint64).max);
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
-        assertEq(bidOutAmount, inAmount / (uint64(p.price) * 10 ** uint32(exponent)));
-        assertEq(askOutAmount, inAmount / (uint64(p.price) * 10 ** uint32(exponent)));
     }
 
     function test_GetQuotes_RevertsWhen_InvalidBase(FuzzableConfig memory c, uint256 inAmount, address base) public {
@@ -429,9 +377,9 @@ contract PythOracleTest is Test {
 
     function _deploy(FuzzableConfig memory c) private {
         _bound(c);
-        vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
-        oracle = new PythOracle(PYTH, c.base, c.quote, c.feedId, c.maxStaleness, c.inverse);
+        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
+        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
+        oracle = new PythOracle(PYTH, c.base, c.quote, c.feedId, c.maxStaleness);
     }
 
     function _bound(PythStructs.Price memory p) private pure {
