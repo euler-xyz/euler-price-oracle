@@ -31,17 +31,6 @@ To omit fork tests:
 forge test --no-match-contract Fork
 ```
 
-## Safety
-
-This software is **experimental** and is provided "as is" and "as available".
-
-**No warranties are provided** and **no liability will be accepted for any loss** incurred through the use of this codebase.
-
-Always include thorough tests when using Price Oracles to ensure it interacts correctly with your code.
-
-Price Oracles is currently undergoing security audits and should not be used in production.
-
-
 ## `IPriceOracle`
 [Source: IPriceOracle.sol](src/interfaces/IPriceOracle.sol)
 
@@ -102,6 +91,15 @@ Parameters and acceptance criteria are easily observed on-chain.
 1. Are the on-chain exchange rate oracles (sDAI, rETH, stEth) immune to manipulation? Are there additional conditions that we can check which could signal that these rates cannot be trusted? 
 
 1. Could any of the hardcoded addresses change under normal operation conditions e.g. as part of an upgrade?
+
+## Safety
+This software is **experimental** and is provided "as is" and "as available".
+
+**No warranties are provided** and **no liability will be accepted for any loss** incurred through the use of this codebase.
+
+Always include thorough tests when using Price Oracles to ensure it interacts correctly with your code.
+
+Price Oracles is currently undergoing security audits and should not be used in production.
 
 ## License
 Licensed under the [GPL-2.0-or-later](LICENSE) license.
