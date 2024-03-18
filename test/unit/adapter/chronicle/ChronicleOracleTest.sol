@@ -14,7 +14,6 @@ contract ChronicleOracleTest is Test {
         address quote;
         address feed;
         uint256 maxStaleness;
-        bool inverse;
         uint8 baseDecimals;
         uint8 quoteDecimals;
         uint8 feedDecimals;
@@ -33,7 +32,6 @@ contract ChronicleOracleTest is Test {
         assertEq(oracle.quote(), c.quote);
         assertEq(oracle.feed(), c.feed);
         assertEq(oracle.maxStaleness(), c.maxStaleness);
-        assertEq(oracle.inverse(), c.inverse);
     }
 
     function test_GetQuote_RevertsWhen_NotSupported_Base(FuzzableConfig memory c, address base, uint256 inAmount)
@@ -97,14 +95,13 @@ contract ChronicleOracleTest is Test {
     function test_GetQuote_Integrity(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(!c.inverse);
         vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
-            inAmount * uint256(d.value) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+            (inAmount * uint256(d.value) * 10 ** c.quoteDecimals) / 10 ** (c.feedDecimals + c.baseDecimals);
         assertEq(outAmount, expectedOutAmount);
     }
 
@@ -113,14 +110,13 @@ contract ChronicleOracleTest is Test {
     {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(c.inverse);
         vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
-        uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
+        uint256 outAmount = oracle.getQuote(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
-            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.value);
+            (inAmount * 10 ** (c.feedDecimals + c.baseDecimals)) / (uint256(d.value) * 10 ** c.quoteDecimals);
         assertEq(outAmount, expectedOutAmount);
     }
 
@@ -185,14 +181,13 @@ contract ChronicleOracleTest is Test {
     function test_GetQuotes_Integrity(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(!c.inverse);
         vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
-            inAmount * uint256(d.value) / 10 ** (c.feedDecimals + c.baseDecimals - c.quoteDecimals);
+            (inAmount * uint256(d.value) * 10 ** c.quoteDecimals) / 10 ** (c.feedDecimals + c.baseDecimals);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
@@ -202,14 +197,13 @@ contract ChronicleOracleTest is Test {
     {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(c.inverse);
         vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
-            inAmount * 10 ** (c.feedDecimals + c.quoteDecimals - c.baseDecimals) / uint256(d.value);
+            (inAmount * 10 ** (c.feedDecimals + c.baseDecimals)) / (uint256(d.value) * 10 ** c.quoteDecimals);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
@@ -224,21 +218,13 @@ contract ChronicleOracleTest is Test {
 
         c.baseDecimals = uint8(bound(c.baseDecimals, 2, 18));
         c.quoteDecimals = uint8(bound(c.quoteDecimals, 2, 18));
-        c.feedDecimals = uint8(bound(c.feedDecimals, c.inverse ? c.baseDecimals : c.quoteDecimals, 18));
-
-        if (c.inverse) {
-            c.feedDecimals = uint8(bound(c.feedDecimals, c.baseDecimals, 18));
-            vm.assume(c.feedDecimals + c.quoteDecimals - c.baseDecimals < 18);
-        } else {
-            c.feedDecimals = uint8(bound(c.feedDecimals, c.quoteDecimals, 18));
-            vm.assume(c.feedDecimals + c.baseDecimals - c.quoteDecimals < 18);
-        }
+        c.feedDecimals = uint8(bound(c.feedDecimals, 2, 18));
 
         vm.mockCall(c.base, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.baseDecimals));
         vm.mockCall(c.quote, abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(c.quoteDecimals));
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.decimals.selector), abi.encode(c.feedDecimals));
 
-        oracle = new ChronicleOracle(c.base, c.quote, c.feed, c.maxStaleness, c.inverse);
+        oracle = new ChronicleOracle(c.base, c.quote, c.feed, c.maxStaleness);
     }
 
     function _prepareValidAnswer(FuzzableAnswer memory d) private pure {
