@@ -1,6 +1,47 @@
 # Price Oracles
 Price Oracles are the components of the Euler Vault Kit (EVK) that facilitate communication with external pricing systems and standardize their answers to a common interface. To read more about how Price Oracles fit in the context of Euler Vaults, refer to the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
 
+## Install
+To install Price Oracles in a [Foundry](https://github.com/foundry-rs/foundry) project:
+
+```sh
+forge install euler-xyz/euler-price-oracle
+```
+
+## Development
+Clone the repo:
+```sh
+git clone https://github.com/euler-xyz/euler-price-oracle.git && cd euler-price-oracle
+```
+
+## Testing
+There are Ethereum fork tests under `test/fork`. To run fork tests set the `ETHEREUM_RPC_URL` variable in your environment:
+```sh
+# File: .env
+ETHEREUM_RPC_URL=...
+```
+
+To run tests:
+```sh
+forge test
+```
+
+To omit fork tests:
+```sh
+forge test --no-match-contract Fork
+```
+
+## Safety
+
+This software is **experimental** and is provided "as is" and "as available".
+
+**No warranties are provided** and **no liability will be accepted for any loss** incurred through the use of this codebase.
+
+Always include thorough tests when using Price Oracles to ensure it interacts correctly with your code.
+
+Price Oracles is currently undergoing security audits and should not be used in production.
+
+
 ## `IPriceOracle`
 [Source: IPriceOracle.sol](src/interfaces/IPriceOracle.sol)
 
@@ -62,3 +103,5 @@ Parameters and acceptance criteria are easily observed on-chain.
 
 1. Could any of the hardcoded addresses change under normal operation conditions e.g. as part of an upgrade?
 
+## License
+Licensed under the [GPL-2.0-or-later](LICENSE) license.
