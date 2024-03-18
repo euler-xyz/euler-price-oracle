@@ -58,7 +58,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Validation logic inherited from PrimaryProdDataServiceConsumerBase.
     function updatePrice() external {
         // Use the cache if the previous price is still fresh.
-        if (block.timestamp < lastUpdatedAt + maxStaleness) return;
+        if (block.timestamp < lastUpdatedAt + RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_DELAY_SECONDS) return;
 
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
