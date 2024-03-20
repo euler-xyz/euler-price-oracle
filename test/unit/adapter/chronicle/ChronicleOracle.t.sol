@@ -78,26 +78,35 @@ contract ChronicleOracleTest is Test {
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuote_RevertsWhen_TooStale(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age > c.maxStaleness);
-
         inAmount = bound(inAmount, 1, type(uint128).max);
+        timestamp = bound(timestamp, d.age + c.maxStaleness + 1, type(uint256).max);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, d.age, c.maxStaleness));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - d.age, c.maxStaleness));
         oracle.getQuote(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuote_Integrity(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount) public {
+    function test_GetQuote_Integrity(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
+        timestamp = bound(timestamp, d.age, d.age + c.maxStaleness);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         uint256 outAmount = oracle.getQuote(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
@@ -105,14 +114,18 @@ contract ChronicleOracleTest is Test {
         assertEq(outAmount, expectedOutAmount);
     }
 
-    function test_GetQuote_Integrity_Inverse(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount)
-        public
-    {
+    function test_GetQuote_Integrity_Inverse(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age <= c.maxStaleness);
+        timestamp = bound(timestamp, d.age, d.age + c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         uint256 outAmount = oracle.getQuote(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
@@ -164,26 +177,35 @@ contract ChronicleOracleTest is Test {
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuotes_RevertsWhen_TooStale(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount)
-        public
-    {
+    function test_GetQuotes_RevertsWhen_TooStale(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age > c.maxStaleness);
-
         inAmount = bound(inAmount, 1, type(uint128).max);
+        timestamp = bound(timestamp, d.age + c.maxStaleness + 1, type(uint256).max);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, d.age, c.maxStaleness));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, timestamp - d.age, c.maxStaleness));
         oracle.getQuotes(inAmount, c.base, c.quote);
     }
 
-    function test_GetQuotes_Integrity(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount) public {
+    function test_GetQuotes_Integrity(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
+        timestamp = bound(timestamp, d.age, d.age + c.maxStaleness);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.base, c.quote);
         uint256 expectedOutAmount =
@@ -192,14 +214,18 @@ contract ChronicleOracleTest is Test {
         assertEq(askOutAmount, expectedOutAmount);
     }
 
-    function test_GetQuotes_Integrity_Inverse(FuzzableConfig memory c, FuzzableAnswer memory d, uint256 inAmount)
-        public
-    {
+    function test_GetQuotes_Integrity_Inverse(
+        FuzzableConfig memory c,
+        FuzzableAnswer memory d,
+        uint256 inAmount,
+        uint256 timestamp
+    ) public {
         _deploy(c);
         _prepareValidAnswer(d);
-        vm.assume(d.age <= c.maxStaleness);
         inAmount = bound(inAmount, 1, type(uint128).max);
+        timestamp = bound(timestamp, d.age, d.age + c.maxStaleness);
 
+        vm.warp(timestamp);
         vm.mockCall(c.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), abi.encode(d));
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, c.quote, c.base);
         uint256 expectedOutAmount =
