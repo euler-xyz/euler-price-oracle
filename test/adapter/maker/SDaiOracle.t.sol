@@ -2,19 +2,16 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import {SDaiOracleHelper} from "test/adapter/maker/SDaiOracleHelper.sol";
 import {IPot} from "src/adapter/maker/IPot.sol";
 import {SDaiOracle} from "src/adapter/maker/SDaiOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-contract SDaiOracleTest is Test {
-    address internal DAI = makeAddr("DAI");
-    address internal SDAI = makeAddr("SDAI");
-    address internal POT = makeAddr("POT");
-
+contract SDaiOracleTest is SDaiOracleHelper {
     SDaiOracle oracle;
 
     function setUp() public {
-        oracle = new SDaiOracle(DAI, SDAI, POT);
+        oracle = _deploy();
     }
 
     function test_Constructor_Integrity() public view {
@@ -71,38 +68,36 @@ contract SDaiOracleTest is Test {
         oracle.getQuote(inAmount, base, quote);
     }
 
-    function test_GetQuote_RevertsWhen_SDai_Dai_DsrPotCallReverts(uint256 inAmount) public {
+    function test_GetQuote_RevertsWhen_SDai_Dai_DsrPotCallReverts(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
         vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, SDAI, DAI);
     }
 
-    function test_GetQuote_RevertsWhen_Dai_SDai_DsrPotCallReverts(uint256 inAmount) public {
+    function test_GetQuote_RevertsWhen_Dai_SDai_DsrPotCallReverts(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
         vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuote(inAmount, DAI, SDAI);
     }
 
-    function test_GetQuote_SDai_Dai_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuote_SDai_Dai_Integrity(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-
-        vm.mockCall(POT, abi.encodeWithSelector(IPot.chi.selector), abi.encode(rate));
 
         uint256 outAmount = oracle.getQuote(inAmount, SDAI, DAI);
-        assertEq(outAmount, inAmount * rate / 1e27);
+        assertEq(outAmount, inAmount * c.rate / 1e27);
     }
 
-    function test_GetQuote_Dai_SDai_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuote_Dai_SDai_Integrity(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-
-        vm.mockCall(POT, abi.encodeWithSelector(IPot.chi.selector), abi.encode(rate));
 
         uint256 outAmount = oracle.getQuote(inAmount, DAI, SDAI);
-        assertEq(outAmount, inAmount * 1e27 / rate);
+        assertEq(outAmount, inAmount * 1e27 / c.rate);
     }
 
     function test_GetQuotes_RevertsWhen_InvalidBase_A(uint256 inAmount, address base) public {
@@ -153,40 +148,38 @@ contract SDaiOracleTest is Test {
         oracle.getQuotes(inAmount, base, quote);
     }
 
-    function test_GetQuotes_RevertsWhen_SDai_Dai_DsrPotCallReverts(uint256 inAmount) public {
+    function test_GetQuotes_RevertsWhen_SDai_Dai_DsrPotCallReverts(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
         vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, SDAI, DAI);
     }
 
-    function test_GetQuotes_RevertsWhen_Dai_SDai_DsrPotCallReverts(uint256 inAmount) public {
+    function test_GetQuotes_RevertsWhen_Dai_SDai_DsrPotCallReverts(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         vm.mockCallRevert(POT, abi.encodeWithSelector(IPot.chi.selector), "oops");
 
         vm.expectRevert(abi.encodePacked("oops"));
         oracle.getQuotes(inAmount, DAI, SDAI);
     }
 
-    function test_GetQuotes_SDai_Dai_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuotes_SDai_Dai_Integrity(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-
-        vm.mockCall(POT, abi.encodeWithSelector(IPot.chi.selector), abi.encode(rate));
 
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, SDAI, DAI);
-        uint256 expectedOutAmount = inAmount * rate / 1e27;
+        uint256 expectedOutAmount = inAmount * c.rate / 1e27;
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
 
-    function test_GetQuotes_Dai_SDai_Integrity(uint256 inAmount, uint256 rate) public {
+    function test_GetQuotes_Dai_SDai_Integrity(FuzzableAnswer memory c, uint256 inAmount) public {
+        _prepareAnswer(c);
         inAmount = bound(inAmount, 1, type(uint128).max);
-        rate = bound(rate, 1, type(uint128).max);
-
-        vm.mockCall(POT, abi.encodeWithSelector(IPot.chi.selector), abi.encode(rate));
 
         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, DAI, SDAI);
-        uint256 expectedOutAmount = inAmount * 1e27 / rate;
+        uint256 expectedOutAmount = inAmount * 1e27 / c.rate;
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
