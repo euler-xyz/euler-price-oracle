@@ -21,6 +21,10 @@ abstract contract BaseAdapter is IPriceOracle {
         return (outAmount, outAmount);
     }
 
+    /// @notice Get the decimals of the asset, falling back to 18 decimals for ISO 4217 currencies.
+    /// @param token ERC20 token address or ISO 4217-encoded currency.
+    /// @dev Rejects address(0), returns 18 for all three-digit addresses, calls decimals() on other addresses.
+    /// @return The decimals of the asset.
     function _getDecimals(address token) internal view returns (uint8) {
         if (token == address(0)) revert Errors.PriceOracle_InvalidConfiguration();
         if (uint160(token) < 1000) return 18;
