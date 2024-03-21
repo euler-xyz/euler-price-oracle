@@ -54,6 +54,7 @@ contract ChronicleOracle is BaseAdapter {
 
         (uint256 price, uint256 age) = IChronicle(feed).readWithAge();
         if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
+
         uint256 staleness = block.timestamp - age;
         if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 
