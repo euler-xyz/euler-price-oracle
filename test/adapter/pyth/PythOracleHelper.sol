@@ -6,37 +6,102 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
 import {StubPyth} from "test/adapter/pyth/StubPyth.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 
 contract PythOracleHelper is Test {
     address PYTH;
 
-    struct FuzzableConfig {
+    struct FuzzableState {
+        // Config
         address base;
         address quote;
         bytes32 feedId;
         uint256 maxStaleness;
         uint8 baseDecimals;
         uint8 quoteDecimals;
+        // Answer
+        PythStructs.Price p;
+        // Environment
+        uint256 inAmount;
     }
 
-    function _bound(PythStructs.Price memory p) internal pure {
-        p.price = int64(bound(p.price, 1, type(int64).max));
-        p.conf = uint64(bound(p.conf, 0, uint64(p.price) / 20));
-        p.expo = int32(bound(p.expo, -16, 16));
+    enum Behavior {
+        FeedReverts,
+        FeedReturnsZero,
+        FeedReturnsNegative,
+        FeedReturnsConfTooWide,
+        FeedReturnsExpoTooLow,
+        FeedReturnsExpoTooHigh
     }
 
-    function _deploy(FuzzableConfig memory c) internal returns (PythOracle) {
+    PythOracle internal oracle;
+    mapping(Behavior => bool) private behaviors;
+
+    function _setBehavior(Behavior behavior, bool _status) internal {
+        behaviors[behavior] = _status;
+    }
+
+    function _bound(PythStructs.Price memory p) internal pure {}
+
+    function _deployAndPrepare(FuzzableState memory s) internal {
         PYTH = address(new StubPyth());
-        c.base = boundAddr(c.base);
-        c.quote = boundAddr(c.quote);
-        vm.assume(c.base != c.quote && c.base != PYTH && c.quote != PYTH);
-        c.baseDecimals = uint8(bound(c.baseDecimals, 0, 18));
-        c.quoteDecimals = uint8(bound(c.quoteDecimals, 0, 18));
-        c.maxStaleness = uint32(bound(c.maxStaleness, 0, type(uint32).max));
-        vm.mockCall(c.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.baseDecimals));
-        vm.mockCall(c.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(c.quoteDecimals));
-        return new PythOracle(PYTH, c.base, c.quote, c.feedId, c.maxStaleness);
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        vm.assume(distinct(s.base, s.quote, PYTH));
+
+        s.maxStaleness = bound(s.maxStaleness, 0, type(uint32).max);
+
+        s.baseDecimals = uint8(bound(s.baseDecimals, 2, 18));
+        s.quoteDecimals = uint8(bound(s.quoteDecimals, 2, 18));
+
+        vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
+        vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
+
+        if (behaviors[Behavior.FeedReturnsZero]) {
+            s.p.price = 0;
+        } else if (behaviors[Behavior.FeedReturnsNegative]) {
+            s.p.price = int64(bound(s.p.price, type(int64).min, -1));
+        } else {
+            s.p.price = int64(bound(s.p.price, 1, type(int32).max));
+        }
+
+        if (behaviors[Behavior.FeedReturnsConfTooWide]) {
+            s.p.conf = uint64(bound(s.p.conf, uint64(s.p.price) / 20 + 1, type(uint64).max));
+        } else {
+            s.p.conf = uint64(bound(s.p.conf, 0, uint64(s.p.price) / 20));
+        }
+
+        if (behaviors[Behavior.FeedReturnsExpoTooLow]) {
+            s.p.expo = int32(bound(s.p.expo, type(int32).min, -17));
+        } else if (behaviors[Behavior.FeedReturnsExpoTooHigh]) {
+            s.p.expo = int32(bound(s.p.expo, 17, type(int32).max));
+        } else {
+            s.p.expo = int32(bound(s.p.expo, -16, 16));
+        }
+
+        if (behaviors[Behavior.FeedReverts]) {
+            StubPyth(PYTH).setRevert(true);
+        } else {
+            StubPyth(PYTH).setPrice(s.p);
+        }
+
+        s.inAmount = bound(s.inAmount, 1, type(uint128).max);
+
+        oracle = new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness);
+    }
+
+    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
+        vm.expectRevert(revertData);
+        oracle.getQuote(s.inAmount, s.base, s.quote);
+
+        vm.expectRevert(revertData);
+        oracle.getQuote(s.inAmount, s.quote, s.base);
+
+        vm.expectRevert(revertData);
+        oracle.getQuotes(s.inAmount, s.base, s.quote);
+
+        vm.expectRevert(revertData);
+        oracle.getQuotes(s.inAmount, s.quote, s.base);
     }
 }

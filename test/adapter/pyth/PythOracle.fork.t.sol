@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {PYTH, PYTH_ETH_USD_FEED, WETH, USDC, DAI} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
 
 contract PythOracleForkTest is ForkTest {
     PythOracle oracle;

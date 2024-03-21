@@ -2,10 +2,9 @@
 pragma solidity 0.8.23;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
-import {ChainlinkOracleHelper} from "test/adapter/chainlink/ChainlinkOracleHelper.sol";
-import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
+import {UniswapV3OracleHelper} from "test/adapter/uniswap/UniswapV3OracleHelper.sol";
 
-contract ChainlinkOraclePropTest is ChainlinkOracleHelper, AdapterPropTest {
+contract UniswapV3OraclePropTest is UniswapV3OracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, PropArgs_Bidirectional memory p) public {
         _setUpAdapter(s);
         _checkProp(p);
@@ -29,7 +28,7 @@ contract ChainlinkOraclePropTest is ChainlinkOracleHelper, AdapterPropTest {
     function _setUpAdapter(FuzzableState memory s) internal {
         _deployAndPrepare(s);
         adapter = address(oracle);
-        base = s.base;
-        quote = s.quote;
+        base = s.tokenA;
+        quote = s.tokenB;
     }
 }

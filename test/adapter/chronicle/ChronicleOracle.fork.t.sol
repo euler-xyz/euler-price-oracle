@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {CHRONICLE_ETH_USD_FEED, WETH, USDC, GUSD, DAI} from "test/utils/EthereumAddresses.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";

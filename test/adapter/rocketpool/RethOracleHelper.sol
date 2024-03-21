@@ -6,11 +6,26 @@ import {StubReth} from "test/adapter/rocketpool/StubReth.sol";
 import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
 
 contract RethOracleHelper is Test {
-    address internal WETH = makeAddr("DAI");
     address internal RETH;
+    address internal WETH = makeAddr("WETH");
 
-    struct FuzzableAnswer {
+    struct FuzzableState {
+        address base;
+        address quote;
+        // Answer
         uint256 rate;
+        uint256 inAmount;
+    }
+
+    enum Behavior {
+        FeedReverts
+    }
+
+    RethOracle internal oracle;
+    mapping(Behavior => bool) private behaviors;
+
+    function _setBehavior(Behavior behavior, bool _status) internal {
+        behaviors[behavior] = _status;
     }
 
     function _deploy() internal returns (RethOracle) {
@@ -18,8 +33,35 @@ contract RethOracleHelper is Test {
         return new RethOracle(WETH, RETH);
     }
 
-    function _prepareAnswer(FuzzableAnswer memory c) internal {
-        c.rate = bound(c.rate, 1e18, 1e27);
-        StubReth(RETH).setRate(c.rate);
+    function _deployAndPrepare(FuzzableState memory s) internal {
+        s.rate = bound(s.rate, 1e18, 1e27);
+
+        RETH = address(new StubReth());
+        oracle = new RethOracle(WETH, RETH);
+
+        s.base = RETH;
+        s.quote = WETH;
+
+        s.inAmount = bound(s.inAmount, 1, type(uint128).max);
+
+        if (behaviors[Behavior.FeedReverts]) {
+            StubReth(RETH).setRevert(true);
+        } else {
+            StubReth(RETH).setRate(s.rate);
+        }
+    }
+
+    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
+        vm.expectRevert(revertData);
+        oracle.getQuote(s.inAmount, s.base, s.quote);
+
+        vm.expectRevert(revertData);
+        oracle.getQuote(s.inAmount, s.quote, s.base);
+
+        vm.expectRevert(revertData);
+        oracle.getQuotes(s.inAmount, s.base, s.quote);
+
+        vm.expectRevert(revertData);
+        oracle.getQuotes(s.inAmount, s.quote, s.base);
     }
 }
