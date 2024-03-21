@@ -9,11 +9,12 @@ contract AdapterPropTest is Test {
     address base;
     address quote;
 
-    struct PropArgs_Bidirectional {
+    struct Prop_Bidirectional {
         uint256 _dummy;
     }
 
-    function checkProp(PropArgs_Bidirectional memory p) internal view {
+    /// @dev Adapter supports (A/B) and (B/A).
+    function checkProp(Prop_Bidirectional memory p) internal view {
         (bool successBQ,) = _tryGetQuote(1, base, quote);
         (bool successQB,) = _tryGetQuote(1, quote, base);
         assertTrue(successBQ);
@@ -21,25 +22,81 @@ contract AdapterPropTest is Test {
         p._dummy;
     }
 
-    struct PropArgs_NoOtherPaths {
+    struct Prop_NoOtherPaths {
         uint256 inAmount;
         address tokenA;
         address tokenB;
     }
 
-    function checkProp(PropArgs_NoOtherPaths memory p) internal view {
+    /// @dev Adapter supports no extra pairs.
+    function checkProp(Prop_NoOtherPaths memory p) internal view {
         vm.assume(!((p.tokenA == base && p.tokenB == quote) || (p.tokenA == quote && p.tokenB == base)));
         (bool success,) = _tryGetQuote(1, p.tokenA, p.tokenB);
         assertFalse(success);
     }
 
-    struct PropArgs_ContinuousDomain {
+    struct Prop_IdempotentQuoteAndQuotes {
+        uint256 inAmount;
+    }
+
+    /// @dev getQuotes(in,b,q) returns (getQuote(in,b,q), getQuote(in,b,q))
+    /// Their domains and codomains are exactly the same.
+    function checkProp(Prop_IdempotentQuoteAndQuotes memory p) internal view {
+        (bool successBQ, uint256 outAmount) = _tryGetQuote(p.inAmount, base, quote);
+        (bool successBQs, uint256 bidOutAmount, uint256 askOutAmount) = _tryGetQuotes(p.inAmount, base, quote);
+        assertEq(successBQs, successBQ);
+        assertEq(bidOutAmount, outAmount);
+        assertEq(askOutAmount, outAmount);
+
+        (bool successQB, uint256 outAmountQB) = _tryGetQuote(p.inAmount, quote, base);
+        (bool successQBs, uint256 bidOutAmountQBs, uint256 askOutAmountQBs) = _tryGetQuotes(p.inAmount, quote, base);
+        assertEq(successQB, successQBs);
+        assertEq(bidOutAmountQBs, outAmountQB);
+        assertEq(askOutAmountQBs, outAmountQB);
+    }
+
+    struct Prop_SupportsZero {
+        uint256 _dummy;
+    }
+
+    /// @dev Adapter supports inAmount = 0 and returns 0.
+    function checkProp(Prop_SupportsZero memory p) internal view {
+        bool success;
+        uint256 outAmount;
+        uint256 bidOutAmount;
+        uint256 askOutAmount;
+
+        (success, outAmount) = _tryGetQuote(0, base, quote);
+        assertTrue(success);
+        assertEq(outAmount, 0);
+
+        (success, outAmount) = _tryGetQuote(0, quote, base);
+        assertTrue(success);
+        assertEq(outAmount, 0);
+
+        (success, bidOutAmount, askOutAmount) = _tryGetQuotes(0, base, quote);
+        assertTrue(success);
+        assertEq(bidOutAmount, 0);
+        assertEq(askOutAmount, 0);
+
+        (success, bidOutAmount, askOutAmount) = _tryGetQuotes(0, quote, base);
+        assertTrue(success);
+        assertEq(bidOutAmount, 0);
+        assertEq(askOutAmount, 0);
+
+        p._dummy;
+    }
+
+    struct Prop_ContinuousDomain {
         uint256 in0;
         uint256 in1;
         uint256 in2;
     }
 
-    function checkProp(PropArgs_ContinuousDomain memory p) internal view {
+    /// @dev The range of accepted inAmount is continuous.
+    /// This property sets up values for inAmount in0 < in1 < in2.
+    /// If in0 and in2 are supported then in1 must be supported as well.
+    function checkProp(Prop_ContinuousDomain memory p) internal view {
         // in0 < in1 < in2
         p.in0 = bound(p.in0, 0, type(uint256).max - 2);
         p.in1 = bound(p.in1, p.in0 + 1, type(uint256).max - 1);
@@ -52,12 +109,13 @@ contract AdapterPropTest is Test {
         if (success0 == success2) assertEq(success1, success2);
     }
 
-    struct PropArgs_OutAmountIncreasing {
+    struct Prop_OutAmountIncreasing {
         uint256 in0;
         uint256 in1;
     }
 
-    function checkProp(PropArgs_OutAmountIncreasing memory p) internal view {
+    /// @dev outAmount is weakly increasing with respect to inAmount.
+    function checkProp(Prop_OutAmountIncreasing memory p) internal view {
         // in0 < in1
         p.in0 = bound(p.in0, 0, type(uint256).max - 2);
         p.in1 = bound(p.in1, p.in0, type(uint256).max - 1);
@@ -76,5 +134,16 @@ contract AdapterPropTest is Test {
         (bool success, bytes memory returnData) = adapter.staticcall(data);
         uint256 outAmount = success ? abi.decode(returnData, (uint256)) : 0;
         return (success, outAmount);
+    }
+
+    function _tryGetQuotes(uint256 inAmount, address _base, address _quote)
+        internal
+        view
+        returns (bool, uint256, uint256)
+    {
+        bytes memory data = abi.encodeCall(IPriceOracle.getQuotes, (inAmount, _base, _quote));
+        (bool success, bytes memory returnData) = adapter.staticcall(data);
+        (uint256 bidOutAmount, uint256 askOutAmount) = success ? abi.decode(returnData, (uint256, uint256)) : (0, 0);
+        return (success, bidOutAmount, askOutAmount);
     }
 }
