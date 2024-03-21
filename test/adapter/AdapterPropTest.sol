@@ -13,7 +13,7 @@ contract AdapterPropTest is Test {
         uint256 _dummy;
     }
 
-    function _checkProp(PropArgs_Bidirectional memory p) internal view {
+    function checkProp(PropArgs_Bidirectional memory p) internal view {
         (bool successBQ,) = _tryGetQuote(1, base, quote);
         (bool successQB,) = _tryGetQuote(1, quote, base);
         assertTrue(successBQ);
@@ -27,7 +27,7 @@ contract AdapterPropTest is Test {
         address tokenB;
     }
 
-    function _checkProp(PropArgs_NoOtherPaths memory p) internal view {
+    function checkProp(PropArgs_NoOtherPaths memory p) internal view {
         vm.assume(!((p.tokenA == base && p.tokenB == quote) || (p.tokenA == quote && p.tokenB == base)));
         (bool success,) = _tryGetQuote(1, p.tokenA, p.tokenB);
         assertFalse(success);
@@ -39,7 +39,7 @@ contract AdapterPropTest is Test {
         uint256 in2;
     }
 
-    function _checkProp(PropArgs_ContinuousDomain memory p) internal view {
+    function checkProp(PropArgs_ContinuousDomain memory p) internal view {
         // in0 < in1 < in2
         p.in0 = bound(p.in0, 0, type(uint256).max - 2);
         p.in1 = bound(p.in1, p.in0 + 1, type(uint256).max - 1);
@@ -57,7 +57,7 @@ contract AdapterPropTest is Test {
         uint256 in1;
     }
 
-    function _checkProp(PropArgs_OutAmountIncreasing memory p) internal view {
+    function checkProp(PropArgs_OutAmountIncreasing memory p) internal view {
         // in0 < in1
         p.in0 = bound(p.in0, 0, type(uint256).max - 2);
         p.in1 = bound(p.in1, p.in0, type(uint256).max - 1);

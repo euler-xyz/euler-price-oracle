@@ -7,29 +7,29 @@ import {RedstoneCoreOracleHarness} from "test/adapter/redstone/RedstoneCoreOracl
 
 contract RedstoneCoreOraclePropTest is RedstoneCoreOracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, PropArgs_Bidirectional memory p) public {
-        _setUpAdapter(s);
-        _checkProp(p);
+        setUpPropTest(s);
+        checkProp(p);
     }
 
     function testProp_NoOtherPaths(FuzzableState memory s, PropArgs_NoOtherPaths memory p) public {
-        _setUpAdapter(s);
-        _checkProp(p);
+        setUpPropTest(s);
+        checkProp(p);
     }
 
     function testProp_ContinuousDomain(FuzzableState memory s, PropArgs_ContinuousDomain memory p) public {
-        _setUpAdapter(s);
-        _checkProp(p);
+        setUpPropTest(s);
+        checkProp(p);
     }
 
     function testProp_OutAmountIncreasing(FuzzableState memory s, PropArgs_OutAmountIncreasing memory p) public {
-        _setUpAdapter(s);
-        _checkProp(p);
+        setUpPropTest(s);
+        checkProp(p);
     }
 
-    function _setUpAdapter(FuzzableState memory s) internal {
+    function setUpPropTest(FuzzableState memory s) internal {
         setUpState(s);
-        _mockPrice(s);
-        _updatePrice(s);
+        mockPrice(s);
+        setPrice(s);
         adapter = address(oracle);
         base = s.base;
         quote = s.quote;

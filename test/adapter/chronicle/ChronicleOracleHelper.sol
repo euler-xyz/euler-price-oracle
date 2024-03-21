@@ -2,12 +2,45 @@
 pragma solidity 0.8.23;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 
 contract ChronicleOracleHelper is AdapterHelper {
+    struct Bounds {
+        uint8 minBaseDecimals;
+        uint8 maxBaseDecimals;
+        uint8 minQuoteDecimals;
+        uint8 maxQuoteDecimals;
+        uint8 minFeedDecimals;
+        uint8 maxFeedDecimals;
+        uint256 minInAmount;
+        uint256 maxInAmount;
+        uint256 minValue;
+        uint256 maxValue;
+    }
+
+    Bounds internal DEFAULT_BOUNDS = Bounds({
+        minBaseDecimals: 0,
+        maxBaseDecimals: 18,
+        minQuoteDecimals: 0,
+        maxQuoteDecimals: 18,
+        minFeedDecimals: 8,
+        maxFeedDecimals: 18,
+        minInAmount: 0,
+        maxInAmount: type(uint128).max,
+        minValue: 1,
+        maxValue: 1e27
+    });
+
+    Bounds internal bounds = DEFAULT_BOUNDS;
+
+    function setBounds(Bounds memory _bounds) internal {
+        bounds = _bounds;
+    }
+
     struct FuzzableState {
         // Config
         address base;
@@ -33,9 +66,9 @@ contract ChronicleOracleHelper is AdapterHelper {
 
         s.maxStaleness = bound(s.maxStaleness, 0, type(uint128).max);
 
-        s.baseDecimals = uint8(bound(s.baseDecimals, 2, 18));
-        s.quoteDecimals = uint8(bound(s.quoteDecimals, 2, 18));
-        s.feedDecimals = uint8(bound(s.feedDecimals, 2, 18));
+        s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
+        s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
+        s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
@@ -46,7 +79,7 @@ contract ChronicleOracleHelper is AdapterHelper {
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.value = 0;
         } else {
-            s.value = bound(s.value, 1, type(uint80).max);
+            s.value = bound(s.value, bounds.minValue, bounds.maxValue);
         }
 
         s.age = bound(s.age, 0, type(uint128).max);
@@ -56,7 +89,7 @@ contract ChronicleOracleHelper is AdapterHelper {
             s.timestamp = bound(s.timestamp, s.age, s.age + s.maxStaleness);
         }
 
-        s.inAmount = bound(s.inAmount, 1, type(uint128).max);
+        s.inAmount = bound(s.inAmount, bounds.minInAmount, bounds.maxInAmount);
 
         if (behaviors[Behavior.FeedReverts]) {
             vm.mockCallRevert(s.feed, abi.encodeWithSelector(IChronicle.readWithAge.selector), "oops");
@@ -65,5 +98,17 @@ contract ChronicleOracleHelper is AdapterHelper {
         }
 
         vm.warp(s.timestamp);
+    }
+
+    function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
+        return FixedPointMathLib.fullMulDiv(
+            s.inAmount, uint256(s.value) * 10 ** s.quoteDecimals, 10 ** (s.feedDecimals + s.baseDecimals)
+        );
+    }
+
+    function calcOutAmountInverse(FuzzableState memory s) internal pure returns (uint256) {
+        return FixedPointMathLib.fullMulDiv(
+            s.inAmount, 10 ** (s.feedDecimals + s.baseDecimals), (uint256(s.value) * 10 ** s.quoteDecimals)
+        );
     }
 }

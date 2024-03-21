@@ -5,12 +5,45 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
+import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {StubPyth} from "test/adapter/pyth/StubPyth.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 
 contract PythOracleHelper is AdapterHelper {
+    struct Bounds {
+        uint8 minBaseDecimals;
+        uint8 maxBaseDecimals;
+        uint8 minQuoteDecimals;
+        uint8 maxQuoteDecimals;
+        uint256 minInAmount;
+        uint256 maxInAmount;
+        int64 minPrice;
+        int64 maxPrice;
+        int32 minExpo;
+        int32 maxExpo;
+    }
+
+    Bounds internal DEFAULT_BOUNDS = Bounds({
+        minBaseDecimals: 0,
+        maxBaseDecimals: 18,
+        minQuoteDecimals: 0,
+        maxQuoteDecimals: 18,
+        minInAmount: 0,
+        maxInAmount: type(uint128).max,
+        minPrice: 1,
+        maxPrice: 1_000_000_000_000,
+        minExpo: -16,
+        maxExpo: 6
+    });
+
+    Bounds internal bounds = DEFAULT_BOUNDS;
+
+    function setBounds(Bounds memory _bounds) internal {
+        bounds = _bounds;
+    }
+
     address PYTH;
 
     struct FuzzableState {
@@ -35,8 +68,8 @@ contract PythOracleHelper is AdapterHelper {
 
         s.maxStaleness = bound(s.maxStaleness, 0, type(uint32).max);
 
-        s.baseDecimals = uint8(bound(s.baseDecimals, 2, 18));
-        s.quoteDecimals = uint8(bound(s.quoteDecimals, 2, 18));
+        s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
+        s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
@@ -46,7 +79,7 @@ contract PythOracleHelper is AdapterHelper {
         } else if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.p.price = int64(bound(s.p.price, type(int64).min, -1));
         } else {
-            s.p.price = int64(bound(s.p.price, 1, type(int32).max));
+            s.p.price = int64(bound(s.p.price, bounds.minPrice, bounds.maxPrice));
         }
 
         if (behaviors[Behavior.FeedReturnsConfTooWide]) {
@@ -60,7 +93,7 @@ contract PythOracleHelper is AdapterHelper {
         } else if (behaviors[Behavior.FeedReturnsExpoTooHigh]) {
             s.p.expo = int32(bound(s.p.expo, 17, type(int32).max));
         } else {
-            s.p.expo = int32(bound(s.p.expo, -16, 16));
+            s.p.expo = int32(bound(s.p.expo, bounds.minExpo, bounds.maxExpo));
         }
 
         if (behaviors[Behavior.FeedReverts]) {
@@ -72,5 +105,31 @@ contract PythOracleHelper is AdapterHelper {
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
 
         oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness));
+    }
+
+    function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
+        int8 diff = int8(s.baseDecimals) - int8(s.p.expo);
+        if (diff > 0) {
+            return FixedPointMathLib.fullMulDiv(
+                s.inAmount, uint256(uint64(s.p.price)) * 10 ** s.quoteDecimals, 10 ** (uint8(diff))
+            );
+        } else {
+            return FixedPointMathLib.fullMulDiv(
+                s.inAmount, uint256(uint64(s.p.price)) * 10 ** (s.quoteDecimals + uint8(-diff)), 1
+            );
+        }
+    }
+
+    function calcOutAmountInverse(FuzzableState memory s) internal pure returns (uint256) {
+        int8 diff = int8(s.baseDecimals) - int8(s.p.expo);
+        if (diff > 0) {
+            return FixedPointMathLib.fullMulDiv(
+                s.inAmount, 10 ** uint8(diff), uint256(uint64(s.p.price)) * 10 ** s.quoteDecimals
+            );
+        } else {
+            return FixedPointMathLib.fullMulDiv(
+                s.inAmount, 1, uint256(uint64(s.p.price)) * 10 ** (s.quoteDecimals + uint8(-diff))
+            );
+        }
     }
 }

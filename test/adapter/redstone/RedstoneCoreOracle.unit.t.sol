@@ -25,8 +25,8 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
     function test_UpdatePrice_Integrity(FuzzableState memory s) public {
         setUpState(s);
-        _mockPrice(s);
-        _updatePrice(s);
+        mockPrice(s);
+        setPrice(s);
 
         assertEq(RedstoneCoreOracle(oracle).lastPrice(), s.price);
         assertEq(RedstoneCoreOracle(oracle).lastUpdatedAt(), s.tsUpdatePrice);
@@ -35,10 +35,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_UpdatePrice_Overflow(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsTooLargePrice, true);
         setUpState(s);
-        _mockPrice(s);
+        mockPrice(s);
 
         vm.expectRevert(Errors.PriceOracle_Overflow.selector);
-        _updatePrice(s);
+        setPrice(s);
 
         assertEq(RedstoneCoreOracle(oracle).lastPrice(), 0);
         assertEq(RedstoneCoreOracle(oracle).lastUpdatedAt(), 0);
@@ -60,10 +60,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
     function test_Quote_Integrity(FuzzableState memory s) public {
         setUpState(s);
-        _mockPrice(s);
-        _updatePrice(s);
+        mockPrice(s);
+        setPrice(s);
 
-        uint256 expectedOutAmount = (s.inAmount * s.price * 10 ** s.quoteDecimals) / 10 ** (8 + s.baseDecimals);
+        uint256 expectedOutAmount = calcOutAmount(s);
 
         uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, expectedOutAmount);
@@ -75,10 +75,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
     function test_Quote_Inverse_Integrity(FuzzableState memory s) public {
         setUpState(s);
-        _mockPrice(s);
-        _updatePrice(s);
+        mockPrice(s);
+        setPrice(s);
 
-        uint256 expectedOutAmount = (s.inAmount * 10 ** (8 + s.baseDecimals)) / (s.price * 10 ** s.quoteDecimals);
+        uint256 expectedOutAmount = calcOutAmountInverse(s);
 
         uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
         assertEq(outAmount, expectedOutAmount);
@@ -91,8 +91,8 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_RevertsWhen_TooStale(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsStalePrice, true);
         setUpState(s);
-        _mockPrice(s);
-        _updatePrice(s);
+        mockPrice(s);
+        setPrice(s);
 
         bytes memory err =
             abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxStaleness);

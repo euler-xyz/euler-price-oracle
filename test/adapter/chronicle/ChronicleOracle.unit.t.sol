@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelper.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -58,9 +57,7 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
     function test_Quote_Integrity(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount = FixedPointMathLib.fullMulDiv(
-            s.inAmount, uint256(s.value) * 10 ** s.quoteDecimals, 10 ** (s.feedDecimals + s.baseDecimals)
-        );
+        uint256 expectedOutAmount = calcOutAmount(s);
 
         uint256 outAmount = ChronicleOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, expectedOutAmount);
@@ -73,9 +70,7 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
     function test_Quote_Integrity_Inverse(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount = FixedPointMathLib.fullMulDiv(
-            s.inAmount, 10 ** (s.feedDecimals + s.baseDecimals), (uint256(s.value) * 10 ** s.quoteDecimals)
-        );
+        uint256 expectedOutAmount = calcOutAmountInverse(s);
 
         uint256 outAmount = ChronicleOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
         assertEq(outAmount, expectedOutAmount);

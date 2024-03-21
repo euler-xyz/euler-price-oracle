@@ -2,11 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {PythOracleHelper} from "test/adapter/pyth/PythOracleHelper.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
-import {StubPyth} from "test/adapter/pyth/StubPyth.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract PythOracleTest is PythOracleHelper {
@@ -77,17 +75,7 @@ contract PythOracleTest is PythOracleHelper {
     function test_Quote_Integrity(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount;
-        int8 diff = int8(s.baseDecimals) - int8(s.p.expo);
-        if (diff > 0) {
-            expectedOutAmount = FixedPointMathLib.fullMulDiv(
-                s.inAmount, uint256(uint64(s.p.price)) * 10 ** s.quoteDecimals, 10 ** (uint8(diff))
-            );
-        } else {
-            expectedOutAmount = FixedPointMathLib.fullMulDiv(
-                s.inAmount, uint256(uint64(s.p.price)) * 10 ** (s.quoteDecimals + uint8(-diff)), 1
-            );
-        }
+        uint256 expectedOutAmount = calcOutAmount(s);
         uint256 outAmount = PythOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, expectedOutAmount);
 
@@ -99,17 +87,7 @@ contract PythOracleTest is PythOracleHelper {
     function test_Quote_Integrity_Inverse(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount;
-        int8 diff = int8(s.baseDecimals) - int8(s.p.expo);
-        if (diff > 0) {
-            expectedOutAmount = FixedPointMathLib.fullMulDiv(
-                s.inAmount, 10 ** uint8(diff), uint256(uint64(s.p.price)) * 10 ** s.quoteDecimals
-            );
-        } else {
-            expectedOutAmount = FixedPointMathLib.fullMulDiv(
-                s.inAmount, 1, uint256(uint64(s.p.price)) * 10 ** (s.quoteDecimals + uint8(-diff))
-            );
-        }
+        uint256 expectedOutAmount = calcOutAmountInverse(s);
         uint256 outAmount = PythOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
         assertEq(outAmount, expectedOutAmount);
 
