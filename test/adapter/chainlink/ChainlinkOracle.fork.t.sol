@@ -6,14 +6,9 @@ import {
     CHAINLINK_BTC_ETH_FEED,
     CHAINLINK_USDC_ETH_FEED,
     CHAINLINK_STETH_ETH_FEED,
-    CHAINLINK_ETH_USD_FEED,
-    WETH,
-    STETH,
-    WBTC,
-    USDC,
-    GUSD,
-    DAI
-} from "test/utils/EthereumAddresses.sol";
+    CHAINLINK_ETH_USD_FEED
+} from "test/adapter/chainlink/ChainlinkAddresses.sol";
+import {WETH, STETH, WBTC, USDC, GUSD, DAI} from "test/utils/EthereumAddresses.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
 contract ChainlinkOracleForkTest is ForkTest {
