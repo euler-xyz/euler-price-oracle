@@ -26,7 +26,7 @@ contract LidoOraclePropTest is LidoOracleHelper, AdapterPropTest {
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         adapter = address(oracle);
         base = STETH;
         quote = WSTETH;

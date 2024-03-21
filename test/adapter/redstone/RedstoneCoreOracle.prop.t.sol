@@ -27,7 +27,7 @@ contract RedstoneCoreOraclePropTest is RedstoneCoreOracleHelper, AdapterPropTest
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         _mockPrice(s);
         _updatePrice(s);
         adapter = address(oracle);

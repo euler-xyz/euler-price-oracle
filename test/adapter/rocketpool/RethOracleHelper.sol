@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {Test} from "forge-std/Test.sol";
+import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {StubReth} from "test/adapter/rocketpool/StubReth.sol";
 import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
 
-contract RethOracleHelper is Test {
+contract RethOracleHelper is AdapterHelper {
     address internal RETH;
     address internal WETH = makeAddr("WETH");
 
@@ -17,27 +17,11 @@ contract RethOracleHelper is Test {
         uint256 inAmount;
     }
 
-    enum Behavior {
-        FeedReverts
-    }
-
-    RethOracle internal oracle;
-    mapping(Behavior => bool) private behaviors;
-
-    function _setBehavior(Behavior behavior, bool _status) internal {
-        behaviors[behavior] = _status;
-    }
-
-    function _deploy() internal returns (RethOracle) {
-        RETH = address(new StubReth());
-        return new RethOracle(WETH, RETH);
-    }
-
-    function _deployAndPrepare(FuzzableState memory s) internal {
+    function setUpState(FuzzableState memory s) internal {
         s.rate = bound(s.rate, 1e18, 1e27);
 
         RETH = address(new StubReth());
-        oracle = new RethOracle(WETH, RETH);
+        oracle = address(new RethOracle(WETH, RETH));
 
         s.base = RETH;
         s.quote = WETH;
@@ -49,19 +33,5 @@ contract RethOracleHelper is Test {
         } else {
             StubReth(RETH).setRate(s.rate);
         }
-    }
-
-    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.quote, s.base);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.quote, s.base);
     }
 }

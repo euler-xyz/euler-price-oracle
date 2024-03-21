@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 
-contract ChronicleOracleHelper is Test {
+contract ChronicleOracleHelper is AdapterHelper {
     struct FuzzableState {
         // Config
         address base;
@@ -25,20 +25,7 @@ contract ChronicleOracleHelper is Test {
         uint256 inAmount;
     }
 
-    enum Behavior {
-        FeedReverts,
-        FeedReturnsZero,
-        FeedReturnsStalePrice
-    }
-
-    ChronicleOracle internal oracle;
-    mapping(Behavior => bool) private behaviors;
-
-    function _setBehavior(Behavior behavior, bool _status) internal {
-        behaviors[behavior] = _status;
-    }
-
-    function _deployAndPrepare(FuzzableState memory s) internal {
+    function setUpState(FuzzableState memory s) internal {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         s.feed = boundAddr(s.feed);
@@ -54,9 +41,9 @@ contract ChronicleOracleHelper is Test {
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
         vm.mockCall(s.feed, abi.encodeWithSelector(IChronicle.decimals.selector), abi.encode(s.feedDecimals));
 
-        oracle = new ChronicleOracle(s.base, s.quote, s.feed, s.maxStaleness);
+        oracle = address(new ChronicleOracle(s.base, s.quote, s.feed, s.maxStaleness));
 
-        if (behaviors[Behavior.FeedReturnsZero]) {
+        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.value = 0;
         } else {
             s.value = bound(s.value, 1, type(uint80).max);
@@ -78,19 +65,5 @@ contract ChronicleOracleHelper is Test {
         }
 
         vm.warp(s.timestamp);
-    }
-
-    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.quote, s.base);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.quote, s.base);
     }
 }

@@ -2,12 +2,12 @@
 pragma solidity 0.8.23;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {Test} from "forge-std/Test.sol";
+import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
-contract ChainlinkOracleHelper is Test {
+contract ChainlinkOracleHelper is AdapterHelper {
     struct FuzzableState {
         // Config
         address base;
@@ -28,21 +28,7 @@ contract ChainlinkOracleHelper is Test {
         uint256 inAmount;
     }
 
-    enum Behavior {
-        FeedReverts,
-        FeedReturnsZero,
-        FeedReturnsNegative,
-        FeedReturnsStalePrice
-    }
-
-    ChainlinkOracle internal oracle;
-    mapping(Behavior => bool) private behaviors;
-
-    function _setBehavior(Behavior behavior, bool _status) internal {
-        behaviors[behavior] = _status;
-    }
-
-    function _deployAndPrepare(FuzzableState memory s) internal {
+    function setUpState(FuzzableState memory s) internal {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         s.feed = boundAddr(s.feed);
@@ -58,11 +44,11 @@ contract ChainlinkOracleHelper is Test {
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
         vm.mockCall(s.feed, abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(s.feedDecimals));
 
-        oracle = new ChainlinkOracle(s.base, s.quote, s.feed, s.maxStaleness);
+        oracle = address(new ChainlinkOracle(s.base, s.quote, s.feed, s.maxStaleness));
 
-        if (behaviors[Behavior.FeedReturnsZero]) {
+        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.answer = 0;
-        } else if (behaviors[Behavior.FeedReturnsNegative]) {
+        } else if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.answer = bound(s.answer, type(int256).min, -1);
         } else {
             s.answer = bound(s.answer, 1, type(int80).max);
@@ -89,19 +75,5 @@ contract ChainlinkOracleHelper is Test {
         }
 
         vm.warp(s.timestamp);
-    }
-
-    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.quote, s.base);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.quote, s.base);
     }
 }

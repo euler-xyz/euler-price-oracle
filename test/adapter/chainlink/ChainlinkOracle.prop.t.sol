@@ -27,7 +27,7 @@ contract ChainlinkOraclePropTest is ChainlinkOracleHelper, AdapterPropTest {
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         adapter = address(oracle);
         base = s.base;
         quote = s.quote;

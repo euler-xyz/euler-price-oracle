@@ -26,7 +26,7 @@ contract SDaiOraclePropTest is SDaiOracleHelper, AdapterPropTest {
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         adapter = address(oracle);
         base = DAI;
         quote = SDAI;

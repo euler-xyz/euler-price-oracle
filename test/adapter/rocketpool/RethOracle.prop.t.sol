@@ -26,7 +26,7 @@ contract RethOraclePropTest is RethOracleHelper, AdapterPropTest {
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         adapter = address(oracle);
         base = RETH;
         quote = WETH;

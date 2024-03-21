@@ -8,66 +8,59 @@ import {Errors} from "src/lib/Errors.sol";
 
 contract SDaiOracleTest is SDaiOracleHelper {
     function test_Constructor_Integrity(FuzzableState memory s) public {
-        _deployAndPrepare(s);
-        assertEq(oracle.dai(), DAI);
-        assertEq(oracle.sDai(), SDAI);
-        assertEq(oracle.dsrPot(), POT);
+        setUpState(s);
+        assertEq(SDaiOracle(oracle).dai(), DAI);
+        assertEq(SDaiOracle(oracle).sDai(), SDAI);
+        assertEq(SDaiOracle(oracle).dsrPot(), POT);
     }
 
     function test_GetQuote_GetQuotes_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB)
         public
     {
-        _deployAndPrepare(s);
+        setUpState(s);
         vm.assume(otherA != SDAI && otherA != DAI);
         vm.assume(otherB != SDAI && otherB != DAI);
-        assertNotSupported(s.inAmount, SDAI, SDAI);
-        assertNotSupported(s.inAmount, DAI, DAI);
-        assertNotSupported(s.inAmount, SDAI, otherA);
-        assertNotSupported(s.inAmount, otherA, SDAI);
-        assertNotSupported(s.inAmount, DAI, otherA);
-        assertNotSupported(s.inAmount, otherA, DAI);
-        assertNotSupported(s.inAmount, otherA, otherA);
-        assertNotSupported(s.inAmount, otherA, otherB);
+        expectNotSupported(s.inAmount, SDAI, SDAI);
+        expectNotSupported(s.inAmount, DAI, DAI);
+        expectNotSupported(s.inAmount, SDAI, otherA);
+        expectNotSupported(s.inAmount, otherA, SDAI);
+        expectNotSupported(s.inAmount, DAI, otherA);
+        expectNotSupported(s.inAmount, otherA, DAI);
+        expectNotSupported(s.inAmount, otherA, otherA);
+        expectNotSupported(s.inAmount, otherA, otherB);
     }
 
     function test_Quote_RevertsWhen_DsrPotCallReverts(FuzzableState memory s) public {
-        _setBehavior(Behavior.FeedReverts, true);
-        _deployAndPrepare(s);
+        setBehavior(Behavior.FeedReverts, true);
+        setUpState(s);
 
         bytes memory err = abi.encodePacked("oops");
-        expectRevertForAllQuotePermutations(s, err);
+        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
     function test_Quote_SDai_Dai_Integrity(FuzzableState memory s) public {
-        _deployAndPrepare(s);
+        setUpState(s);
 
         uint256 expectedOutAmount = s.inAmount * s.rate / 1e27;
 
-        uint256 outAmount = oracle.getQuote(s.inAmount, SDAI, DAI);
+        uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, SDAI, DAI);
         assertEq(outAmount, expectedOutAmount);
 
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(s.inAmount, SDAI, DAI);
+        (uint256 bidOutAmount, uint256 askOutAmount) = SDaiOracle(oracle).getQuotes(s.inAmount, SDAI, DAI);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
 
     function test_Quote_Dai_SDai_Integrity(FuzzableState memory s) public {
-        _deployAndPrepare(s);
+        setUpState(s);
 
         uint256 expectedOutAmount = s.inAmount * 1e27 / s.rate;
 
-        uint256 outAmount = oracle.getQuote(s.inAmount, DAI, SDAI);
+        uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, DAI, SDAI);
         assertEq(outAmount, expectedOutAmount);
 
-        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(s.inAmount, DAI, SDAI);
+        (uint256 bidOutAmount, uint256 askOutAmount) = SDaiOracle(oracle).getQuotes(s.inAmount, DAI, SDAI);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
-    }
-
-    function assertNotSupported(uint256 inAmount, address tokenA, address tokenB) internal {
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, tokenA, tokenB));
-        oracle.getQuote(inAmount, tokenA, tokenB);
-        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, tokenA, tokenB));
-        oracle.getQuotes(inAmount, tokenA, tokenB);
     }
 }

@@ -5,11 +5,12 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
+import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {StubPyth} from "test/adapter/pyth/StubPyth.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 
-contract PythOracleHelper is Test {
+contract PythOracleHelper is AdapterHelper {
     address PYTH;
 
     struct FuzzableState {
@@ -26,25 +27,7 @@ contract PythOracleHelper is Test {
         uint256 inAmount;
     }
 
-    enum Behavior {
-        FeedReverts,
-        FeedReturnsZero,
-        FeedReturnsNegative,
-        FeedReturnsConfTooWide,
-        FeedReturnsExpoTooLow,
-        FeedReturnsExpoTooHigh
-    }
-
-    PythOracle internal oracle;
-    mapping(Behavior => bool) private behaviors;
-
-    function _setBehavior(Behavior behavior, bool _status) internal {
-        behaviors[behavior] = _status;
-    }
-
-    function _bound(PythStructs.Price memory p) internal pure {}
-
-    function _deployAndPrepare(FuzzableState memory s) internal {
+    function setUpState(FuzzableState memory s) internal {
         PYTH = address(new StubPyth());
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
@@ -58,9 +41,9 @@ contract PythOracleHelper is Test {
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        if (behaviors[Behavior.FeedReturnsZero]) {
+        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.p.price = 0;
-        } else if (behaviors[Behavior.FeedReturnsNegative]) {
+        } else if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.p.price = int64(bound(s.p.price, type(int64).min, -1));
         } else {
             s.p.price = int64(bound(s.p.price, 1, type(int32).max));
@@ -88,20 +71,6 @@ contract PythOracleHelper is Test {
 
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
 
-        oracle = new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness);
-    }
-
-    function expectRevertForAllQuotePermutations(FuzzableState memory s, bytes memory revertData) internal {
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuote(s.inAmount, s.quote, s.base);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.base, s.quote);
-
-        vm.expectRevert(revertData);
-        oracle.getQuotes(s.inAmount, s.quote, s.base);
+        oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness));
     }
 }

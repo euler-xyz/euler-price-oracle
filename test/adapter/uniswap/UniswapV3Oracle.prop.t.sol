@@ -26,7 +26,7 @@ contract UniswapV3OraclePropTest is UniswapV3OracleHelper, AdapterPropTest {
     }
 
     function _setUpAdapter(FuzzableState memory s) internal {
-        _deployAndPrepare(s);
+        setUpState(s);
         adapter = address(oracle);
         base = s.tokenA;
         quote = s.tokenB;
