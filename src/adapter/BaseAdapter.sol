@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -18,6 +19,14 @@ abstract contract BaseAdapter is IPriceOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    function _getDecimals(address token) internal view returns (uint8) {
+        if (token == address(0)) revert Errors.PriceOracle_InvalidConfiguration();
+        if (uint160(token) < 1000) return 18;
+        (bool success, bytes memory data) = token.staticcall(abi.encodeCall(IERC20.decimals, ()));
+        if (!success) revert Errors.PriceOracle_InvalidConfiguration();
+        return abi.decode(data, (uint8));
     }
 
     function _getQuote(uint256, address, address) internal view virtual returns (uint256);

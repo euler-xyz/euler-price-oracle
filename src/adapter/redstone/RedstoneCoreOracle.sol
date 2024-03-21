@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
@@ -49,8 +48,8 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         quote = _quote;
         feedId = _feedId;
         maxStaleness = _maxStaleness;
-        uint8 baseDecimals = IERC20(base).decimals();
-        uint8 quoteDecimals = IERC20(quote).decimals();
+        uint8 baseDecimals = _getDecimals(base);
+        uint8 quoteDecimals = _getDecimals(quote);
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, FEED_DECIMALS);
     }
 
