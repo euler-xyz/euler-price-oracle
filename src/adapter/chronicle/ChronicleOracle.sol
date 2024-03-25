@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -38,8 +37,8 @@ contract ChronicleOracle is BaseAdapter {
         maxStaleness = _maxStaleness;
 
         // The scale factor is used to correctly convert decimals.
-        uint8 baseDecimals = IERC20(base).decimals();
-        uint8 quoteDecimals = IERC20(quote).decimals();
+        uint8 baseDecimals = _getDecimals(base);
+        uint8 quoteDecimals = _getDecimals(quote);
         uint8 feedDecimals = IChronicle(feed).decimals();
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, feedDecimals);
     }

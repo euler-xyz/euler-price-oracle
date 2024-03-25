@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
@@ -37,8 +36,8 @@ contract ChainlinkOracle is BaseAdapter {
         maxStaleness = _maxStaleness;
 
         // The scale factor is used to correctly convert decimals.
-        uint8 baseDecimals = IERC20(base).decimals();
-        uint8 quoteDecimals = IERC20(quote).decimals();
+        uint8 baseDecimals = _getDecimals(base);
+        uint8 quoteDecimals = _getDecimals(quote);
         uint8 feedDecimals = AggregatorV3Interface(feed).decimals();
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, feedDecimals);
     }

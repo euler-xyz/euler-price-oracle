@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -18,6 +19,16 @@ abstract contract BaseAdapter is IPriceOracle {
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
         uint256 outAmount = _getQuote(inAmount, base, quote);
         return (outAmount, outAmount);
+    }
+
+    /// @notice Get the decimals of the asset or fall back to 18 decimals.
+    /// @param asset ERC20 token address or other asset.
+    /// @dev Oracles can use ERC-7535, ISO 4217 or other conventions to represent non-ERC20 assets as addresses,
+    /// as long as these addresses are not contracts. Their decimals will be 18.
+    /// @return The decimals of the asset.
+    function _getDecimals(address asset) internal view returns (uint8) {
+        (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IERC20.decimals, ()));
+        return success && data.length == 32 ? abi.decode(data, (uint8)) : 18;
     }
 
     function _getQuote(uint256, address, address) internal view virtual returns (uint256);
