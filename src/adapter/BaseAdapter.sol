@@ -21,16 +21,14 @@ abstract contract BaseAdapter is IPriceOracle {
         return (outAmount, outAmount);
     }
 
-    /// @notice Get the decimals of the asset, falling back to 18 decimals for ISO 4217 currencies.
-    /// @param token ERC20 token address or ISO 4217-encoded currency.
-    /// @dev Rejects address(0), returns 18 for all three-digit addresses, calls decimals() on other addresses.
+    /// @notice Get the decimals of the asset or fall back to 18 decimals.
+    /// @param asset ERC20 token address or other asset.
+    /// @dev Oracles can use ERC-7535, ISO 4217 or other conventions to represent non-ERC20 assets as addresses,
+    /// as long as these addresses are not contracts. Their decimals will be 18.
     /// @return The decimals of the asset.
-    function _getDecimals(address token) internal view returns (uint8) {
-        if (token == address(0)) revert Errors.PriceOracle_InvalidConfiguration();
-        if (uint160(token) < 1000) return 18;
-        (bool success, bytes memory data) = token.staticcall(abi.encodeCall(IERC20.decimals, ()));
-        if (!success) revert Errors.PriceOracle_InvalidConfiguration();
-        return abi.decode(data, (uint8));
+    function _getDecimals(address asset) internal view returns (uint8) {
+        (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IERC20.decimals, ()));
+        return success && data.length == 32 ? abi.decode(data, (uint8)) : 18;
     }
 
     function _getQuote(uint256, address, address) internal view virtual returns (uint256);
