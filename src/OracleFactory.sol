@@ -2,11 +2,11 @@
 pragma solidity 0.8.23;
 
 import {Governable} from "src/lib/Governable.sol";
-import {IAdapterFactory} from "src/interfaces/IAdapterFactory.sol";
+import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 
 contract OracleFactory is Governable {
     mapping(address factory => bool) public enabledFactories;
-    mapping(address base => mapping(address quote => address)) public singletonAdapters;
+    mapping(address base => mapping(address quote => address)) public singletonOracles;
 
     struct DeploymentInfo {
         address factory;
@@ -15,40 +15,37 @@ contract OracleFactory is Governable {
         bytes extraData;
     }
 
-    mapping(address adapter => DeploymentInfo) public deployedAdapters;
+    mapping(address oracle => DeploymentInfo) public deployedOracles;
 
-    event FactorySet(address factory, bool isEnabled);
-    event AdapterDeployed(
-        address indexed adapter, address indexed factory, address base, address quote, bytes extraData
-    );
+    event FactoryStatusSet(address indexed factory, bool indexed isEnabled);
+    event OracleDeployed(address indexed oracle, address indexed factory, address base, address quote, bytes extraData);
+    event SingletonOracleSet(address indexed oracle, address base, address quote);
 
     error DeploymentFailed();
     error FactoryUnauthorized();
 
     constructor(address _governor) Governable(_governor) {}
 
-    function setFactory(address factory, bool isEnabled) external onlyGovernor {
+    function setFactoryStatus(address factory, bool isEnabled) external onlyGovernor {
         enabledFactories[factory] = isEnabled;
-        emit FactorySet(factory, isEnabled);
+        emit FactoryStatusSet(factory, isEnabled);
     }
 
-    function deployAdapter(address factory, address base, address quote, bytes calldata extraData)
+    function deployOracle(address factory, address base, address quote, bytes calldata extraData)
         external
         returns (address)
     {
         if (!enabledFactories[factory]) revert FactoryUnauthorized();
-        address adapter = IAdapterFactory(factory).deploy(base, quote, extraData);
-        if (adapter == address(0)) revert DeploymentFailed();
-        deployedAdapters[adapter] = DeploymentInfo(factory, base, quote, extraData);
-        emit AdapterDeployed(adapter, factory, base, quote, extraData);
-        return adapter;
+        address oracle = IOracleFactory(factory).deploy(base, quote, extraData);
+        if (oracle == address(0)) revert DeploymentFailed();
+        deployedOracles[oracle] = DeploymentInfo(factory, base, quote, extraData);
+        emit OracleDeployed(oracle, factory, base, quote, extraData);
+        return oracle;
     }
 
-    function setSingletonAdapter(address base, address quote, address oracle, bool populateInverse)
-        external
-        onlyGovernor
-    {
-        singletonAdapters[base][quote] = oracle;
-        if (populateInverse) singletonAdapters[quote][base] = oracle;
+    function setSingletonOracle(address base, address quote, address oracle) external onlyGovernor {
+        singletonOracles[base][quote] = oracle;
+        singletonOracles[quote][base] = oracle;
+        emit SingletonOracleSet(oracle, base, quote);
     }
 }

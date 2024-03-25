@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {FeedRegistry} from "src/FeedRegistry.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
-import {IAdapterFactory} from "src/interfaces/IAdapterFactory.sol";
+import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-contract RedstoneCoreFactory is FeedRegistry, IAdapterFactory {
+contract RedstoneCoreFactory is FeedRegistry, IOracleFactory {
     struct DeploymentInfo {
         address deployer;
         uint48 deployedAt;

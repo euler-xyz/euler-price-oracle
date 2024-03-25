@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {FeedRegistry} from "src/FeedRegistry.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
-import {IAdapterFactory} from "src/interfaces/IAdapterFactory.sol";
+import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-contract PythFactory is FeedRegistry, IAdapterFactory {
+contract PythFactory is FeedRegistry, IOracleFactory {
     address public immutable pyth;
 
     struct DeploymentInfo {
