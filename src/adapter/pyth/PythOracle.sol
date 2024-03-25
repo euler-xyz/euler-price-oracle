@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
 import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
@@ -41,8 +40,8 @@ contract PythOracle is BaseAdapter {
         quote = _quote;
         feedId = _feedId;
         maxStaleness = _maxStaleness;
-        baseDecimals = IERC20(_base).decimals();
-        quoteDecimals = IERC20(_quote).decimals();
+        baseDecimals = _getDecimals(base);
+        quoteDecimals = _getDecimals(quote);
     }
 
     /// @notice Update the price of the Pyth feed.
