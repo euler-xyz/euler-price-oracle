@@ -29,13 +29,13 @@ contract CrossAdapterTest is Test {
     address CROSS = makeAddr("CROSS");
     address QUOTE = makeAddr("QUOTE");
     StubPriceOracle oracleBaseCross;
-    StubPriceOracle oracleQuoteCross;
+    StubPriceOracle oracleCrossQuote;
     CrossAdapter oracle;
 
     function setUp() public {
         oracleBaseCross = new StubPriceOracle();
-        oracleQuoteCross = new StubPriceOracle();
-        oracle = new CrossAdapter(BASE, CROSS, QUOTE, address(oracleBaseCross), address(oracleQuoteCross));
+        oracleCrossQuote = new StubPriceOracle();
+        oracle = new CrossAdapter(BASE, CROSS, QUOTE, address(oracleBaseCross), address(oracleCrossQuote));
     }
 
     function test_Constructor_Integrity() public view {
@@ -43,10 +43,8 @@ contract CrossAdapterTest is Test {
         assertEq(oracle.cross(), CROSS);
         assertEq(oracle.quote(), QUOTE);
         assertEq(oracle.oracleBaseCross(), address(oracleBaseCross));
-        assertEq(oracle.oracleQuoteCross(), address(oracleQuoteCross));
+        assertEq(oracle.oracleCrossQuote(), address(oracleCrossQuote));
     }
-
-    
 
     function test_GetQuote_Integrity(uint256 inAmount, uint256 priceBaseCross, uint256 priceCrossQuote) public {
         inAmount = bound(inAmount, 0, type(uint128).max);
@@ -54,7 +52,7 @@ contract CrossAdapterTest is Test {
         priceCrossQuote = bound(priceCrossQuote, 1, 1e27);
 
         oracleBaseCross.setPrice(BASE, CROSS, priceBaseCross);
-        oracleQuoteCross.setPrice(CROSS, QUOTE, priceCrossQuote);
+        oracleCrossQuote.setPrice(CROSS, QUOTE, priceCrossQuote);
 
         uint256 expectedOutAmount = inAmount * priceBaseCross / 1e18 * priceCrossQuote / 1e18;
         assertEq(oracle.getQuote(inAmount, BASE, QUOTE), expectedOutAmount);
@@ -67,7 +65,7 @@ contract CrossAdapterTest is Test {
         priceQuoteCross = bound(priceQuoteCross, 1, 1e27);
         priceCrossBase = bound(priceCrossBase, 1, 1e27);
 
-        oracleQuoteCross.setPrice(QUOTE, CROSS, priceQuoteCross);
+        oracleCrossQuote.setPrice(QUOTE, CROSS, priceQuoteCross);
         oracleBaseCross.setPrice(CROSS, BASE, priceCrossBase);
 
         uint256 expectedOutAmount = inAmount * priceQuoteCross / 1e18 * priceCrossBase / 1e18;

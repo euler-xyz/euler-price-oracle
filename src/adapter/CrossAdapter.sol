@@ -21,22 +21,22 @@ contract CrossAdapter is BaseAdapter {
     address public immutable oracleBaseCross;
     /// @notice The oracle that resolves quote/cross and cross/quote.
     /// @dev The oracle MUST be bidirectional.
-    address public immutable oracleQuoteCross;
+    address public immutable oracleCrossQuote;
 
     /// @notice Deploy a CrossAdapter.
     /// @param _base The address of the base asset.
     /// @param _cross The address of the cross/through asset.
     /// @param _quote The address of the quote asset.
     /// @param _oracleBaseCross The oracle that resolves base/cross and cross/base.
-    /// @param _oracleQuoteCross The oracle that resolves quote/cross and cross/quote.
+    /// @param _oracleCrossQuote The oracle that resolves quote/cross and cross/quote.
     /// @dev Both cross oracles MUST be bidirectional.
     /// @dev Does not support bid/ask pricing.
-    constructor(address _base, address _cross, address _quote, address _oracleBaseCross, address _oracleQuoteCross) {
+    constructor(address _base, address _cross, address _quote, address _oracleBaseCross, address _oracleCrossQuote) {
         base = _base;
         cross = _cross;
         quote = _quote;
         oracleBaseCross = _oracleBaseCross;
-        oracleQuoteCross = _oracleQuoteCross;
+        oracleCrossQuote = _oracleCrossQuote;
     }
 
     /// @notice Get a quote by chaining the cross oracles.
@@ -50,11 +50,11 @@ contract CrossAdapter is BaseAdapter {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
         if (inverse) {
-            inAmount = IPriceOracle(oracleQuoteCross).getQuote(inAmount, quote, cross);
+            inAmount = IPriceOracle(oracleCrossQuote).getQuote(inAmount, quote, cross);
             return IPriceOracle(oracleBaseCross).getQuote(inAmount, cross, base);
         } else {
             inAmount = IPriceOracle(oracleBaseCross).getQuote(inAmount, base, cross);
-            return IPriceOracle(oracleQuoteCross).getQuote(inAmount, cross, quote);
+            return IPriceOracle(oracleCrossQuote).getQuote(inAmount, cross, quote);
         }
     }
 }
