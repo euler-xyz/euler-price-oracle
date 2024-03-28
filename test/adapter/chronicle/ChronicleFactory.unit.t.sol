@@ -5,6 +5,7 @@ import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelpe
 import {arrOf, boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 import {ChronicleFactory} from "src/adapter/chronicle/ChronicleFactory.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {FeedIdentifierLib} from "src/lib/FeedIdentifier.sol";
 
 contract ChronicleFactoryPropTest is ChronicleOracleHelper {
@@ -23,5 +24,10 @@ contract ChronicleFactoryPropTest is ChronicleOracleHelper {
 
         address deployedOracle = factory.deploy(s.base, s.quote, abi.encode(s.maxStaleness));
         assertEq(deployedOracle.codehash, oracle.codehash);
+    }
+
+    function test_Deploy_RevertsWhen_NoFeed(address base, address quote, uint256 maxStaleness) public {
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        factory.deploy(base, quote, abi.encode(maxStaleness));
     }
 }

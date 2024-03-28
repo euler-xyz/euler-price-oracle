@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {Governable} from "src/lib/Governable.sol";
 import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 
-contract OracleFactory is Governable {
+contract OracleMultiFactory is Governable {
     mapping(address factory => bool) public enabledFactories;
     mapping(address base => mapping(address quote => address)) public singletonOracles;
 
@@ -31,7 +31,13 @@ contract OracleFactory is Governable {
         emit FactoryStatusSet(factory, isEnabled);
     }
 
-    function deployOracle(address factory, address base, address quote, bytes calldata extraData)
+    function setSingletonOracle(address base, address quote, address oracle) external onlyGovernor {
+        singletonOracles[base][quote] = oracle;
+        singletonOracles[quote][base] = oracle;
+        emit SingletonOracleSet(oracle, base, quote);
+    }
+
+    function deployWithFactory(address factory, address base, address quote, bytes calldata extraData)
         external
         returns (address)
     {
@@ -41,11 +47,5 @@ contract OracleFactory is Governable {
         deployedOracles[oracle] = DeploymentInfo(factory, base, quote, extraData);
         emit OracleDeployed(oracle, factory, base, quote, extraData);
         return oracle;
-    }
-
-    function setSingletonOracle(address base, address quote, address oracle) external onlyGovernor {
-        singletonOracles[base][quote] = oracle;
-        singletonOracles[quote][base] = oracle;
-        emit SingletonOracleSet(oracle, base, quote);
     }
 }

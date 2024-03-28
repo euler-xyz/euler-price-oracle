@@ -2,27 +2,8 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import {StubPriceOracle} from "test/adapter/StubPriceOracle.sol";
 import {CrossAdapter} from "src/adapter/CrossAdapter.sol";
-
-contract StubPriceOracle {
-    mapping(address => mapping(address => uint256)) prices;
-
-    function setPrice(address base, address quote, uint256 price) external {
-        prices[base][quote] = price;
-    }
-
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _calcQuote(inAmount, base, quote);
-    }
-
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        return (_calcQuote(inAmount, base, quote), _calcQuote(inAmount, base, quote));
-    }
-
-    function _calcQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        return inAmount * prices[base][quote] / 1e18;
-    }
-}
 
 contract CrossAdapterTest is Test {
     address BASE = makeAddr("BASE");
@@ -55,7 +36,12 @@ contract CrossAdapterTest is Test {
         oracleCrossQuote.setPrice(CROSS, QUOTE, priceCrossQuote);
 
         uint256 expectedOutAmount = inAmount * priceBaseCross / 1e18 * priceCrossQuote / 1e18;
-        assertEq(oracle.getQuote(inAmount, BASE, QUOTE), expectedOutAmount);
+        uint256 outAmount = oracle.getQuote(inAmount, BASE, QUOTE);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, BASE, QUOTE);
+
+        assertEq(outAmount, expectedOutAmount);
+        assertEq(bidOutAmount, expectedOutAmount);
+        assertEq(askOutAmount, expectedOutAmount);
     }
 
     function test_GetQuote_Integrity_Inverse(uint256 inAmount, uint256 priceQuoteCross, uint256 priceCrossBase)
@@ -69,6 +55,11 @@ contract CrossAdapterTest is Test {
         oracleBaseCross.setPrice(CROSS, BASE, priceCrossBase);
 
         uint256 expectedOutAmount = inAmount * priceQuoteCross / 1e18 * priceCrossBase / 1e18;
-        assertEq(oracle.getQuote(inAmount, QUOTE, BASE), expectedOutAmount);
+        uint256 outAmount = oracle.getQuote(inAmount, QUOTE, BASE);
+        (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(inAmount, QUOTE, BASE);
+
+        assertEq(outAmount, expectedOutAmount);
+        assertEq(bidOutAmount, expectedOutAmount);
+        assertEq(askOutAmount, expectedOutAmount);
     }
 }

@@ -5,6 +5,7 @@ import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracle
 import {arrOf, boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 import {RedstoneCoreFactory} from "src/adapter/redstone/RedstoneCoreFactory.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {FeedIdentifierLib} from "src/lib/FeedIdentifier.sol";
 
 contract RedstoneCoreFactoryPropTest is RedstoneCoreOracleHelper {
@@ -24,5 +25,10 @@ contract RedstoneCoreFactoryPropTest is RedstoneCoreOracleHelper {
         address _oracle = address(new RedstoneCoreOracle(s.base, s.quote, s.feedId, s.maxStaleness));
         address deployedOracle = factory.deploy(s.base, s.quote, abi.encode(s.maxStaleness));
         assertEq(deployedOracle.codehash, _oracle.codehash);
+    }
+
+    function test_Deploy_RevertsWhen_NoFeed(address base, address quote, uint256 maxStaleness) public {
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        factory.deploy(base, quote, abi.encode(maxStaleness));
     }
 }

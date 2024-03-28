@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {FeedRegistry} from "src/FeedRegistry.sol";
 import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 import {Errors} from "src/lib/Errors.sol";
+import {FeedIdentifier} from "src/lib/FeedIdentifier.sol";
 
 /// @title BaseAdapterFactory
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -11,6 +12,8 @@ import {Errors} from "src/lib/Errors.sol";
 abstract contract BaseAdapterFactory is FeedRegistry, IOracleFactory {
     /// @inheritdoc IOracleFactory
     mapping(address oracle => DeploymentInfo) public deployments;
+
+    event OracleDeployed(address indexed oracle, address indexed base, address indexed quote, bytes extraData);
 
     /// Deploy BaseAdapterFactory.
     /// @param _governor The address of the FeedRegistry governor.
@@ -20,6 +23,7 @@ abstract contract BaseAdapterFactory is FeedRegistry, IOracleFactory {
     function deploy(address base, address quote, bytes calldata extraData) external returns (address) {
         address oracle = _deployAdapter(base, quote, extraData);
         deployments[oracle] = DeploymentInfo(msg.sender, uint48(block.timestamp));
+        emit OracleDeployed(oracle, base, quote, extraData);
         return oracle;
     }
 

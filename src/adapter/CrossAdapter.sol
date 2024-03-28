@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
 /// @title CrossAdapter
 /// @author Euler Labs (https://www.eulerlabs.com/)

@@ -4,48 +4,12 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
+import {StubERC4626} from "test/StubERC4626.sol";
+import {StubPriceOracle} from "test/adapter/StubPriceOracle.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 import {EulerRouter} from "src/EulerRouter.sol";
-
-contract StubERC4626 {
-    address public asset;
-    uint256 private rate;
-
-    constructor(address _asset, uint256 _rate) {
-        asset = _asset;
-        rate = _rate;
-    }
-
-    function convertToAssets(uint256 shares) external view returns (uint256) {
-        return shares * rate / 1e18;
-    }
-
-    function convertToShares(uint256 assets) external view returns (uint256) {
-        return assets * 1e18 / rate;
-    }
-}
-
-contract StubPriceOracle {
-    mapping(address => mapping(address => uint256)) prices;
-
-    function setPrice(address base, address quote, uint256 price) external {
-        prices[base][quote] = price;
-    }
-
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        return _calcQuote(inAmount, base, quote);
-    }
-
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        return (_calcQuote(inAmount, base, quote), _calcQuote(inAmount, base, quote));
-    }
-
-    function _calcQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        return inAmount * prices[base][quote] / 1e18;
-    }
-}
 
 contract EulerRouterTest is Test {
     address GOVERNOR = makeAddr("GOVERNOR");

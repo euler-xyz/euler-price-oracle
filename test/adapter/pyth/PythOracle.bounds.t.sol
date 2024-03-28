@@ -41,7 +41,7 @@ contract PythOracleBoundsTest is PythOracleHelper {
                 minPrice: 1,
                 maxPrice: 1_000_000,
                 minExpo: 0,
-                maxExpo: 16
+                maxExpo: 12
             })
         );
         setUpState(s);

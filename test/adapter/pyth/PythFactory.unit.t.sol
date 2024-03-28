@@ -5,6 +5,7 @@ import {PythOracleHelper} from "test/adapter/pyth/PythOracleHelper.sol";
 import {arrOf, boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 import {PythFactory} from "src/adapter/pyth/PythFactory.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {FeedIdentifierLib} from "src/lib/FeedIdentifier.sol";
 
 contract PythFactoryPropTest is PythOracleHelper {
@@ -13,7 +14,6 @@ contract PythFactoryPropTest is PythOracleHelper {
 
     function test_Deploy_Identity(FuzzableState memory s) public {
         setUpState(s);
-
         factory = new PythFactory(GOVERNOR, PYTH);
 
         vm.prank(GOVERNOR);
@@ -21,5 +21,11 @@ contract PythFactoryPropTest is PythOracleHelper {
 
         address deployedOracle = factory.deploy(s.base, s.quote, abi.encode(s.maxStaleness));
         assertEq(deployedOracle.codehash, oracle.codehash);
+    }
+
+    function test_Deploy_RevertsWhen_NoFeed(address base, address quote, uint256 maxStaleness) public {
+        factory = new PythFactory(GOVERNOR, PYTH);
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        factory.deploy(base, quote, abi.encode(maxStaleness));
     }
 }

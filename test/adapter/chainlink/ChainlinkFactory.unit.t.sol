@@ -5,6 +5,7 @@ import {ChainlinkOracleHelper} from "test/adapter/chainlink/ChainlinkOracleHelpe
 import {arrOf, boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {ChainlinkFactory} from "src/adapter/chainlink/ChainlinkFactory.sol";
+import {Errors} from "src/lib/Errors.sol";
 import {FeedIdentifierLib} from "src/lib/FeedIdentifier.sol";
 
 contract ChainlinkFactoryPropTest is ChainlinkOracleHelper {
@@ -23,5 +24,10 @@ contract ChainlinkFactoryPropTest is ChainlinkOracleHelper {
 
         address deployedOracle = factory.deploy(s.base, s.quote, abi.encode(s.maxStaleness));
         assertEq(deployedOracle.codehash, oracle.codehash);
+    }
+
+    function test_Deploy_RevertsWhen_NoFeed(address base, address quote, uint256 maxStaleness) public {
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        factory.deploy(base, quote, abi.encode(maxStaleness));
     }
 }
