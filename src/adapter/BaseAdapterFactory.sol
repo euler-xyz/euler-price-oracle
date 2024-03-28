@@ -13,9 +13,13 @@ abstract contract BaseAdapterFactory is FeedRegistry, IOracleFactory {
     /// @inheritdoc IOracleFactory
     mapping(address oracle => DeploymentInfo) public deployments;
 
+    /// @notice A PriceOracle deployed by the factory.
+    /// @param base The token that is being priced.
+    /// @param quote The token that is the unit of account.
+    /// @param extraData Abi-encoded extra deployment arguments.
     event OracleDeployed(address indexed oracle, address indexed base, address indexed quote, bytes extraData);
 
-    /// Deploy BaseAdapterFactory.
+    /// @notice Deploy BaseAdapterFactory.
     /// @param _governor The address of the FeedRegistry governor.
     constructor(address _governor) FeedRegistry(_governor) {}
 

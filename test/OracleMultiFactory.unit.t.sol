@@ -50,20 +50,13 @@ contract OracleMultiFactoryTest is Test {
         vm.prank(GOVERNOR);
         multiFactory.setSingletonOracle(base, quote, oracle);
 
-        assertEq(multiFactory.singletonOracles(base, quote), oracle);
-        assertEq(multiFactory.singletonOracles(quote, base), oracle);
-    }
+        (address _factory, address _base, address _quote, bytes memory _extraData) =
+            multiFactory.deployedOracles(oracle);
 
-    function test_SetSingletonOracle_Integrity_Overwrite(address base, address quote, address oracleA, address oracleB)
-        public
-    {
-        vm.prank(GOVERNOR);
-        multiFactory.setSingletonOracle(base, quote, oracleA);
-        vm.prank(GOVERNOR);
-        multiFactory.setSingletonOracle(base, quote, oracleB);
-
-        assertEq(multiFactory.singletonOracles(base, quote), oracleB);
-        assertEq(multiFactory.singletonOracles(quote, base), oracleB);
+        assertEq(_factory, address(0));
+        assertEq(_base, base);
+        assertEq(_quote, quote);
+        assertEq(_extraData.length, 0);
     }
 
     function test_SetSingletonOracle_RevertsWhen_CallerNotGovernor(
