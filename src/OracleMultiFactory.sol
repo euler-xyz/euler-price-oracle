@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+import {Errors} from "src/lib/Errors.sol";
 import {Governable} from "src/lib/Governable.sol";
 import {IOracleFactory} from "src/interfaces/IOracleFactory.sol";
 
@@ -19,10 +20,9 @@ contract OracleMultiFactory is Governable {
         address quote;
         bytes extraData;
     }
-
     /// @notice Factories enabled by the governor.
-    mapping(address factory => bool) public enabledFactories;
 
+    mapping(address factory => bool) public enabledFactories;
     /// @notice Oracles deployed by the factory or set by the governor.
     mapping(address oracle => DeploymentInfo) public deployedOracles;
 
@@ -43,11 +43,6 @@ contract OracleMultiFactory is Governable {
     /// @param quote The token that is the unit of account.
     event SingletonOracleSet(address indexed oracle, address base, address quote);
 
-    /// @notice The oracle deployment failed.
-    error DeploymentFailed();
-    /// @notice The factory is not enabled.
-    error FactoryUnauthorized();
-
     /// @notice Deploy OracleMultiFactory.
     /// @param _governor Address of the contract governor.
     constructor(address _governor) Governable(_governor) {}
@@ -67,6 +62,7 @@ contract OracleMultiFactory is Governable {
     /// @param oracle The oracle to set as a singleton. Must implement `IPriceOracle`.
     /// @dev Only callable by the governor. Useful for exchange rate oracles e.g. LidoOracle.
     function setSingletonOracle(address base, address quote, address oracle) external onlyGovernor {
+        if (deployedOracles[oracle].base != address(0)) revert Errors.OracleMultiFactory_OracleAlreadySet();
         deployedOracles[oracle] = DeploymentInfo(address(0), base, quote, "");
         emit SingletonOracleSet(oracle, base, quote);
     }
@@ -81,9 +77,11 @@ contract OracleMultiFactory is Governable {
         external
         returns (address)
     {
-        if (!enabledFactories[factory]) revert FactoryUnauthorized();
+        if (!enabledFactories[factory]) revert Errors.OracleMultiFactory_FactoryUnauthorized();
+
         address oracle = IOracleFactory(factory).deploy(base, quote, extraData);
-        if (oracle == address(0)) revert DeploymentFailed();
+        if (oracle == address(0)) revert Errors.OracleMultiFactory_DeploymentFailed();
+
         deployedOracles[oracle] = DeploymentInfo(factory, base, quote, extraData);
         emit OracleDeployed(oracle, factory, base, quote, extraData);
         return oracle;

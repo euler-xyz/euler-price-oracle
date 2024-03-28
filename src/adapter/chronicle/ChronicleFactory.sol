@@ -21,7 +21,7 @@ contract ChronicleFactory is BaseAdapterFactory {
     {
         uint256 maxStaleness = abi.decode(extraData, (uint256));
         address feed = getFeed[base][quote].toAddress();
-        if (feed == address(0)) revert Errors.PriceOracle_InvalidConfiguration();
+        if (feed == address(0)) revert Errors.OracleFactory_NoFeed(base, quote);
         return address(new ChronicleOracle(base, quote, feed, maxStaleness));
     }
 }

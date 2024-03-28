@@ -25,7 +25,7 @@ contract PythFactoryPropTest is PythOracleHelper {
 
     function test_Deploy_RevertsWhen_NoFeed(address base, address quote, uint256 maxStaleness) public {
         factory = new PythFactory(GOVERNOR, PYTH);
-        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        vm.expectRevert(abi.encodeWithSelector(Errors.OracleFactory_NoFeed.selector, base, quote));
         factory.deploy(base, quote, abi.encode(maxStaleness));
     }
 }

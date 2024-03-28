@@ -21,7 +21,7 @@ contract RedstoneCoreFactory is BaseAdapterFactory {
     {
         uint256 maxStaleness = abi.decode(extraData, (uint256));
         bytes32 feed = getFeed[base][quote].toBytes32();
-        if (feed == 0) revert Errors.PriceOracle_InvalidConfiguration();
+        if (feed == 0) revert Errors.OracleFactory_NoFeed(base, quote);
         return address(new RedstoneCoreOracle(base, quote, feed, maxStaleness));
     }
 }

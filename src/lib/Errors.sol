@@ -27,4 +27,12 @@ library Errors {
     error FeedRegistry_InvalidConfiguration();
     /// @notice The value has dirty higher-order bits.
     error FeedIdentifier_ValueOOB();
+    /// @notice No feed is configured for the base/quote pair.
+    error OracleFactory_NoFeed(address base, address quote);
+    /// @notice The oracle deployment failed.
+    error OracleMultiFactory_DeploymentFailed();
+    /// @notice The factory is not enabled.
+    error OracleMultiFactory_FactoryUnauthorized();
+    /// @notice The oracle was already set or deployed using a factory.
+    error OracleMultiFactory_OracleAlreadySet();
 }

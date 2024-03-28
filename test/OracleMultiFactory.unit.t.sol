@@ -107,7 +107,7 @@ contract OracleMultiFactoryTest is Test {
         vm.prank(GOVERNOR);
         multiFactory.setFactoryStatus(address(factory), true);
 
-        vm.expectRevert(OracleMultiFactory.DeploymentFailed.selector);
+        vm.expectRevert(Errors.OracleMultiFactory_DeploymentFailed.selector);
         multiFactory.deployWithFactory(address(factory), base, quote, extraData);
     }
 
@@ -117,7 +117,7 @@ contract OracleMultiFactoryTest is Test {
         address quote,
         bytes calldata extraData
     ) public {
-        vm.expectRevert(OracleMultiFactory.FactoryUnauthorized.selector);
+        vm.expectRevert(Errors.OracleMultiFactory_FactoryUnauthorized.selector);
         multiFactory.deployWithFactory(factory, base, quote, extraData);
     }
 }
