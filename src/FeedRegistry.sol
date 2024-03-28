@@ -2,75 +2,48 @@
 pragma solidity 0.8.23;
 
 import {Errors} from "src/lib/Errors.sol";
+import {FeedIdentifier} from "src/lib/FeedIdentifier.sol";
 import {Governable} from "src/lib/Governable.sol";
 
+/// @title FeedRegistry
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Stores a list of feed identifiers used when deploying external oracles.
 contract FeedRegistry is Governable {
-    enum FeedType {
-        Bytes32,
-        Address
-    }
+    /// @notice FeedIdentifier configured for base/quote.
+    /// @dev Address types are still stored as `bytes32`.
+    mapping(address base => mapping(address quote => FeedIdentifier)) public getFeed;
 
-    FeedType internal immutable feedType;
-    mapping(address base => mapping(address quote => address feed)) private _addressFeeds;
-    mapping(address base => mapping(address quote => bytes32 feed)) private _bytes32Feeds;
+    /// @notice Configure a feed to correspond to base/quote.
+    /// @param base The address of the base token.
+    /// @param quote The address of the quote token.
+    /// @param feed The address of the feed that corresponds to base/quote.
+    event FeedSet(address indexed base, address indexed quote, FeedIdentifier indexed feed);
 
-    event AddressFeedSet(address indexed base, address indexed quote, address indexed feed);
-    event Bytes32FeedSet(address indexed base, address indexed quote, bytes32 indexed feed);
+    /// @notice Deploy FeedRegistry.
+    /// @param _governor The address of the governor.
+    constructor(address _governor) Governable(_governor) {}
 
-    constructor(address _governor, FeedType _feedType) Governable(_governor) {
-        feedType = _feedType;
-    }
-
-    function setFeeds(address[] calldata bases, address[] calldata quotes, address[] calldata feeds)
+    /// @notice Configure the feeds that correspond to base/quote pairs.
+    /// @param bases Array of base token addresses.
+    /// @param quotes Array of quote token addresses.
+    /// @param feeds Array of feed identifiers of type `address`.
+    /// @dev Only callable by the governor and if the feed type is `address`.
+    function govSetFeeds(address[] memory bases, address[] memory quotes, FeedIdentifier[] memory feeds)
         external
-        onlyFeedType(FeedType.Address)
         onlyGovernor
     {
         if (bases.length != quotes.length || quotes.length != feeds.length) {
-            revert Errors.PriceOracle_InvalidConfiguration();
+            revert Errors.FeedRegistry_InvalidConfiguration();
         }
 
         for (uint256 i = 0; i < bases.length; ++i) {
-            _setFeed(bases[i], quotes[i], feeds[i]);
+            address base = bases[i];
+            address quote = quotes[i];
+            FeedIdentifier feed = feeds[i];
+
+            if (getFeed[base][quote].toBytes32() != 0) revert Errors.FeedRegistry_InvalidConfiguration();
+            getFeed[base][quote] = feed;
+            emit FeedSet(base, quote, feed);
         }
-    }
-
-    function setFeeds(address[] calldata bases, address[] calldata quotes, bytes32[] calldata feeds)
-        external
-        onlyFeedType(FeedType.Bytes32)
-        onlyGovernor
-    {
-        if (bases.length != quotes.length || quotes.length != feeds.length) {
-            revert Errors.PriceOracle_InvalidConfiguration();
-        }
-
-        for (uint256 i = 0; i < bases.length; ++i) {
-            _setFeed(bases[i], quotes[i], feeds[i]);
-        }
-    }
-
-    function getAddressFeed(address base, address quote) public view onlyFeedType(FeedType.Address) returns (address) {
-        return _addressFeeds[base][quote];
-    }
-
-    function getBytes32Feed(address base, address quote) public view onlyFeedType(FeedType.Bytes32) returns (bytes32) {
-        return _bytes32Feeds[base][quote];
-    }
-
-    function _setFeed(address _base, address _quote, address _feed) internal {
-        if (_addressFeeds[_base][_quote] != address(0)) revert Errors.PriceOracle_InvalidConfiguration();
-        _addressFeeds[_base][_quote] = _feed;
-        emit AddressFeedSet(_base, _quote, _feed);
-    }
-
-    function _setFeed(address _base, address _quote, bytes32 _feed) internal {
-        if (_bytes32Feeds[_base][_quote] != 0) revert Errors.PriceOracle_InvalidConfiguration();
-        _bytes32Feeds[_base][_quote] = _feed;
-        emit Bytes32FeedSet(_base, _quote, _feed);
-    }
-
-    modifier onlyFeedType(FeedType _feedType) {
-        if (_feedType != feedType) revert("");
-        _;
     }
 }

@@ -88,20 +88,6 @@ address constant ZRX = 0xE41d2489571d322189246DaFA5ebDe1F4699F498;
 
 address constant DSR_POT = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
 
-// Chronicle Feeds
-address constant CHRONICLE_ETH_USD_FEED = 0x46ef0071b1E2fF6B42d36e5A177EA43Ae5917f4E;
-
 // Uniswap
 address constant UNISWAP_V3_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
 address constant UNISWAP_V3_USDC_WETH_500 = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
-
-// Pyth
-address constant PYTH = 0x4305FB66699C3B2702D4d05CF36551390A4c69C6;
-
-// Pyth Feeds (see https://pyth.network/developers/price-feed-ids)
-bytes32 constant PYTH_ETH_USD_FEED = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
-bytes32 constant PYTH_USDC_USD_FEED = 0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a;
-bytes32 constant PYTH_GUSD_USD_FEED = 0xe186e116f2c7642d0d8aa89c32345d83ebeb350242b2274c46a19ea82e04fb8d;
-
-// Redstone Feeds
-bytes32 constant REDSTONE_ETH_USD_FEED = bytes32("ETH");

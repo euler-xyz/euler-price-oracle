@@ -58,6 +58,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         vm.assume(s.base != s.quote);
+        vm.assume(s.feedId != 0);
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {PYTH, PYTH_ETH_USD_FEED, WETH, USDC, DAI} from "test/utils/EthereumAddresses.sol";
+import {PYTH, PYTH_ETH_USD_FEED} from "test/adapter/pyth/PythFeeds.sol";
+import {WETH, USDC, DAI} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 

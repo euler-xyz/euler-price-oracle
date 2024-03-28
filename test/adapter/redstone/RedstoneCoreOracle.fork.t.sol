@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {REDSTONE_ETH_USD_FEED, WETH, USDC, DAI, GUSD} from "test/utils/EthereumAddresses.sol";
+import {REDSTONE_ETH_USD_FEED} from "test/adapter/redstone/RedstoneFeeds.sol";
+import {WETH, USDC, DAI, GUSD} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
