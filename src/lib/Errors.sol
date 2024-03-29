@@ -21,9 +21,7 @@ library Errors {
     error PriceOracle_TooStale(uint256 staleness, uint256 maxStaleness);
     /// @notice The method can only be called by the governor.
     error Governance_CallerNotGovernor();
-    /// @notice The method can only be called by the governor.
-    error FeedRegistry_NotAvailable();
-    /// @notice The method can only be called by the governor.
+    /// @notice The configuration parameters for the FeedRegistry are invalid.
     error FeedRegistry_InvalidConfiguration();
     /// @notice The value has dirty higher-order bits.
     error FeedIdentifier_ValueOOB();
