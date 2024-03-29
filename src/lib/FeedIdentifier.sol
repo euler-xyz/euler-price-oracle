@@ -36,7 +36,7 @@ library FeedIdentifierLib {
 
     /// @notice Cast `address` to `FeedIdentifier`.
     /// @param id The identifier.
-    /// @return `bytes32` cast to `FeedIdentifier`.
+    /// @return `address` cast to `FeedIdentifier`.
     function fromAddress(address id) internal pure returns (FeedIdentifier) {
         return FeedIdentifier.wrap(bytes32(uint256(uint160(id))));
     }
