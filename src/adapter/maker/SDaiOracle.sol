@@ -35,9 +35,9 @@ contract SDaiOracle is BaseAdapter {
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         if (base == sDai && quote == dai) {
-            return inAmount * _getExchangeRate() / 1e27;
+            return inAmount * _getExchangeRate() / RAY;
         } else if (base == dai && quote == sDai) {
-            return inAmount * 1e27 / _getExchangeRate();
+            return inAmount * RAY / _getExchangeRate();
         }
         revert Errors.PriceOracle_NotSupported(base, quote);
     }
@@ -47,6 +47,6 @@ contract SDaiOracle is BaseAdapter {
         uint256 exchangeRate = IPot(dsrPot).chi();
         if (lastUpdatedAt == block.timestamp) return exchangeRate;
         uint256 ratePerSecond = IPot(dsrPot).dsr();
-        return FixedPointMathLib.rpow(ratePerSecond, block.timestamp - lastUpdatedAt, RAY) * ratePerSecond / RAY;
+        return FixedPointMathLib.rpow(ratePerSecond, block.timestamp - lastUpdatedAt, RAY) * exchangeRate / RAY;
     }
 }

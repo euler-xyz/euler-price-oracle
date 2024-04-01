@@ -50,6 +50,6 @@ contract SDaiOracleHelper is AdapterHelper {
     }
 
     function getUpdatedRate(FuzzableState memory s) internal view returns (uint256) {
-        return FixedPointMathLib.rpow(s.dsr, block.timestamp - s.rho, RAY) * s.dsr / RAY;
+        return FixedPointMathLib.rpow(s.dsr, block.timestamp - s.rho, RAY) * s.chi / RAY;
     }
 }

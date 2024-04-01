@@ -23,15 +23,15 @@ contract SDaiOracleForkTest is ForkTest {
     }
 
     function test_GetQuote_Integrity_EquivalentToDrip() public {
+        uint256 sDaiDaiBeforeDrip = oracle.getQuote(1000e6, SDAI, DAI);
+        uint256 daiSDaiBeforeDrip = oracle.getQuote(1000e6, DAI, SDAI);
         (bool success,) = DSR_POT.call(abi.encodeWithSelector(bytes4(keccak256("drip()"))));
         assertTrue(success);
 
-        uint256 chi = IPot(DSR_POT).chi();
-        uint256 sDaiDai = oracle.getQuote(1000e6, SDAI, DAI);
-        assertEq(sDaiDai, 1000e6 * chi / 1e27);
-
-        uint256 daiSDai = oracle.getQuote(1000e6, DAI, SDAI);
-        assertEq(daiSDai, 1000e6 * 1e27 / chi);
+        uint256 sDaiDaiAfterDrip = oracle.getQuote(1000e6, SDAI, DAI);
+        uint256 daiSDaiAfterDrip = oracle.getQuote(1000e6, DAI, SDAI);
+        assertEq(sDaiDaiBeforeDrip, sDaiDaiAfterDrip);
+        assertEq(daiSDaiBeforeDrip, daiSDaiAfterDrip);
     }
 
     function test_GetQuotes_Integrity() public view {
@@ -45,17 +45,16 @@ contract SDaiOracleForkTest is ForkTest {
     }
 
     function test_GetQuotes_Integrity_EquivalentToDrip() public {
+        (uint256 sDaiDaiBidBeforeDrip, uint256 sDaiDaiAskBeforeDrip) = oracle.getQuotes(1000e6, SDAI, DAI);
+        (uint256 daiSDaiBidBeforeDrip, uint256 daiSDaiAskBeforeDrip) = oracle.getQuotes(1000e6, DAI, SDAI);
         (bool success,) = DSR_POT.call(abi.encodeWithSelector(bytes4(keccak256("drip()"))));
         assertTrue(success);
 
-        uint256 chi = IPot(DSR_POT).chi();
-
-        (uint256 sDaiDaiBid, uint256 sDaiDaiAsk) = oracle.getQuotes(1000e6, SDAI, DAI);
-        assertEq(sDaiDaiBid, 1000e6 * chi / 1e27);
-        assertEq(sDaiDaiAsk, 1000e6 * chi / 1e27);
-
-        (uint256 daiSDaiBid, uint256 daiSDaiAsk) = oracle.getQuotes(1000e6, DAI, SDAI);
-        assertEq(daiSDaiBid, 1000e6 * 1e27 / chi);
-        assertEq(daiSDaiAsk, 1000e6 * 1e27 / chi);
+        (uint256 sDaiDaiBidAfterDrip, uint256 sDaiDaiAskAfterDrip) = oracle.getQuotes(1000e6, SDAI, DAI);
+        (uint256 daiSDaiBidAfterDrip, uint256 daiSDaiAskAfterDrip) = oracle.getQuotes(1000e6, DAI, SDAI);
+        assertEq(sDaiDaiBidBeforeDrip, sDaiDaiBidAfterDrip);
+        assertEq(sDaiDaiAskBeforeDrip, sDaiDaiAskAfterDrip);
+        assertEq(daiSDaiBidBeforeDrip, daiSDaiBidAfterDrip);
+        assertEq(daiSDaiAskBeforeDrip, daiSDaiAskAfterDrip);
     }
 }
