@@ -42,6 +42,10 @@ contract SDaiOracle is BaseAdapter {
         revert Errors.PriceOracle_NotSupported(base, quote);
     }
 
+    /// @notice Get the exchange rate from the DSR Pot contract.
+    /// @dev This function replicates `IPot.drip`, compounding the savings rate for the time since last update.
+    /// Calling `drip` directly is not an option because it is state-mutating, making these functions non-view.
+    /// @return The sDAI/DAI exchange rate.
     function _getExchangeRate() internal view returns (uint256) {
         uint256 lastUpdatedAt = IPot(dsrPot).rho();
         uint256 exchangeRate = IPot(dsrPot).chi();
