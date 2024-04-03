@@ -34,7 +34,7 @@ Fixed. Decimals are now fetched with `BaseAdapter::_getDecimals` which returns 1
 
 ### ERR-01M: Improper Oracle Resolution Mechanism
 
-Fixed. `EulerOracle::govSetConfig` now also sets `oracles[quote][base]`.
+Fixed. `EulerRouter::govSetConfig` now also sets `oracles[quote][base]`.
 
 ### ERR-02M: Incorrect Oracle Resolution of EIP-4626 Vaults
 
