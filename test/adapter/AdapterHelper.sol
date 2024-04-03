@@ -13,6 +13,7 @@ contract AdapterHelper is Test {
         FeedReturnsNegativePrice,
         FeedReturnsZeroPrice,
         FeedReturnsStalePrice,
+        FeedReturnsStaleRate,
         FeedReturnsConfTooWide,
         FeedReturnsExpoTooLow,
         FeedReturnsExpoTooHigh,
