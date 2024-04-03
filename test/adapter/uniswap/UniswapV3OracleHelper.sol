@@ -43,6 +43,8 @@ contract UniswapV3OracleHelper is AdapterHelper {
 
         if (behaviors[Behavior.Constructor_TwapWindowTooShort]) {
             s.twapWindow = uint32(bound(s.twapWindow, 1, 59));
+        } else if (behaviors[Behavior.Constructor_TwapWindowTooLong]) {
+            s.twapWindow = uint32(bound(s.twapWindow, uint32(type(int32).max) + 1, type(uint32).max));
         } else {
             s.twapWindow = uint32(bound(s.twapWindow, 60, 9 days));
         }

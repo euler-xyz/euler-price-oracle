@@ -32,7 +32,9 @@ contract UniswapV3Oracle is BaseAdapter {
     /// @param _twapWindow The desired length of the twap window.
     /// @param _uniswapV3Factory The address of the Uniswap V3 Factory.
     constructor(address _tokenA, address _tokenB, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
-        if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
+        if (_twapWindow < MIN_TWAP_WINDOW || _twapWindow > uint32(type(int32).max)) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
         tokenA = _tokenA;
         tokenB = _tokenB;
         fee = _fee;
@@ -58,7 +60,9 @@ contract UniswapV3Oracle is BaseAdapter {
 
         // Calculate the mean tick over the twap window.
         (int56[] memory tickCumulatives,) = IUniswapV3Pool(pool).observe(secondsAgos);
-        int24 tick = int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapWindow));
+        int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+        int24 tick = int24(tickCumulativesDelta / int56(uint56(twapWindow)));
+        if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(twapWindow)) != 0)) tick--;
         return OracleLibrary.getQuoteAtTick(tick, uint128(inAmount), base, quote);
     }
 }

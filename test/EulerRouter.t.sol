@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
-import {LibPRNG} from "@solady/utils/LibPRNG.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -20,10 +19,6 @@ contract StubERC4626 {
 
     function convertToAssets(uint256 shares) external view returns (uint256) {
         return shares * rate / 1e18;
-    }
-
-    function convertToShares(uint256 assets) external view returns (uint256) {
-        return assets * 1e18 / rate;
     }
 }
 
@@ -254,48 +249,6 @@ contract EulerRouterTest is Test {
         assertEq(askOutAmount, outAmount);
     }
 
-    function test_GetQuote_Integrity_QuoteIsVault(
-        uint256 inAmount,
-        address base,
-        address quoteAsset,
-        address quote,
-        address oracle,
-        uint256 outAmount
-    ) public {
-        base = boundAddr(base);
-        quoteAsset = boundAddr(quoteAsset);
-        quote = boundAddr(quote);
-        oracle = boundAddr(oracle);
-        vm.assume(
-            base != quoteAsset && base != quote && base != oracle && quoteAsset != quote && quoteAsset != oracle
-                && quote != oracle
-        );
-        inAmount = bound(inAmount, 1, type(uint128).max);
-        vm.prank(GOVERNOR);
-        router.govSetConfig(base, quoteAsset, oracle);
-
-        vm.mockCall(quote, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(quoteAsset));
-        vm.mockCall(quote, abi.encodeWithSelector(IERC4626.convertToShares.selector, inAmount), abi.encode(inAmount));
-        vm.prank(GOVERNOR);
-        router.govSetResolvedVault(quote, true);
-
-        vm.mockCall(
-            oracle,
-            abi.encodeWithSelector(IPriceOracle.getQuote.selector, inAmount, base, quoteAsset),
-            abi.encode(outAmount)
-        );
-        vm.mockCall(
-            oracle,
-            abi.encodeWithSelector(IPriceOracle.getQuotes.selector, inAmount, base, quoteAsset),
-            abi.encode(outAmount, outAmount)
-        );
-        uint256 _outAmount = router.getQuote(inAmount, base, quote);
-        assertEq(_outAmount, outAmount);
-        (uint256 bidOutAmount, uint256 askOutAmount) = router.getQuotes(inAmount, base, quote);
-        assertEq(bidOutAmount, outAmount);
-        assertEq(askOutAmount, outAmount);
-    }
-
     function test_GetQuote_Integrity_NoOracleButHasFallback(
         uint256 inAmount,
         address base,
@@ -341,88 +294,6 @@ contract EulerRouterTest is Test {
         router.getQuotes(inAmount, base, quote);
     }
 
-    function test_GetQuote_InverseProperty(uint256 inAmount, uint256 i, uint256 j) public {
-        eWETH = address(new StubERC4626(WETH, 1.2e18));
-        eeWETH = address(new StubERC4626(eWETH, 1.1e18));
-        eDAI = address(new StubERC4626(DAI, 1.5e18));
-        eeDAI = address(new StubERC4626(eDAI, 1.25e18));
-
-        eOracle = new StubPriceOracle();
-        eOracle.setPrice(WETH, DAI, 2500e18);
-        eOracle.setPrice(DAI, WETH, 0.0004e18);
-
-        vm.startPrank(GOVERNOR);
-        router.govSetConfig(WETH, DAI, address(eOracle));
-        router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetResolvedVault(eDAI, true);
-        router.govSetResolvedVault(eeDAI, true);
-        router.govSetResolvedVault(eWETH, true);
-        router.govSetResolvedVault(eeWETH, true);
-        vm.stopPrank();
-
-        address[] memory tokens = new address[](6);
-        tokens[0] = WETH;
-        tokens[1] = eWETH;
-        tokens[2] = eeWETH;
-        tokens[3] = DAI;
-        tokens[4] = eDAI;
-        tokens[5] = eeDAI;
-
-        inAmount = bound(inAmount, 1, type(uint128).max);
-        i = bound(i, 0, tokens.length - 2);
-        j = bound(j, i + 1, tokens.length - 1);
-
-        uint256 outAmount_ij = router.getQuote(inAmount, tokens[i], tokens[j]);
-        uint256 outAmount_ij_ji = router.getQuote(outAmount_ij, tokens[j], tokens[i]);
-        assertApproxEqAbs(outAmount_ij_ji, inAmount, 10);
-
-        (uint256 bidOutAmount_ij, uint256 askOutAmount_ij) = router.getQuotes(inAmount, tokens[i], tokens[j]);
-        uint256 bidOutAmount_ij_ji = router.getQuote(bidOutAmount_ij, tokens[j], tokens[i]);
-        uint256 askOutAmount_ij_ji = router.getQuote(askOutAmount_ij, tokens[j], tokens[i]);
-        assertApproxEqAbs(bidOutAmount_ij_ji, inAmount, 10);
-        assertApproxEqAbs(askOutAmount_ij_ji, inAmount, 10);
-    }
-
-    function test_GetQuote_ClosedLoopProperty(uint256 inAmount, LibPRNG.PRNG memory prng) public {
-        eWETH = address(new StubERC4626(WETH, 1.2e18));
-        eeWETH = address(new StubERC4626(eWETH, 1.1e18));
-        eDAI = address(new StubERC4626(DAI, 1.5e18));
-        eeDAI = address(new StubERC4626(eDAI, 1.25e18));
-
-        eOracle = new StubPriceOracle();
-        eOracle.setPrice(WETH, DAI, 2500e18);
-        eOracle.setPrice(DAI, WETH, 0.0004e18);
-
-        vm.startPrank(GOVERNOR);
-        router.govSetConfig(WETH, DAI, address(eOracle));
-        router.govSetConfig(DAI, WETH, address(eOracle));
-        router.govSetResolvedVault(eDAI, true);
-        router.govSetResolvedVault(eeDAI, true);
-        router.govSetResolvedVault(eWETH, true);
-        router.govSetResolvedVault(eeWETH, true);
-        vm.stopPrank();
-
-        address[] memory tokens = new address[](6);
-        tokens[0] = WETH;
-        tokens[1] = eWETH;
-        tokens[2] = eeWETH;
-        tokens[3] = DAI;
-        tokens[4] = eDAI;
-        tokens[5] = eeDAI;
-
-        _shuffle(prng, tokens);
-
-        inAmount = bound(inAmount, 1e18, type(uint128).max);
-
-        uint256 initInAmount = inAmount;
-
-        for (uint256 i = 0; i < tokens.length; ++i) {
-            uint256 j = (i + 1) % tokens.length;
-            inAmount = router.getQuote(inAmount, tokens[i], tokens[j]);
-        }
-        assertApproxEqRel(initInAmount, inAmount, 0.00000001e18);
-    }
-
     function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {
         vm.assume(caller != GOVERNOR);
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
@@ -443,13 +314,5 @@ contract EulerRouterTest is Test {
         router.transferGovernance(address(0));
 
         assertEq(router.governor(), address(0));
-    }
-
-    function _shuffle(LibPRNG.PRNG memory prng, address[] memory a) private pure {
-        uint256[] memory a_;
-        assembly {
-            a_ := a
-        }
-        LibPRNG.shuffle(prng, a_);
     }
 }

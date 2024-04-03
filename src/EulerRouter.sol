@@ -40,14 +40,16 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @param _governor The address of the governor.
     constructor(address _governor) Governable(_governor) {}
 
-    /// @notice Configure a PriceOracle to resolve base/quote.
+    /// @notice Configure a PriceOracle to resolve base/quote and quote/base.
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
     /// @param oracle The address of the PriceOracle that resolves base/quote.
     /// @dev Callable only by the governor.
     function govSetConfig(address base, address quote, address oracle) external onlyGovernor {
         oracles[base][quote] = oracle;
+        oracles[quote][base] = oracle;
         emit ConfigSet(base, quote, oracle);
+        emit ConfigSet(quote, base, oracle);
     }
 
     /// @notice Configure an ERC4626 vault to use internal pricing via `convert*` methods.
@@ -96,34 +98,26 @@ contract EulerRouter is Governable, IPriceOracle {
     ///    return it without transforming the other variables.
     /// 3. If `base` is configured as an ERC4626 vault with internal pricing,
     ///    transform inAmount by calling `convertToAssets` and recurse by substituting `asset` for `base`.
-    /// 4. If `quote` is configured as an ERC4626 vault with internal pricing,
-    ///    transform inAmount by calling `convertToAssets` and recurse by substituting `asset` for `quote`.
-    /// 5. If there is a fallback oracle, return it without transforming the other variables, else revert.
-    /// @return The resolved inAmount.
+    /// @return The resolved amount. Note that this value may be different from `inAmount` if the resolution path 
+    /// included an ERC4626 vault present in `resolvedVaults`. 
     /// @return The resolved base.
     /// @return The resolved quote.
     /// @return The resolved PriceOracle to call.
     function _resolveOracle(uint256 inAmount, address base, address quote)
         internal
         view
-        returns (uint256, /* inAmount */ address, /* base */ address, /* quote */ address /* oracle */ )
+        returns (uint256, /* resolvedAmount */ address, /* base */ address, /* quote */ address /* oracle */ )
     {
-        // Check the base case
+        // 1. Check the base case.
         if (base == quote) return (inAmount, base, quote, address(0));
-        // 1. Check if base/quote is configured.
+        // 2. Check if there is a PriceOracle for base/quote.
         address oracle = oracles[base][quote];
         if (oracle != address(0)) return (inAmount, base, quote, oracle);
-        // 2. Recursively resolve `base`.
+        // 3. Recursively resolve `base`.
         address baseAsset = resolvedVaults[base];
         if (baseAsset != address(0)) {
             inAmount = IERC4626(base).convertToAssets(inAmount);
             return _resolveOracle(inAmount, baseAsset, quote);
-        }
-        // 3. Recursively resolve `quote`.
-        address quoteAsset = resolvedVaults[quote];
-        if (quoteAsset != address(0)) {
-            inAmount = IERC4626(quote).convertToShares(inAmount);
-            return _resolveOracle(inAmount, base, quoteAsset);
         }
         // 4. Return the fallback or revert if not configured.
         oracle = fallbackOracle;

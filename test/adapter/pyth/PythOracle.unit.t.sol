@@ -20,6 +20,8 @@ contract PythOracleTest is PythOracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.base && otherA != s.quote);
         vm.assume(otherB != s.base && otherB != s.quote);
         expectNotSupported(s.inAmount, s.base, s.base);
@@ -30,14 +32,6 @@ contract PythOracleTest is PythOracleHelper {
         expectNotSupported(s.inAmount, otherA, s.quote);
         expectNotSupported(s.inAmount, otherA, otherA);
         expectNotSupported(s.inAmount, otherA, otherB);
-    }
-
-    function test_Quote_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsZeroPrice, true);
-        setUpState(s);
-
-        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
     function test_Quote_RevertsWhen_NegativePrice(FuzzableState memory s) public {

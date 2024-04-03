@@ -37,8 +37,7 @@ abstract contract Governable {
     /// @notice Set the governor address.
     /// @param newGovernor The address of the new governor.
     function _setGovernor(address newGovernor) internal {
-        address oldGovernor = governor;
+        emit GovernorSet(governor, newGovernor);
         governor = newGovernor;
-        emit GovernorSet(oldGovernor, newGovernor);
     }
 }

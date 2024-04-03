@@ -9,6 +9,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @title ChronicleOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chronicle push-based price feeds.
+/// @dev Note: Chronicle price feeds currently have a caller whitelist. To be able read price data,
+/// the caller must be explicitly authorized
 contract ChronicleOracle is BaseAdapter {
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;

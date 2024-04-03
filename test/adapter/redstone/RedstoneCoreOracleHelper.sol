@@ -14,6 +14,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         uint8 maxBaseDecimals;
         uint8 minQuoteDecimals;
         uint8 maxQuoteDecimals;
+        uint8 minFeedDecimals;
+        uint8 maxFeedDecimals;
         uint256 minInAmount;
         uint256 maxInAmount;
         uint256 minPrice;
@@ -25,6 +27,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         maxBaseDecimals: 18,
         minQuoteDecimals: 0,
         maxQuoteDecimals: 18,
+        minFeedDecimals: 8,
+        maxFeedDecimals: 18,
         minInAmount: 0,
         maxInAmount: type(uint128).max,
         minPrice: 1,
@@ -61,6 +65,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
+        s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
         if (behaviors[Behavior.Constructor_MaxStalenessTooSmall]) {
             s.maxStaleness = uint32(bound(s.maxStaleness, 0, 3 minutes - 1));
@@ -71,12 +76,10 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        oracle = address(new RedstoneCoreOracleHarness(s.base, s.quote, s.feedId, s.maxStaleness));
+        oracle = address(new RedstoneCoreOracleHarness(s.base, s.quote, s.feedId, s.feedDecimals, s.maxStaleness));
 
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.price = 0;
-        } else if (behaviors[Behavior.FeedReturnsTooLargePrice]) {
-            s.price = bound(s.price, uint256(type(uint208).max) + 1, type(uint256).max);
         } else {
             s.price = bound(s.price, bounds.minPrice, bounds.maxPrice);
         }
@@ -95,22 +98,18 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
     function mockPrice(FuzzableState memory s) internal {
         vm.warp(s.tsUpdatePrice);
         RedstoneCoreOracleHarness(oracle).setPrice(s.price);
-    }
-
-    function setPrice(FuzzableState memory s) internal {
-        RedstoneCoreOracleHarness(oracle).updatePrice();
         vm.warp(s.tsGetQuote);
     }
 
     function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
         return FixedPointMathLib.fullMulDiv(
-            s.inAmount, uint256(s.price) * 10 ** s.quoteDecimals, 10 ** (8 + s.baseDecimals)
+            s.inAmount, uint256(s.price) * 10 ** s.quoteDecimals, 10 ** (s.feedDecimals + s.baseDecimals)
         );
     }
 
     function calcOutAmountInverse(FuzzableState memory s) internal pure returns (uint256) {
         return FixedPointMathLib.fullMulDiv(
-            s.inAmount, 10 ** (8 + s.baseDecimals), (uint256(s.price) * 10 ** s.quoteDecimals)
+            s.inAmount, 10 ** (s.feedDecimals + s.baseDecimals), (uint256(s.price) * 10 ** s.quoteDecimals)
         );
     }
 }

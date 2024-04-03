@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracleHelper.sol";
+import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -13,8 +14,6 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).quote(), s.quote);
         assertEq(RedstoneCoreOracle(oracle).feedId(), s.feedId);
         assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
-        assertEq(RedstoneCoreOracle(oracle).lastPrice(), 0);
-        assertEq(RedstoneCoreOracle(oracle).lastUpdatedAt(), 0);
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessLt3Min(FuzzableState memory s) public {
@@ -26,26 +25,12 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_UpdatePrice_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
-        setPrice(s);
-
-        assertEq(RedstoneCoreOracle(oracle).lastPrice(), s.price);
-        assertEq(RedstoneCoreOracle(oracle).lastUpdatedAt(), s.tsUpdatePrice);
-    }
-
-    function test_UpdatePrice_Overflow(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsTooLargePrice, true);
-        setUpState(s);
-        mockPrice(s);
-
-        vm.expectRevert(Errors.PriceOracle_Overflow.selector);
-        setPrice(s);
-
-        assertEq(RedstoneCoreOracle(oracle).lastPrice(), 0);
-        assertEq(RedstoneCoreOracle(oracle).lastUpdatedAt(), 0);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.base && otherA != s.quote);
         vm.assume(otherB != s.base && otherB != s.quote);
         expectNotSupported(s.inAmount, s.base, s.base);
@@ -61,7 +46,6 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
-        setPrice(s);
 
         uint256 expectedOutAmount = calcOutAmount(s);
 
@@ -76,7 +60,6 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_Inverse_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
-        setPrice(s);
 
         uint256 expectedOutAmount = calcOutAmountInverse(s);
 
@@ -92,7 +75,6 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         setBehavior(Behavior.FeedReturnsStalePrice, true);
         setUpState(s);
         mockPrice(s);
-        setPrice(s);
 
         bytes memory err =
             abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxStaleness);

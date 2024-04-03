@@ -12,7 +12,6 @@ contract AdapterHelper is Test {
         FeedReverts,
         FeedReturnsNegativePrice,
         FeedReturnsZeroPrice,
-        FeedReturnsTooLargePrice,
         FeedReturnsStalePrice,
         FeedReturnsConfTooWide,
         FeedReturnsExpoTooLow,
@@ -20,6 +19,7 @@ contract AdapterHelper is Test {
         Constructor_MaxStalenessTooSmall,
         Constructor_NoPool,
         Constructor_TwapWindowTooShort,
+        Constructor_TwapWindowTooLong,
         Quote_InAmountTooLarge,
         Quote_ObserveReverts
     }

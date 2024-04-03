@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3OracleHelper} from "test/adapter/uniswap/UniswapV3OracleHelper.sol";
+import {boundAddr} from "test/utils/TestUtils.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -22,6 +23,12 @@ contract UniswapV3OracleTest is UniswapV3OracleHelper {
         setUpState(s);
     }
 
+    function test_Constructor_RevertsWhen_Constructor_TwapWindowTooLong(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_TwapWindowTooLong, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Constructor_RevertsWhen_PoolAddressZero(FuzzableState memory s) public {
         setBehavior(Behavior.Constructor_NoPool, true);
         vm.expectRevert();
@@ -30,6 +37,8 @@ contract UniswapV3OracleTest is UniswapV3OracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.tokenA && otherA != s.tokenB);
         vm.assume(otherB != s.tokenA && otherB != s.tokenB);
         expectNotSupported(s.inAmount, s.tokenA, s.tokenA);

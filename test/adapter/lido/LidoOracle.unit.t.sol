@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {LidoOracleHelper} from "test/adapter/lido/LidoOracleHelper.sol";
+import {boundAddr} from "test/utils/TestUtils.sol";
 import {IStEth} from "src/adapter/lido/IStEth.sol";
 import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
@@ -16,6 +17,8 @@ contract LidoOracleTest is LidoOracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != WSTETH && otherA != STETH);
         vm.assume(otherB != WSTETH && otherB != STETH);
         expectNotSupported(s.inAmount, WSTETH, WSTETH);
