@@ -51,16 +51,6 @@ library ScaleUtils {
         return from(quoteDecimals, feedDecimals + baseDecimals);
     }
 
-    /// @notice Calculate the scale factors for converting a unit price.
-    /// @param baseDecimals The decimals of the base asset.
-    /// @param quoteDecimals The decimals of the quote asset.
-    /// @param priceDecimals The decimals of the feed price, not incorporated into the price.
-    /// @return The scale factors used for price conversions.
-    function calcScale(uint8 baseDecimals, uint8 quoteDecimals, int8 priceDecimals) internal pure returns (Scale) {
-        int8 diff = int8(baseDecimals) - priceDecimals;
-        return from(quoteDecimals, uint8(diff));
-    }
-
     /// @notice Convert the price by applying scale factors.
     /// @param inAmount The amount of `base` to convert.
     /// @param unitPrice The unit price reported by the feed.
