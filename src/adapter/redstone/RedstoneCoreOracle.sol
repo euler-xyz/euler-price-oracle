@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/console2.sol";
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
@@ -73,7 +72,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Validation logic inherited from PrimaryProdDataServiceConsumerBase.
     function updatePrice() external {
         // Use the cache if it has not expired.
-        if (block.timestamp < uint256(cacheUpdatedAt) + maxCacheStaleness) return;
+        if (block.timestamp <= maxCacheStaleness + cacheUpdatedAt) return;
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
         cachedPrice = uint208(price);
@@ -88,8 +87,9 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// This is an artifact of the Redstone system and we don't override this behavior.
     function validateTimestamp(uint256 timestampMillis) public view virtual override {
         uint256 timestamp = timestampMillis / 1000;
-        if (block.timestamp > timestamp && block.timestamp - timestamp > maxPriceStaleness) {
-            revert Errors.PriceOracle_InvalidAnswer();
+        if (block.timestamp > timestamp) {
+            uint256 staleness = block.timestamp - timestamp;
+            if (staleness > maxPriceStaleness) revert Errors.PriceOracle_TooStale(staleness, maxPriceStaleness);
         } else if (
             block.timestamp < timestamp
                 && timestamp - block.timestamp > RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS
@@ -106,8 +106,8 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
-        uint256 cacheStaleness = block.timestamp - cacheUpdatedAt;
-        if (cacheStaleness > maxCacheStaleness) revert Errors.PriceOracle_TooStale(cacheStaleness, maxCacheStaleness);
+        uint256 staleness = block.timestamp - cacheUpdatedAt;
+        if (staleness > maxCacheStaleness) revert Errors.PriceOracle_TooStale(staleness, maxCacheStaleness);
 
         return ScaleUtils.calcOutAmount(inAmount, cachedPrice, scale, inverse);
     }

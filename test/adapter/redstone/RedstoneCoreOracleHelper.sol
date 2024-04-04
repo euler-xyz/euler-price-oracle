@@ -69,8 +69,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
         s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
-        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 0, 168 hours));
-        s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 0, 168 hours));
+        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours));
+        s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, 168 hours));
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
@@ -85,14 +85,16 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.price = 0;
+        } else if (behaviors[Behavior.FeedReturnsTooLargePrice]) {
+            s.price = bound(s.price, uint256(type(uint208).max) + 1, type(uint256).max);
         } else {
             s.price = bound(s.price, bounds.minPrice, bounds.maxPrice);
         }
 
-        s.tsDataPackage = bound(s.tsDataPackage, 2 ** 20, 2 ** 48);
+        s.tsDataPackage = bound(s.tsDataPackage, 2 ** 20, 2 ** 36);
         if (behaviors[Behavior.FeedReturnsStalePrice]) {
             s.tsUpdatePrice =
-                bound(s.tsUpdatePrice, s.tsDataPackage + s.maxPriceStaleness + 1, 2 ** 48 + s.maxPriceStaleness + 1);
+                bound(s.tsUpdatePrice, s.tsDataPackage + s.maxPriceStaleness + 1, 2 ** 36 + s.maxPriceStaleness + 1);
         } else {
             s.tsUpdatePrice = bound(s.tsUpdatePrice, s.tsDataPackage, s.tsDataPackage + s.maxPriceStaleness);
         }

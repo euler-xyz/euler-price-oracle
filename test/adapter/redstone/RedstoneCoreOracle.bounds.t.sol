@@ -22,6 +22,7 @@ contract RedstoneOracleBoundsTest is RedstoneCoreOracleHelper {
         );
         setUpState(s);
         mockPrice(s);
+        setPrice(s);
 
         uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, calcOutAmount(s));
@@ -47,6 +48,7 @@ contract RedstoneOracleBoundsTest is RedstoneCoreOracleHelper {
         );
         setUpState(s);
         mockPrice(s);
+        setPrice(s);
 
         uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, calcOutAmount(s));
