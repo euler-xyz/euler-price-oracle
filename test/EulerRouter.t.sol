@@ -65,28 +65,32 @@ contract EulerRouterTest is Test {
     }
 
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
+        (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
         vm.expectEmit();
-        emit EulerRouter.ConfigSet(base, quote, oracle);
+        emit EulerRouter.ConfigSet(token0, token1, oracle);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
 
-        assertEq(router.oracles(base, quote), oracle);
+        assertEq(router.getConfiguredOracle(base, quote), oracle);
+        assertEq(router.getConfiguredOracle(quote, base), oracle);
     }
 
     function test_GovSetConfig_Integrity_OverwriteOk(address base, address quote, address oracleA, address oracleB)
         public
     {
+        (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
         vm.expectEmit();
-        emit EulerRouter.ConfigSet(base, quote, oracleA);
+        emit EulerRouter.ConfigSet(token0, token1, oracleA);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleA);
 
         vm.expectEmit();
-        emit EulerRouter.ConfigSet(base, quote, oracleB);
+        emit EulerRouter.ConfigSet(token0, token1, oracleB);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracleB);
 
-        assertEq(router.oracles(base, quote), oracleB);
+        assertEq(router.getConfiguredOracle(base, quote), oracleB);
+        assertEq(router.getConfiguredOracle(quote, base), oracleB);
     }
 
     function test_GovSetConfig_RevertsWhen_CallerNotGovernor(

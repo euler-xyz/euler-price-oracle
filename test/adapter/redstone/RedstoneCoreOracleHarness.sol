@@ -5,16 +5,24 @@ import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
 contract RedstoneCoreOracleHarness is RedstoneCoreOracle {
     uint256 price;
+    uint256 timestampMillis;
 
-    constructor(address _base, address _quote, bytes32 _feedId, uint8 _feedDecimals, uint32 _maxStaleness)
-        RedstoneCoreOracle(_base, _quote, _feedId, _feedDecimals, _maxStaleness)
-    {}
+    constructor(
+        address _base,
+        address _quote,
+        bytes32 _feedId,
+        uint8 _feedDecimals,
+        uint32 _maxPriceStaleness,
+        uint32 _maxCacheStaleness
+    ) RedstoneCoreOracle(_base, _quote, _feedId, _feedDecimals, _maxPriceStaleness, _maxCacheStaleness) {}
 
-    function setPrice(uint256 _price) external {
+    function setPrice(uint256 _price, uint256 _timestampMillis) external {
         price = _price;
+        timestampMillis = _timestampMillis;
     }
 
     function getOracleNumericValueFromTxMsg(bytes32) internal view override returns (uint256) {
+        validateTimestamp(timestampMillis);
         return price;
     }
 }

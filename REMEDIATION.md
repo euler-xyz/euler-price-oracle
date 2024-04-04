@@ -44,7 +44,7 @@ After analyzing how `EulerRouter` is going to be used in our deployment, we conc
 
 ### LOE-01M: Potentially Stale Calculation of Exchange Rate (Asynchronous Rewards / Penalties)
 
-Acknowledged, won't fix. We agree with the economic assessment, however the magnitude of the difference is too small to necessitate any changes in the logic of the oracle. Add
+Acknowledged, won't fix. We agree with the economic assessment, however the magnitude of the difference is too small to necessitate any changes in the logic of the oracle.
 
 ### POE-01M: Inexistent Configurability of Confidence Width
 
@@ -86,15 +86,23 @@ Oracle adapters in the Price Oracles codebase are intended to be immutable. Circ
 
 ### RCO-04M: Misconceived Data Staleness
 
-Fixed after fixing RCO-05M.
+Fixed.
 
-As a result of the fix for RCO-05M, the local price caching logic (`updatePrice`, `lastPrice` and `lastUpdatedAt`) was removed. Instead, the signed price data payload is extracted and verified in `_getQuote`. Now `maxStaleness` is used in the overriden `validateTimestamp` function from `RedstoneConsumerBase`. The effect of this change is that the range of valid Redstone signed data package timestamps is `[ts - maxStaleness, ts + 1 min]`. Note that we still allow for timestamps from the future, which we consider an artifact of the RedStone system that does not affect the security adversely. We additionaly document that callers have a degree of freedom to choose a most favorable price in the valid timestamp range, however tightening the range too much runs the risk of dropped transactions due to network latency.
+There are now two notions of staleness in `RedstoneCoreOracle`, `maxPriceStaleness` and `maxCacheStaleness`. The former compares `block.timestamp` against the timestamp of the Redstone data package in `updatePrice`. The latter compares `block.timestamp` against the timestamp of the cached price in `_getQuote`.
+
+To enforce `maxPriceStaleness` we override `validateTimestamp` from `RedstoneConsumerBase` to effectively set the accepted range of valid Redstone signed data package timestamps to `[block.timestamp - maxPriceStaleness, block.timestamp + 1 min]`. Note that we still allow for timestamps from the future, which we consider an artifact of the RedStone system that does not affect the security of our integration adversely.
+
+We acknowledge and document that callers can choose the most suitable Redstone price in `[block.time - maxPriceStaleness, block.timestamp]` for their action. However this is a drawback of the local data verification model employed by Redstone Core that will be present to an extent in any integration.
 
 ### RCO-05M: Improper Integration of Redstone On-Demand Feeds
 
-Fixed.
+Disagree with analysis and severity.
 
-The local price caching logic (`updatePrice`, `lastPrice` and `lastUpdatedAt`) was removed. Instead, the signed price data payload is extracted and verified in `_getQuote`.
+The Price Oracles codebase is intended to be used as a part of the Euler Vault Kit (EVK) system. Due to Redstone's unique way of transmitting price updates, separating the verification and consumption of the price in `RedstoneCoreOracle` is the only way to have EVK vaults remain agnostic to the implementation details of Redstone. If `RedstoneCoreOracle::_getQuote` also decoded and verified the signed Redstone price, then the extra calldata would need to be special-cased in the vault code. In fact, the entire call chain leading to `getQuote` would also need to special-case this behavior. We believe that having this phantom behavior present itself depending on whether `EulerRouter` points to this particular implementation of `IPriceOracle` is a worse security problem than explicitly requiring the caller to update the price in a separate call prior to interaction.
+
+We disagree with the assertion that "the oracles of the Euler Finance Oracle repository should not require active maintenance." Pull-based oracles need _active maintenance_ by definition as the caller is themselves responsible of transmitting the price data and updating the price. Furthermore, users are expected to interact with EVK vaults through the Ethereum Vault Connector (EVC), which has multicall functionality. The user can dispatch a call to `RedstoneCoreOracle::updatePrice` prior to interacting with the vault, ensuring atomicity.
+
+The assertion that "`RedstoneCoreOracle` functions identically to the "classic" data feeds already provided by Redstone" is a non sequitur. Redstone Core and Redstone Classic are different oracle products with a different operating model and supported pairs. Redstone Classic feeds have fixed update conditions, whereas `RedstoneCoreOracle` has dynamic update conditions, chosen to an extent by the deployer and the caller, with no deviation threshold. Additionally, after the fix for RCO-04M that decouples price staleness from cache staleness, one can set `maxCacheStaleness=0`, effectively enforcing that `updatePrice` be called in the same block as `getQuote` (e.g. through the EVC). In this configuration, the integration that `RedstoneCoreOracle` provides will the exact same latency guarantees as any conventional integration of Redstone Core.
 
 ### ROE-01M: Potentially Stale Calculation of Exchange Rate (Asynchronous Rewards / Penalties)
 
@@ -102,7 +110,7 @@ Fixed by removing `RethOracle` from the codebase. Upon further research, we conc
 
 ### SDO-01M: Insecure Usage of Outdated Interest Rate Accumulator
 
-Fixed according to recommendation. We used `FixedPointMathLib::rpow` from Solady.
+Fixed according to recommendation. We used `FixedPointMathLib::rpow` from Solady and verified it is equivalent to the `rpow` implementation used in the DSR Pot.
 
 ### SUS-01M: Potential Increase of Acceptable Values
 
@@ -118,7 +126,9 @@ Fixed. The constructor now reverts with `Errors.PriceOracle_InvalidConfiguration
 
 ### UVO-02M: Inexistent Validation of Observation Cardinality Length
 
-TODO
+Acknowledged, won't fix.
+
+`UniswapV3Oracle` requires preparation before deployment and use. The pool must have sufficient total liquidity, enough full-range liquidity, and enough observations in the ring buffer to support the desired TWAP window. Increasing the observation cardinality is best done before deployment because of two main reasons. First, the appropriate cardinality for a given TWAP window is difficult to determine on-chain because it depends on block time metrics, which may be variable (especially on non-ossified blockchains such as L2s). Second, it takes time for the buffer's length to grow to its new cardinality, during which the oracle is inoperable.
 
 ### UVO-03M: Insecure Calculation of Mean Tick
 
@@ -126,7 +136,9 @@ Fixed. Copied the rounding-down logic from `OracleLibrary` v0.8. Note that the s
 
 ### UVO-04M: Potentially Insecure TWAP Window
 
-TODO
+Acknowledged, won't fix.
+
+The appropriate minimum value is relative. The oracle may be used for the internal Synths project, which will likely need TWAP windows shorter than 30 minutes. Note that price manipulation is less severe for Synths than it is for the lending product.
 
 ### UVO-05M: Insecure Down-Casting Operation (Input Amount)
 
@@ -149,7 +161,7 @@ We believe that the code in its current form is more legible. When dealing with 
 
 ### POE-01C: Potentially Redundant Function Implementation
 
-TODO: discuss internally.
+Fixed by removing the function. Callers are expected to update the Pyth price in an EVC batch prior to interacting with the relevant EVK vault.
 
 ### POE-02C: Redundant Handling of Positive Exponent
 

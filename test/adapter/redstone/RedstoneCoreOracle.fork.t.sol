@@ -14,7 +14,7 @@ contract RedstoneCoreOracleForkTest is ForkTest {
 
     function test_GetQuote_Integrity_WETH_USDC() public {
         vm.skip(true);
-        oracle = new RedstoneCoreOracle(WETH, USDC, REDSTONE_ETH_USD_FEED, 8, 3 minutes);
+        oracle = new RedstoneCoreOracle(WETH, USDC, REDSTONE_ETH_USD_FEED, 8, 3 minutes, 1 minutes);
 
         bytes memory getQuoteData = abi.encodeCall(oracle.getQuote, (1e18, WETH, USDC));
         bytes memory redstonePayload = abi.encode(1);

@@ -13,18 +13,32 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).base(), s.base);
         assertEq(RedstoneCoreOracle(oracle).quote(), s.quote);
         assertEq(RedstoneCoreOracle(oracle).feedId(), s.feedId);
-        assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
-    }
-
-    function test_Constructor_RevertsWhen_MaxStalenessLt3Min(FuzzableState memory s) public {
-        setBehavior(Behavior.Constructor_MaxStalenessTooSmall, true);
-        vm.expectRevert();
-        setUpState(s);
+        assertEq(RedstoneCoreOracle(oracle).feedDecimals(), s.feedDecimals);
+        assertEq(RedstoneCoreOracle(oracle).maxPriceStaleness(), s.maxPriceStaleness);
+        assertEq(RedstoneCoreOracle(oracle).maxCacheStaleness(), s.maxCacheStaleness);
+        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), 0);
+        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
     }
 
     function test_UpdatePrice_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
+        setPrice(s);
+
+        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), s.price);
+        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), s.tsUpdatePrice);
+    }
+
+    function test_UpdatePrice_Overflow(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsTooLargePrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_Overflow.selector);
+        setPrice(s);
+
+        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), 0);
+        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
@@ -46,6 +60,7 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
+        setPrice(s);
 
         uint256 expectedOutAmount = calcOutAmount(s);
 
@@ -60,6 +75,7 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_Inverse_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
+        setPrice(s);
 
         uint256 expectedOutAmount = calcOutAmountInverse(s);
 
@@ -71,13 +87,27 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(askOutAmount, expectedOutAmount);
     }
 
-    function test_Quote_RevertsWhen_TooStale(FuzzableState memory s) public {
+    function test_Quote_RevertsWhen_PriceTooStale(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsStalePrice, true);
         setUpState(s);
         mockPrice(s);
 
-        bytes memory err =
-            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxStaleness);
+        bytes memory err = abi.encodeWithSelector(
+            Errors.PriceOracle_TooStale.selector, s.tsUpdatePrice - s.tsDataPackage, s.maxPriceStaleness
+        );
+        vm.expectRevert(err);
+        setPrice(s);
+    }
+
+    function test_Quote_RevertsWhen_CacheTooStale(FuzzableState memory s) public {
+        setBehavior(Behavior.CachedPriceStale, true);
+        setUpState(s);
+        mockPrice(s);
+        setPrice(s);
+
+        bytes memory err = abi.encodeWithSelector(
+            Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxCacheStaleness
+        );
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 }
