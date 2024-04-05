@@ -2,7 +2,8 @@
 pragma solidity 0.8.23;
 
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {CHRONICLE_ETH_USD_FEED, WETH, USDC, GUSD, DAI} from "test/utils/EthereumAddresses.sol";
+import {CHRONICLE_ETH_USD_FEED} from "test/adapter/chronicle/ChronicleAddresses.sol";
+import {WETH, USDC, GUSD, DAI} from "test/utils/EthereumAddresses.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 
 contract ChronicleOracleForkTest is ForkTest {

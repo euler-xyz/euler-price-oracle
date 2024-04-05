@@ -66,6 +66,7 @@ contract PythOracleHelper is AdapterHelper {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         vm.assume(distinct(s.base, s.quote, PYTH));
+        vm.assume(s.feedId != 0);
 
         s.maxStaleness = bound(s.maxStaleness, 0, type(uint32).max);
         s.maxConfWidth = bound(s.maxConfWidth, 1, 10_000);

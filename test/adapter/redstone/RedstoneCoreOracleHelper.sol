@@ -95,6 +95,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         if (behaviors[Behavior.FeedReturnsStalePrice]) {
             s.tsUpdatePrice =
                 bound(s.tsUpdatePrice, s.tsDataPackage + s.maxPriceStaleness + 1, 2 ** 36 + s.maxPriceStaleness + 1);
+        } else if (behaviors[Behavior.FeedReturnsTooAheadPrice]) {
+            s.tsUpdatePrice = bound(s.tsUpdatePrice, s.maxCacheStaleness + 1, s.tsDataPackage - 1 minutes - 1);
         } else {
             s.tsUpdatePrice = bound(s.tsUpdatePrice, s.tsDataPackage, s.tsDataPackage + s.maxPriceStaleness);
         }

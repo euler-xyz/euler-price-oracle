@@ -99,6 +99,15 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         setPrice(s);
     }
 
+    function test_Quote_RevertsWhen_PriceTooAhead(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsTooAheadPrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        setPrice(s);
+    }
+
     function test_Quote_RevertsWhen_CacheTooStale(FuzzableState memory s) public {
         setBehavior(Behavior.CachedPriceStale, true);
         setUpState(s);
@@ -109,5 +118,18 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
             Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxCacheStaleness
         );
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+    }
+
+    function test_ValidateTimestamp_Ahead_Within1Min(FuzzableState memory s, uint256 timestamp) public {
+        setUpState(s);
+        timestamp = bound(timestamp, block.timestamp, block.timestamp + 1 minutes);
+        RedstoneCoreOracle(oracle).validateTimestamp(timestamp * 1000);
+    }
+
+    function test_ValidateTimestamp_Ahead_Over1Min(FuzzableState memory s, uint256 timestamp) public {
+        setUpState(s);
+        timestamp = bound(timestamp, block.timestamp + 1 minutes + 1, type(uint256).max / 1000);
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        RedstoneCoreOracle(oracle).validateTimestamp(timestamp * 1000);
     }
 }

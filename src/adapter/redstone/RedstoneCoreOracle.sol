@@ -44,11 +44,9 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @param _maxPriceStaleness The maximum allowed age of the Redstone price in `updatePrice`.
     /// @param _maxCacheStaleness The maximum allowed age of the cached price in `_getQuote`.
     /// @dev Base and quote are not required to correspond to the feed assets.
-    /// Note: Since the signed Redstone price is verified locally, callers are theoretically
-    /// able to use any Redstone price between `now - maxPriceStaleness` and `now`.
-    /// On the other hand, `maxStaleness` effectively imposes a deadline on the transaction,
-    /// so choosing an acceptance that is too short increases the change that the transaction is dropped,
-    /// especially during chain congestion.
+    /// Note: Since Redstone prices are verified locally, callers can pass data to `maxPriceStaleness` seconds old.
+    /// On the other hand, `maxStaleness` effectively imposes a deadline on the transaction, so a staleness window
+    /// that is too short increases the chance that the transaction reverts, especially during chain congestion.
     constructor(
         address _base,
         address _quote,
@@ -90,10 +88,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         if (block.timestamp > timestamp) {
             uint256 staleness = block.timestamp - timestamp;
             if (staleness > maxPriceStaleness) revert Errors.PriceOracle_TooStale(staleness, maxPriceStaleness);
-        } else if (
-            block.timestamp < timestamp
-                && timestamp - block.timestamp > RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS
-        ) {
+        } else if (timestamp - block.timestamp > RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS) {
             revert Errors.PriceOracle_InvalidAnswer();
         }
     }
