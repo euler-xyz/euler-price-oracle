@@ -123,7 +123,7 @@ Since feed decimals cannot be introspected on-chain, `_feedDecimals` is now a co
 
 ### RCO-03M: Inexistent Capability of Functionality Overrides
 
-Acknowledged, won't fix.
+Acknowledged, won't fix. Disagree with severity.
 
 Oracle adapters in the Price Oracles codebase are intended to be immutable. Circuit breakers and other risk measures arising from conditions that cannot be reliably deduced on-chain may exist on a higher-level layer e.g. a router contract. The governor of that contract may then change the resolved oracle for the given pair to another provider or another implementation.
 
@@ -181,7 +181,7 @@ The constructor now reverts with `Errors.PriceOracle_InvalidConfiguration()` if 
 
 ### UVO-02M: Inexistent Validation of Observation Cardinality Length
 
-Acknowledged, won't fix.
+Acknowledged, won't fix. Disagree with severity.
 
 `UniswapV3Oracle` requires preparation before deployment and use. The pool must have sufficient total liquidity, enough full-range liquidity, and enough observations in the ring buffer to support the desired TWAP window. Increasing the observation cardinality is best done before deployment because of two main reasons. First, the appropriate cardinality for a given TWAP window is difficult to determine on-chain because it depends on block time metrics, which may be variable (especially on non-ossified blockchains such as L2s). Second, it takes time for the buffer's length to grow to its new cardinality, during which the oracle is inoperable.
 
@@ -193,9 +193,9 @@ Copied the rounding-down logic from `OracleLibrary` v0.8. Note that the subtract
 
 ### UVO-04M: Potentially Insecure TWAP Window
 
-Acknowledged, won't fix.
+Fixed.
 
-The appropriate minimum value is relative. The oracle may be used for the internal Synths project, which will likely need TWAP windows shorter than 30 minutes. Note that price manipulation is less severe for Synths than it is for the lending product.
+The minimum TWAP window is 5 minutes. This oracle may be used for the internal Synths project, which will likely need TWAP windows shorter than 30 minutes. Note that price manipulation is less severe for Synths than it is for the lending product.
 
 ### UVO-05M: Insecure Down-Casting Operation (Input Amount)
 
