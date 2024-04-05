@@ -92,8 +92,8 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @param quote The address of the quote token.
     /// @return The configured `PriceOracle` for the pair or `address(0)` if no oracle is configured.
     function getConfiguredOracle(address base, address quote) public view returns (address) {
-        (address token0, address token1) = _sort(base, quote);
-        return oracles[token0][token1];
+        (address asset0, address asset1) = _sort(base, quote);
+        return oracles[asset0][asset1];
     }
 
     /// @notice Resolve the PriceOracle to call for a given base/quote pair.

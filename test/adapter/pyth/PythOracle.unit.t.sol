@@ -89,37 +89,4 @@ contract PythOracleTest is PythOracleHelper {
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
-
-    function test_UpdatePrice_Integrity(
-        FuzzableState memory s,
-        address caller,
-        bytes[] calldata updateData,
-        uint256 value
-    ) public {
-        setUpState(s);
-        caller = boundAddr(caller);
-        vm.deal(caller, value);
-
-        vm.prank(caller);
-        PythOracle(oracle).updatePrice{value: value}(updateData);
-        assertEq(caller.balance, 0);
-    }
-
-    function test_UpdatePrice_RevertsWhen_PythCallReverts(
-        FuzzableState memory s,
-        address caller,
-        bytes[] calldata updateData,
-        uint256 value
-    ) public {
-        setBehavior(Behavior.FeedReverts, true);
-        setUpState(s);
-        caller = boundAddr(caller);
-        vm.deal(caller, value);
-
-        vm.expectRevert();
-        vm.prank(caller);
-        PythOracle(oracle).updatePrice{value: value}(updateData);
-        assertEq(caller.balance, value);
-        assertEq(address(PythOracle(oracle)).balance, 0);
-    }
 }

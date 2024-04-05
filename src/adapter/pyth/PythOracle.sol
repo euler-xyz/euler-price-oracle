@@ -56,13 +56,6 @@ contract PythOracle is BaseAdapter {
         quoteDecimals = _getDecimals(quote);
     }
 
-    /// @notice Update the price of the Pyth feed.
-    /// @param updateData Price update data. Must be fetched off-chain.
-    /// @dev The required fee can be computed by calling `getUpdateFee` on Pyth with the length of the `updateData` array.
-    function updatePrice(bytes[] calldata updateData) external payable {
-        IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
-    }
-
     /// @notice Fetch the latest Pyth price and transform it to a quote.
     /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
