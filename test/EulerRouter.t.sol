@@ -33,6 +33,7 @@ contract EulerRouterTest is Test {
     }
 
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
+        vm.assume(base != quote);
         (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
         vm.expectEmit();
         emit EulerRouter.ConfigSet(token0, token1, oracle);
@@ -46,6 +47,7 @@ contract EulerRouterTest is Test {
     function test_GovSetConfig_Integrity_OverwriteOk(address base, address quote, address oracleA, address oracleB)
         public
     {
+        vm.assume(base != quote);
         (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
         vm.expectEmit();
         emit EulerRouter.ConfigSet(token0, token1, oracleA);
@@ -67,11 +69,18 @@ contract EulerRouterTest is Test {
         address quote,
         address oracle
     ) public {
+        vm.assume(base != quote);
         vm.assume(caller != GOVERNOR);
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.govSetConfig(base, quote, oracle);
+    }
+
+    function test_GovSetConfig_RevertsWhen_BaseEqQuote(address base, address oracle) public {
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        vm.prank(GOVERNOR);
+        router.govSetConfig(base, base, oracle);
     }
 
     function test_GovSetVaultResolver_Integrity(address vault, address asset) public {
@@ -195,15 +204,14 @@ contract EulerRouterTest is Test {
         rate1 = bound(rate1, 1, 1e24);
         rate2 = bound(rate2, 1, 1e24);
 
-        vm.startPrank(GOVERNOR);
         address oracle = address(new StubPriceOracle());
+        address base = address(new StubERC4626(baseAsset, rate2));
+        vm.assume(distinct(base, baseAsset, quote, oracle));
+
+        vm.startPrank(GOVERNOR);
         StubPriceOracle(oracle).setPrice(baseAsset, quote, rate1);
         router.govSetConfig(baseAsset, quote, oracle);
-
-        address base = address(new StubERC4626(baseAsset, rate2));
         router.govSetResolvedVault(base, true);
-
-        vm.assume(distinct(base, baseAsset, quote, oracle));
         inAmount = bound(inAmount, 1, type(uint128).max);
         uint256 expectedOutAmount = (inAmount * rate2 / 1e18) * rate1 / 1e18;
         uint256 outAmount = router.getQuote(inAmount, base, quote);

@@ -46,6 +46,8 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @param oracle The address of the PriceOracle to resolve the pair.
     /// @dev Callable only by the governor.
     function govSetConfig(address base, address quote, address oracle) external onlyGovernor {
+        // This case is handled by _resolveOracle.
+        if (base == quote) revert Errors.PriceOracle_InvalidConfiguration();
         (address asset0, address asset1) = _sort(base, quote);
         oracles[asset0][asset1] = oracle;
         emit ConfigSet(asset0, asset1, oracle);

@@ -79,7 +79,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice Validate the timestamp of a Redstone signed price data package.
     /// @param timestampMillis Data package timestamp in milliseconds.
     /// @dev This function will be called in `getOracleNumericValueFromTxMsg` in `getQuote`,
-    /// overriding the accepted range to `[now - 1 minute, now + maxPriceStaleness]`.
+    /// overriding the accepted range to `[now - maxPriceStaleness, now + 1 min]`.
     /// Notably there are cases where the data timestamp is ahead of `block.timestamp`.
     /// This is an artifact of the Redstone system and we don't override this behavior.
     function validateTimestamp(uint256 timestampMillis) public view virtual override {
