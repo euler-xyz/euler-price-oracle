@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+address constant PYTH = 0x4305FB66699C3B2702D4d05CF36551390A4c69C6;
+
 bytes32 constant PYTH_1INCH_USD_FEED = 0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3;
 bytes32 constant PYTH_AAVE_USD_FEED = 0x2b9ab1e972a281585084148ba1389800799bd4be63b957507db1349314e47445;
 bytes32 constant PYTH_ACM_USD_FEED = 0xbd640cddb72063e2ede34c6a0baf6699759b9837fcb06aa0e2fbcecb9b65fde7;

@@ -20,6 +20,8 @@ contract PythOracleTest is PythOracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.base && otherA != s.quote);
         vm.assume(otherB != s.base && otherB != s.quote);
         expectNotSupported(s.inAmount, s.base, s.base);
@@ -30,14 +32,6 @@ contract PythOracleTest is PythOracleHelper {
         expectNotSupported(s.inAmount, otherA, s.quote);
         expectNotSupported(s.inAmount, otherA, otherA);
         expectNotSupported(s.inAmount, otherA, otherB);
-    }
-
-    function test_Quote_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsZeroPrice, true);
-        setUpState(s);
-
-        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
     function test_Quote_RevertsWhen_NegativePrice(FuzzableState memory s) public {
@@ -94,38 +88,5 @@ contract PythOracleTest is PythOracleHelper {
         (uint256 bidOutAmount, uint256 askOutAmount) = PythOracle(oracle).getQuotes(s.inAmount, s.quote, s.base);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
-    }
-
-    function test_UpdatePrice_Integrity(
-        FuzzableState memory s,
-        address caller,
-        bytes[] calldata updateData,
-        uint256 value
-    ) public {
-        setUpState(s);
-        caller = boundAddr(caller);
-        vm.deal(caller, value);
-
-        vm.prank(caller);
-        PythOracle(oracle).updatePrice{value: value}(updateData);
-        assertEq(caller.balance, 0);
-    }
-
-    function test_UpdatePrice_RevertsWhen_PythCallReverts(
-        FuzzableState memory s,
-        address caller,
-        bytes[] calldata updateData,
-        uint256 value
-    ) public {
-        setBehavior(Behavior.FeedReverts, true);
-        setUpState(s);
-        caller = boundAddr(caller);
-        vm.deal(caller, value);
-
-        vm.expectRevert();
-        vm.prank(caller);
-        PythOracle(oracle).updatePrice{value: value}(updateData);
-        assertEq(caller.balance, value);
-        assertEq(address(PythOracle(oracle)).balance, 0);
     }
 }

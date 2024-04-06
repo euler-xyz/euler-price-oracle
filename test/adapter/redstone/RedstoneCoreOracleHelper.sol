@@ -14,6 +14,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         uint8 maxBaseDecimals;
         uint8 minQuoteDecimals;
         uint8 maxQuoteDecimals;
+        uint8 minFeedDecimals;
+        uint8 maxFeedDecimals;
         uint256 minInAmount;
         uint256 maxInAmount;
         uint256 minPrice;
@@ -25,6 +27,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         maxBaseDecimals: 18,
         minQuoteDecimals: 0,
         maxQuoteDecimals: 18,
+        minFeedDecimals: 8,
+        maxFeedDecimals: 18,
         minInAmount: 0,
         maxInAmount: type(uint128).max,
         minPrice: 1,
@@ -42,13 +46,15 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         address base;
         address quote;
         bytes32 feedId;
-        uint32 maxStaleness;
+        uint32 maxPriceStaleness;
+        uint32 maxCacheStaleness;
         uint8 baseDecimals;
         uint8 quoteDecimals;
         uint8 feedDecimals;
         // Answer
         uint256 price;
         // Environment
+        uint256 tsDataPackage;
         uint256 tsUpdatePrice;
         uint256 tsGetQuote;
         uint256 inAmount;
@@ -61,17 +67,21 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
+        s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
-        if (behaviors[Behavior.Constructor_MaxStalenessTooSmall]) {
-            s.maxStaleness = uint32(bound(s.maxStaleness, 0, 3 minutes - 1));
-        } else {
-            s.maxStaleness = uint32(bound(s.maxStaleness, 3 minutes, 24 hours));
-        }
+        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours));
+        s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, 168 hours));
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        oracle = address(new RedstoneCoreOracleHarness(s.base, s.quote, s.feedId, s.maxStaleness));
+        oracle = address(
+            new RedstoneCoreOracleHarness(
+                s.base, s.quote, s.feedId, s.feedDecimals, s.maxPriceStaleness, s.maxCacheStaleness
+            )
+        );
+
+        vm.warp(s.maxCacheStaleness + 1);
 
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.price = 0;
@@ -81,12 +91,20 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
             s.price = bound(s.price, bounds.minPrice, bounds.maxPrice);
         }
 
+        s.tsDataPackage = bound(s.tsDataPackage, 2 ** 20, 2 ** 36);
         if (behaviors[Behavior.FeedReturnsStalePrice]) {
-            s.tsUpdatePrice = bound(s.tsUpdatePrice, 3 minutes + 1, type(uint48).max - s.maxStaleness - 1);
-            s.tsGetQuote = bound(s.tsGetQuote, s.tsUpdatePrice + s.maxStaleness + 1, type(uint48).max);
+            s.tsUpdatePrice =
+                bound(s.tsUpdatePrice, s.tsDataPackage + s.maxPriceStaleness + 1, 2 ** 36 + s.maxPriceStaleness + 1);
+        } else if (behaviors[Behavior.FeedReturnsTooAheadPrice]) {
+            s.tsUpdatePrice = bound(s.tsUpdatePrice, s.maxCacheStaleness + 1, s.tsDataPackage - 1 minutes - 1);
         } else {
-            s.tsUpdatePrice = bound(s.tsUpdatePrice, 3 minutes + 1, type(uint48).max - s.maxStaleness);
-            s.tsGetQuote = bound(s.tsGetQuote, s.tsUpdatePrice, s.tsUpdatePrice + s.maxStaleness);
+            s.tsUpdatePrice = bound(s.tsUpdatePrice, s.tsDataPackage, s.tsDataPackage + s.maxPriceStaleness);
+        }
+
+        if (behaviors[Behavior.CachedPriceStale]) {
+            s.tsGetQuote = bound(s.tsGetQuote, s.tsUpdatePrice + s.maxCacheStaleness + 1, type(uint64).max);
+        } else {
+            s.tsGetQuote = bound(s.tsGetQuote, s.tsUpdatePrice, s.tsUpdatePrice + s.maxCacheStaleness);
         }
 
         s.inAmount = bound(s.inAmount, bounds.minInAmount, bounds.maxInAmount);
@@ -94,7 +112,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
     function mockPrice(FuzzableState memory s) internal {
         vm.warp(s.tsUpdatePrice);
-        RedstoneCoreOracleHarness(oracle).setPrice(s.price);
+        RedstoneCoreOracleHarness(oracle).setPrice(s.price, s.tsDataPackage * 1000);
     }
 
     function setPrice(FuzzableState memory s) internal {
@@ -104,13 +122,13 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
     function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
         return FixedPointMathLib.fullMulDiv(
-            s.inAmount, uint256(s.price) * 10 ** s.quoteDecimals, 10 ** (8 + s.baseDecimals)
+            s.inAmount, uint256(s.price) * 10 ** s.quoteDecimals, 10 ** (s.feedDecimals + s.baseDecimals)
         );
     }
 
     function calcOutAmountInverse(FuzzableState memory s) internal pure returns (uint256) {
         return FixedPointMathLib.fullMulDiv(
-            s.inAmount, 10 ** (8 + s.baseDecimals), (uint256(s.price) * 10 ** s.quoteDecimals)
+            s.inAmount, 10 ** (s.feedDecimals + s.baseDecimals), (uint256(s.price) * 10 ** s.quoteDecimals)
         );
     }
 }

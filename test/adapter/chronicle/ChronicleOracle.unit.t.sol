@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelper.sol";
+import {boundAddr} from "test/utils/TestUtils.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -17,6 +18,8 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.base && otherA != s.quote);
         vm.assume(otherB != s.base && otherB != s.quote);
         expectNotSupported(s.inAmount, s.base, s.base);

@@ -14,15 +14,17 @@ contract AdapterHelper is Test {
         FeedReturnsZeroPrice,
         FeedReturnsTooLargePrice,
         FeedReturnsStalePrice,
+        FeedReturnsTooAheadPrice,
         FeedReturnsStaleRate,
         FeedReturnsConfTooWide,
         FeedReturnsExpoTooLow,
         FeedReturnsExpoTooHigh,
-        Constructor_MaxStalenessTooSmall,
         Constructor_NoPool,
         Constructor_TwapWindowTooShort,
+        Constructor_TwapWindowTooLong,
         Quote_InAmountTooLarge,
-        Quote_ObserveReverts
+        Quote_ObserveReverts,
+        CachedPriceStale
     }
 
     mapping(Behavior => bool) internal behaviors;

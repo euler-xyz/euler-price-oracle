@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {REDSTONE_ETH_USD_FEED, WETH, USDC, DAI, GUSD} from "test/utils/EthereumAddresses.sol";
+import {REDSTONE_ETH_USD_FEED} from "test/adapter/redstone/RedstoneFeeds.sol";
+import {WETH, USDC, DAI, GUSD} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
@@ -14,49 +15,15 @@ contract RedstoneCoreOracleForkTest is ForkTest {
 
     function test_GetQuote_Integrity_WETH_USDC() public {
         vm.skip(true);
-        oracle = new RedstoneCoreOracle(WETH, USDC, REDSTONE_ETH_USD_FEED, 3 minutes);
+        oracle = new RedstoneCoreOracle(WETH, USDC, REDSTONE_ETH_USD_FEED, 8, 3 minutes, 1 minutes);
 
-        bytes memory updateData = abi.encodeCall(oracle.updatePrice, ());
+        bytes memory getQuoteData = abi.encodeCall(oracle.getQuote, (1e18, WETH, USDC));
         bytes memory redstonePayload = abi.encode(1);
-        bytes memory data = abi.encodePacked(updateData, redstonePayload);
+        bytes memory data = abi.encodePacked(getQuoteData, redstonePayload);
 
         (bool success,) = address(oracle).call(data);
         assertTrue(success);
         uint256 outAmount = oracle.getQuote(1e18, WETH, USDC);
         assertApproxEqRel(outAmount, 2500e6, 0.1e18);
     }
-
-    //     function test_GetQuote_Integrity_WETH_DAI() public {
-    //         oracle = new PythOracle(PYTH, WETH, DAI, PYTH_ETH_USD_FEED, 1000 days);
-    //         uint256 outAmount = oracle.getQuote(1e18, WETH, DAI);
-    //         assertApproxEqRel(outAmount, 2500e18, 0.1e18);
-    //         uint256 outAmountInverse = oracle.getQuote(2500e18, DAI, WETH);
-    //         assertApproxEqRel(outAmountInverse, 1e18, 0.1e18);
-    //     }
-
-    //     function test_GetQuotes_Integrity_WETH_USDC() public {
-    //         oracle = new PythOracle(PYTH, WETH, USDC, PYTH_ETH_USD_FEED, 1000 days);
-    //         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, USDC);
-    //         assertApproxEqRel(bidOutAmount, 2500e6, 0.1e18);
-    //         assertApproxEqRel(askOutAmount, 2500e6, 0.1e18);
-    //         assertEq(bidOutAmount, askOutAmount);
-
-    //         (uint256 bidOutAmountInverse, uint256 askOutAmountInverse) = oracle.getQuotes(2500e6, USDC, WETH);
-    //         assertApproxEqRel(bidOutAmountInverse, 1e18, 0.1e18);
-    //         assertApproxEqRel(askOutAmountInverse, 1e18, 0.1e18);
-    //         assertEq(bidOutAmountInverse, askOutAmountInverse);
-    //     }
-
-    //     function test_GetQuotes_Integrity_WETH_DAI() public {
-    //         oracle = new PythOracle(PYTH, WETH, DAI, PYTH_ETH_USD_FEED, 1000 days);
-    //         (uint256 bidOutAmount, uint256 askOutAmount) = oracle.getQuotes(1e18, WETH, DAI);
-    //         assertApproxEqRel(bidOutAmount, 2500e18, 0.1e18);
-    //         assertApproxEqRel(askOutAmount, 2500e18, 0.1e18);
-    //         assertEq(bidOutAmount, askOutAmount);
-
-    //         (uint256 bidOutAmountInverse, uint256 askOutAmountInverse) = oracle.getQuotes(2500e18, DAI, WETH);
-    //         assertApproxEqRel(bidOutAmountInverse, 1e18, 0.1e18);
-    //         assertApproxEqRel(askOutAmountInverse, 1e18, 0.1e18);
-    //         assertEq(bidOutAmountInverse, askOutAmountInverse);
-    //     }
 }

@@ -74,7 +74,6 @@ Parameters and acceptance criteria are easily observed on-chain.
 | sDAI          | On-chain  | sDAI, DAI     | -                 |
 | Pyth          | External  | Any           | feed, staleness   |
 | Redstone      | External  | Any           | feed, staleness   |
-| Rocketpool    | On-chain  | rETH, WETH    | -                 |
 | Uniswap V3    | On-chain  | Any           | fee, twap window  |
 
 ### Security Questions
@@ -88,7 +87,7 @@ Parameters and acceptance criteria are easily observed on-chain.
 
 1. Are there timing games / OEV opportunities that arise from the price caching logic in Redstone and Pyth adapters?
 
-1. Are the on-chain exchange rate oracles (sDAI, rETH, stEth) immune to manipulation? Are there additional conditions that we can check which could signal that these rates cannot be trusted? 
+1. Are the on-chain exchange rate oracles (sDAI, stEth) immune to manipulation? Are there additional conditions that we can check which could signal that these rates cannot be trusted? 
 
 1. Could any of the hardcoded addresses change under normal operation conditions e.g. as part of an upgrade?
 

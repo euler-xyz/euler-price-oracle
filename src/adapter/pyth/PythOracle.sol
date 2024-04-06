@@ -10,8 +10,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 contract PythOracle is BaseAdapter {
-    /// @dev The confidence interval can be at most (-5%,+5%) wide.
-    uint256 internal constant MAX_CONF_WIDTH = 500;
+    /// @notice The smallest PythStruct exponent that the oracle can handle.
+    int256 internal constant MIN_EXPONENT = -20;
     /// @notice The address of the Pyth oracle proxy.
     address public immutable pyth;
     /// @notice The address of the base asset corresponding to the feed.
@@ -23,6 +23,9 @@ contract PythOracle is BaseAdapter {
     bytes32 public immutable feedId;
     /// @notice The maximum allowed age of the price.
     uint256 public immutable maxStaleness;
+    /// @notice The maximum allowed width of the confidence interval.
+    /// @dev Note: this value is in basis points i.e. 500 = 5%.
+    uint256 public immutable maxConfWidth;
     /// @dev Used for correcting for the decimals of base and quote.
     uint8 internal immutable baseDecimals;
     /// @dev Used for correcting for the decimals of base and quote.
@@ -34,21 +37,23 @@ contract PythOracle is BaseAdapter {
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feedId The id of the feed in the Pyth network.
     /// @param _maxStaleness The maximum allowed age of the price.
-    constructor(address _pyth, address _base, address _quote, bytes32 _feedId, uint256 _maxStaleness) {
+    /// @param _maxConfWidth The maximum width of the confidence interval in basis points.
+    constructor(
+        address _pyth,
+        address _base,
+        address _quote,
+        bytes32 _feedId,
+        uint256 _maxStaleness,
+        uint256 _maxConfWidth
+    ) {
         pyth = _pyth;
         base = _base;
         quote = _quote;
         feedId = _feedId;
         maxStaleness = _maxStaleness;
+        maxConfWidth = _maxConfWidth;
         baseDecimals = _getDecimals(base);
         quoteDecimals = _getDecimals(quote);
-    }
-
-    /// @notice Update the price of the Pyth feed.
-    /// @param updateData Price update data. Must be fetched off-chain.
-    /// @dev The required fee can be computed by calling `getUpdateFee` on Pyth with the length of the `updateData` array.
-    function updatePrice(bytes[] calldata updateData) external payable {
-        IPyth(pyth).updatePriceFeeds{value: msg.value}(updateData);
     }
 
     /// @notice Fetch the latest Pyth price and transform it to a quote.
@@ -62,15 +67,19 @@ contract PythOracle is BaseAdapter {
         PythStructs.Price memory priceStruct = _fetchPriceStruct();
         uint256 price = uint256(uint64(priceStruct.price));
 
-        Scale scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, int8(priceStruct.expo));
+        // priceStruct.expo will always be negative
+        uint8 feedExponent = uint8(int8(baseDecimals) - int8(priceStruct.expo));
+        Scale scale = ScaleUtils.from(quoteDecimals, feedExponent);
         return ScaleUtils.calcOutAmount(inAmount, price, scale, inverse);
     }
 
     /// @notice Get the latest Pyth price and perform sanity checks.
-    /// @dev Reverts if price is non-positive, confidence is too wide, or exponent is too large.
+    /// @dev Reverts conditions: price is negative, confidence interval is too wide,
+    /// exponent is positive, exponent
+    /// confidence is too wide, or exponent is too large.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = IPyth(pyth).getPriceNoOlderThan(feedId, maxStaleness);
-        if (p.price <= 0 || p.conf > uint64(p.price) * MAX_CONF_WIDTH / 10_000 || p.expo > 16 || p.expo < -16) {
+        if (p.price < 0 || p.conf > uint64(p.price) * maxConfWidth / 10_000 || p.expo > 0 || p.expo < MIN_EXPONENT) {
             revert Errors.PriceOracle_InvalidAnswer();
         }
         return p;

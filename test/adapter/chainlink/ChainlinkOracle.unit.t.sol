@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ChainlinkOracleHelper} from "test/adapter/chainlink/ChainlinkOracleHelper.sol";
+import {boundAddr} from "test/utils/TestUtils.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -16,6 +17,8 @@ contract ChainlinkOracleTest is ChainlinkOracleHelper {
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
+        otherA = boundAddr(otherA);
+        otherB = boundAddr(otherB);
         vm.assume(otherA != s.base && otherA != s.quote);
         vm.assume(otherB != s.base && otherB != s.quote);
         expectNotSupported(s.inAmount, s.base, s.base);

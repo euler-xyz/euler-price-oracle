@@ -34,8 +34,8 @@ contract PythOracleHelper is AdapterHelper {
         maxInAmount: type(uint128).max,
         minPrice: 1,
         maxPrice: 1_000_000_000_000,
-        minExpo: -16,
-        maxExpo: 6
+        minExpo: -20,
+        maxExpo: 0
     });
 
     Bounds internal bounds = DEFAULT_BOUNDS;
@@ -51,6 +51,7 @@ contract PythOracleHelper is AdapterHelper {
         address base;
         address quote;
         bytes32 feedId;
+        uint256 maxConfWidth;
         uint256 maxStaleness;
         uint8 baseDecimals;
         uint8 quoteDecimals;
@@ -65,8 +66,10 @@ contract PythOracleHelper is AdapterHelper {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         vm.assume(distinct(s.base, s.quote, PYTH));
+        vm.assume(s.feedId != 0);
 
         s.maxStaleness = bound(s.maxStaleness, 0, type(uint32).max);
+        s.maxConfWidth = bound(s.maxConfWidth, 1, 10_000);
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
@@ -74,24 +77,22 @@ contract PythOracleHelper is AdapterHelper {
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
-            s.p.price = 0;
-        } else if (behaviors[Behavior.FeedReturnsNegativePrice]) {
+        if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.p.price = int64(bound(s.p.price, type(int64).min, -1));
         } else {
             s.p.price = int64(bound(s.p.price, bounds.minPrice, bounds.maxPrice));
         }
 
         if (behaviors[Behavior.FeedReturnsConfTooWide]) {
-            s.p.conf = uint64(bound(s.p.conf, uint64(s.p.price) / 20 + 1, type(uint64).max));
+            s.p.conf = uint64(bound(s.p.conf, uint64(s.p.price) * s.maxConfWidth / 10000 + 1, type(uint64).max));
         } else {
-            s.p.conf = uint64(bound(s.p.conf, 0, uint64(s.p.price) / 20));
+            s.p.conf = uint64(bound(s.p.conf, 0, uint64(s.p.price) * s.maxConfWidth / 10000));
         }
 
         if (behaviors[Behavior.FeedReturnsExpoTooLow]) {
-            s.p.expo = int32(bound(s.p.expo, type(int32).min, -17));
+            s.p.expo = int32(bound(s.p.expo, type(int32).min, -21));
         } else if (behaviors[Behavior.FeedReturnsExpoTooHigh]) {
-            s.p.expo = int32(bound(s.p.expo, 17, type(int32).max));
+            s.p.expo = int32(bound(s.p.expo, 1, type(int32).max));
         } else {
             s.p.expo = int32(bound(s.p.expo, bounds.minExpo, bounds.maxExpo));
         }
@@ -104,7 +105,7 @@ contract PythOracleHelper is AdapterHelper {
 
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
 
-        oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness));
+        oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness, s.maxConfWidth));
     }
 
     function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {

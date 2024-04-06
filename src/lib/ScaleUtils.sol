@@ -10,6 +10,7 @@ type Scale is uint256;
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for handling decimal conversion of unit price feeds.
 library ScaleUtils {
+    uint256 internal constant PRICE_SCALE_MASK = 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
     /// @notice The maximum allowed exponent for Scale components.
     /// @dev 38 is the largest integer exponent of 10 that fits in 128 bits.
     uint256 internal constant MAX_EXPONENT = 38;
@@ -50,17 +51,6 @@ library ScaleUtils {
         return from(quoteDecimals, feedDecimals + baseDecimals);
     }
 
-    /// @notice Calculate the scale factors for converting a unit price.
-    /// @param baseDecimals The decimals of the base asset.
-    /// @param quoteDecimals The decimals of the quote asset.
-    /// @param priceDecimals The decimals of the feed price, not incorporated into the price.
-    /// @return The scale factors used for price conversions.
-    function calcScale(uint8 baseDecimals, uint8 quoteDecimals, int8 priceDecimals) internal pure returns (Scale) {
-        int8 diff = int8(baseDecimals) - priceDecimals;
-        if (diff > 0) return from(quoteDecimals, uint8(diff));
-        else return from(quoteDecimals + uint8(-diff), 0);
-    }
-
     /// @notice Convert the price by applying scale factors.
     /// @param inAmount The amount of `base` to convert.
     /// @param unitPrice The unit price reported by the feed.
@@ -72,7 +62,7 @@ library ScaleUtils {
         pure
         returns (uint256)
     {
-        uint256 priceScale = (Scale.unwrap(scale) << 128) >> 128;
+        uint256 priceScale = Scale.unwrap(scale) & PRICE_SCALE_MASK;
         uint256 feedScale = Scale.unwrap(scale) >> 128;
         if (inverse) {
             // (inAmount * feedScale) / (priceScale * unitPrice)

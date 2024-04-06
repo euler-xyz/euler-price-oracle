@@ -27,8 +27,6 @@ contract ChainlinkOracle is BaseAdapter {
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chainlink price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
-    /// @dev Base and quote are not required to correspond to the feed assets.
-    /// For example, the ETH/USD feed can be used to price WETH/USDC.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
         base = _base;
         quote = _quote;

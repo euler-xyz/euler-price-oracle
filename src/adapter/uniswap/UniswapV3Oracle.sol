@@ -10,9 +10,14 @@ import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Uniswap V3's TWAP oracle.
 /// @dev This oracle supports quoting tokenA/tokenB and tokenB/tokenA of the given pool.
+/// WARNING: Do not use Uniswap V3 as an oracle unless you understand its security implications.
+/// Instead, consider using another provider as a primary price source.
+/// Under PoS a validator may be chosen to propose consecutive blocks, allowing risk-free multi-block manipulation.
+/// The chosen pool must have enough total liquidity and some full-range liquidity to resist manipulation.
+/// The cardinality of the observation buffer must be grown sufficiently to accomodate for the chosen TWAP window.
 contract UniswapV3Oracle is BaseAdapter {
-    /// @dev The minimum length of the TWAP window is 1 minute.
-    uint32 internal constant MIN_TWAP_WINDOW = 60 seconds;
+    /// @dev The minimum length of the TWAP window.
+    uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
     /// @notice One of the tokens in the pool.
     address public immutable tokenA;
     /// @notice The other token in the pool.
@@ -32,7 +37,9 @@ contract UniswapV3Oracle is BaseAdapter {
     /// @param _twapWindow The desired length of the twap window.
     /// @param _uniswapV3Factory The address of the Uniswap V3 Factory.
     constructor(address _tokenA, address _tokenB, uint24 _fee, uint32 _twapWindow, address _uniswapV3Factory) {
-        if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
+        if (_twapWindow < MIN_TWAP_WINDOW || _twapWindow > uint32(type(int32).max)) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
         tokenA = _tokenA;
         tokenB = _tokenB;
         fee = _fee;
@@ -58,7 +65,9 @@ contract UniswapV3Oracle is BaseAdapter {
 
         // Calculate the mean tick over the twap window.
         (int56[] memory tickCumulatives,) = IUniswapV3Pool(pool).observe(secondsAgos);
-        int24 tick = int24((tickCumulatives[1] - tickCumulatives[0]) / int32(twapWindow));
+        int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+        int24 tick = int24(tickCumulativesDelta / int56(uint56(twapWindow)));
+        if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(twapWindow)) != 0)) tick--;
         return OracleLibrary.getQuoteAtTick(tick, uint128(inAmount), base, quote);
     }
 }

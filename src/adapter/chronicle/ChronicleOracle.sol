@@ -9,6 +9,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @title ChronicleOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chronicle push-based price feeds.
+/// @dev Note: Chronicle price feeds currently have a caller whitelist.
+/// To be able read price data, the caller (this contract) must be explicitly authorized.
 contract ChronicleOracle is BaseAdapter {
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
@@ -28,8 +30,6 @@ contract ChronicleOracle is BaseAdapter {
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chronicle price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
-    /// @dev Base and quote are not required to correspond to the feed assets.
-    /// For example, the ETH/USD feed can be used to price WETH/USDC.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
         base = _base;
         quote = _quote;

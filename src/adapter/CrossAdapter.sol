@@ -3,11 +3,11 @@ pragma solidity 0.8.23;
 
 import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
 /// @title CrossAdapter
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice PriceOracle that chains two adapters.
+/// @notice PriceOracle that chains two PriceOracles.
 /// @dev For example, CrossAdapter can price wstETH/USD by querying a wstETH/stETH oracle and a stETH/USD oracle.
 contract CrossAdapter is BaseAdapter {
     /// @notice The address of the base asset.

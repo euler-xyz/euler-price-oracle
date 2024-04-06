@@ -13,19 +13,19 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @notice The PriceOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
     address public fallbackOracle;
-    /// @notice PriceOracle configured for base/quote.
-    mapping(address base => mapping(address quote => address oracle)) public oracles;
-    /// @notice ERC4626 vaults to resolve using internal pricing.
-    /// @dev During resolution the vault is substituted with its asset.
-    /// The `inAmount` is augmented by the vault's `convert*` function.
+    /// @notice ERC4626 vaults resolved using internal pricing (`convertToAssets`).
     mapping(address vault => address asset) public resolvedVaults;
+    /// @notice PriceOracle configured per asset pair.
+    /// @dev The keys are lexicographically sorted (asset0 < asset1).
+    mapping(address asset0 => mapping(address asset1 => address oracle)) internal oracles;
 
-    /// @notice Configure a PriceOracle to resolve base/quote.
-    /// @param base The address of the base token.
-    /// @param quote The address of the quote token.
-    /// @param oracle The address of the PriceOracle that resolves base/quote.
-    /// @dev If `oracle` is `address(0)` then the base/quote configuration was removed.
-    event ConfigSet(address indexed base, address indexed quote, address indexed oracle);
+    /// @notice Configure a PriceOracle to resolve an asset pair.
+    /// @param asset0 The address first in lexicographic order.
+    /// @param asset1 The address second in lexicographic order.
+    /// @param oracle The address of the PriceOracle that resolves the pair.
+    /// @dev If `oracle` is `address(0)` then the configuration was removed.
+    /// The keys are lexicographically sorted (asset0 < asset1).
+    event ConfigSet(address indexed asset0, address indexed asset1, address indexed oracle);
     /// @notice Set a PriceOracle as a fallback resolver.
     /// @param fallbackOracle The address of the PriceOracle that is called when base/quote is not configured.
     /// @dev If `fallbackOracle` is `address(0)` then there is no fallback resolver.
@@ -40,20 +40,23 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @param _governor The address of the governor.
     constructor(address _governor) Governable(_governor) {}
 
-    /// @notice Configure a PriceOracle to resolve base/quote.
+    /// @notice Configure a PriceOracle to resolve base/quote and quote/base.
     /// @param base The address of the base token.
     /// @param quote The address of the quote token.
-    /// @param oracle The address of the PriceOracle that resolves base/quote.
+    /// @param oracle The address of the PriceOracle to resolve the pair.
     /// @dev Callable only by the governor.
     function govSetConfig(address base, address quote, address oracle) external onlyGovernor {
-        oracles[base][quote] = oracle;
-        emit ConfigSet(base, quote, oracle);
+        // This case is handled by _resolveOracle.
+        if (base == quote) revert Errors.PriceOracle_InvalidConfiguration();
+        (address asset0, address asset1) = _sort(base, quote);
+        oracles[asset0][asset1] = oracle;
+        emit ConfigSet(asset0, asset1, oracle);
     }
 
     /// @notice Configure an ERC4626 vault to use internal pricing via `convert*` methods.
     /// @param vault The address of the ERC4626 vault.
     /// @param set True to configure the vault, false to clear the record.
-    /// @dev Callable only by the governor. Vault must be ERC4626.
+    /// @dev Callable only by the governor. Vault must implement ERC4626.
     /// Only configure internal pricing after verifying that the implementation of
     /// `convertToAssets` and `convertToShares` cannot be manipulated.
     function govSetResolvedVault(address vault, bool set) external onlyGovernor {
@@ -64,7 +67,7 @@ contract EulerRouter is Governable, IPriceOracle {
 
     /// @notice Set a PriceOracle as a fallback resolver.
     /// @param _fallbackOracle The address of the PriceOracle that is called when base/quote is not configured.
-    /// @dev `address(0)` removes the fallback.
+    /// @dev Callable only by the governor. `address(0)` removes the fallback.
     function govSetFallbackOracle(address _fallbackOracle) external onlyGovernor {
         fallbackOracle = _fallbackOracle;
         emit FallbackOracleSet(_fallbackOracle);
@@ -86,48 +89,58 @@ contract EulerRouter is Governable, IPriceOracle {
         return IPriceOracle(oracle).getQuotes(inAmount, base, quote);
     }
 
+    /// @notice Get the PriceOracle configured for base/quote.
+    /// @param base The address of the base token.
+    /// @param quote The address of the quote token.
+    /// @return The configured `PriceOracle` for the pair or `address(0)` if no oracle is configured.
+    function getConfiguredOracle(address base, address quote) public view returns (address) {
+        (address asset0, address asset1) = _sort(base, quote);
+        return oracles[asset0][asset1];
+    }
+
     /// @notice Resolve the PriceOracle to call for a given base/quote pair.
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.
     /// @param quote The token that is the unit of account.
-    /// @dev Implements the following recursive resolution logic:
+    /// @dev Implements the following resolution logic:
     /// 1. Check the base case: `base == quote` and terminate if true.
-    /// 2. If a PriceOracle is configured for base/quote in the `oracles` mapping,
-    ///    return it without transforming the other variables.
-    /// 3. If `base` is configured as an ERC4626 vault with internal pricing,
-    ///    transform inAmount by calling `convertToAssets` and recurse by substituting `asset` for `base`.
-    /// 4. If `quote` is configured as an ERC4626 vault with internal pricing,
-    ///    transform inAmount by calling `convertToAssets` and recurse by substituting `asset` for `quote`.
-    /// 5. If there is a fallback oracle, return it without transforming the other variables, else revert.
-    /// @return The resolved inAmount.
+    /// 2. If a PriceOracle is configured for base/quote in the `oracles` mapping, return it.
+    /// 3. If `base` is configured as a resolved ERC4626 vault, call `convertToAssets(inAmount)`
+    /// and continue the recursion, substituting the ERC4626 `asset` for `base`.
+    /// 4. As a last resort, return the fallback oracle or revert if it is not set.
+    /// @return The resolved amount. This value may be different from the original `inAmount`
+    /// if the resolution path included an ERC4626 vault present in `resolvedVaults`.
     /// @return The resolved base.
     /// @return The resolved quote.
     /// @return The resolved PriceOracle to call.
     function _resolveOracle(uint256 inAmount, address base, address quote)
         internal
         view
-        returns (uint256, /* inAmount */ address, /* base */ address, /* quote */ address /* oracle */ )
+        returns (uint256, /* resolvedAmount */ address, /* base */ address, /* quote */ address /* oracle */ )
     {
-        // Check the base case
+        // 1. Check the base case.
         if (base == quote) return (inAmount, base, quote, address(0));
-        // 1. Check if base/quote is configured.
-        address oracle = oracles[base][quote];
+        // 2. Check if there is a PriceOracle configured for base/quote.
+        address oracle = getConfiguredOracle(base, quote);
         if (oracle != address(0)) return (inAmount, base, quote, oracle);
-        // 2. Recursively resolve `base`.
+        // 3. Recursively resolve `base`.
         address baseAsset = resolvedVaults[base];
         if (baseAsset != address(0)) {
             inAmount = IERC4626(base).convertToAssets(inAmount);
             return _resolveOracle(inAmount, baseAsset, quote);
         }
-        // 3. Recursively resolve `quote`.
-        address quoteAsset = resolvedVaults[quote];
-        if (quoteAsset != address(0)) {
-            inAmount = IERC4626(quote).convertToShares(inAmount);
-            return _resolveOracle(inAmount, base, quoteAsset);
-        }
         // 4. Return the fallback or revert if not configured.
         oracle = fallbackOracle;
         if (oracle == address(0)) revert Errors.PriceOracle_NotSupported(base, quote);
         return (inAmount, base, quote, oracle);
+    }
+
+    /// @notice Lexicographically sort two addresses.
+    /// @param assetA One of the assets in the pair.
+    /// @param assetB The other asset in the pair.
+    /// @return The address first in lexicographic order.
+    /// @return The address second in lexicographic order.
+    function _sort(address assetA, address assetB) internal pure returns (address, address) {
+        return assetA < assetB ? (assetA, assetB) : (assetB, assetA);
     }
 }
