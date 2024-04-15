@@ -20,7 +20,7 @@ contract ChronicleOracle is BaseAdapter {
     /// @dev https://chroniclelabs.org/dashboard/oracles
     address public immutable feed;
     /// @notice The maximum allowed age of the price.
-    /// @dev Reverts if age > maxStaleness.
+    /// @dev Reverts if `block.timestamp - age > maxStaleness`.
     uint256 public immutable maxStaleness;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
