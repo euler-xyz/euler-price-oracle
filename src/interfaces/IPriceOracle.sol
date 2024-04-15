@@ -17,7 +17,7 @@ interface IPriceOracle {
     /// @param base The token that is being priced.
     /// @param quote The token that is the unit of account.
     /// @return bidOutAmount The amount of `quote` you would get for selling `inAmount` of `base`.
-    /// @return askOutAmount The amount of `quote` you would get for buying `inAmount` of `base`.
+    /// @return askOutAmount The amount of `quote` you would spend for buying `inAmount` of `base`.
     function getQuotes(uint256 inAmount, address base, address quote)
         external
         view
