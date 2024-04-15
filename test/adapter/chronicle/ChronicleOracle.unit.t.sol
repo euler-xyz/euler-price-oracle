@@ -40,14 +40,6 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
-    function test_Quote_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsZeroPrice, true);
-        setUpState(s);
-
-        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
-    }
-
     function test_Quote_RevertsWhen_TooStale(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsStalePrice, true);
         setUpState(s);

@@ -51,9 +51,8 @@ contract ChronicleOracle is BaseAdapter {
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
+        // Note: `readWithAge` will revert if `price == 0`.
         (uint256 price, uint256 age) = IChronicle(feed).readWithAge();
-        if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
-
         uint256 staleness = block.timestamp - age;
         if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 

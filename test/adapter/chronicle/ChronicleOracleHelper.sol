@@ -76,11 +76,7 @@ contract ChronicleOracleHelper is AdapterHelper {
 
         oracle = address(new ChronicleOracle(s.base, s.quote, s.feed, s.maxStaleness));
 
-        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
-            s.value = 0;
-        } else {
-            s.value = bound(s.value, bounds.minValue, bounds.maxValue);
-        }
+        s.value = bound(s.value, bounds.minValue, bounds.maxValue);
 
         s.age = bound(s.age, 0, type(uint128).max);
         if (behaviors[Behavior.FeedReturnsStalePrice]) {
