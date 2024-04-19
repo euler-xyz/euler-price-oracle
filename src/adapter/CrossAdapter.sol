@@ -40,8 +40,8 @@ contract CrossAdapter is BaseAdapter {
     }
 
     /// @notice Get a quote by chaining the cross oracles.
+    /// @dev For the inverse direction it calculates quote/cross * cross/base.
     /// For the forward direction it calculates base/cross * cross/quote.
-    /// For the inverse direction it calculates quote/cross * cross/base.
     /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.

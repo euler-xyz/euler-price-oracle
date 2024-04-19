@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {DAI, SDAI, DSR_POT} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
-import {IPot} from "src/adapter/maker/IPot.sol";
 import {SDaiOracle} from "src/adapter/maker/SDaiOracle.sol";
 
 contract SDaiOracleForkTest is ForkTest {
@@ -11,7 +10,7 @@ contract SDaiOracleForkTest is ForkTest {
 
     function setUp() public {
         _setUpFork(19000000);
-        oracle = new SDaiOracle(DAI, SDAI, DSR_POT);
+        oracle = new SDaiOracle(DAI, SDAI);
     }
 
     function test_GetQuote_Integrity() public view {

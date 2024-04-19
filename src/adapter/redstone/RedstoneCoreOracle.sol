@@ -25,12 +25,12 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Compares `block.timestamp` against the timestamp of the Redstone data package in `updatePrice`.
     uint256 public immutable maxPriceStaleness;
     /// @notice The maximum allowed age of the cached price.
-    /// @dev Compares `block.timestamp` against the timestamp of the cached price `_getQuote`.
+    /// @dev Compares `block.timestamp` against the timestamp of the cached price in `_getQuote`.
     uint256 public immutable maxCacheStaleness;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
     /// @notice The last updated price.
-    /// @dev This gets updated after calling `updatePrice`.
+    /// @dev Gets updated to the latest price after calling `updatePrice`.
     uint208 public cachedPrice;
     /// @notice The timestamp of the last update.
     /// @dev Gets updated to `block.timestamp` after calling `updatePrice`.
@@ -43,7 +43,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @param _feedDecimals The decimals of the price feed.
     /// @param _maxPriceStaleness The maximum allowed age of the Redstone price in `updatePrice`.
     /// @param _maxCacheStaleness The maximum allowed age of the cached price in `_getQuote`.
-    /// @dev Since Redstone prices are verified locally, callers can pass data to `maxPriceStaleness` seconds old.
+    /// @dev Since Redstone prices are verified locally, callers can pass data up to `maxPriceStaleness` seconds old.
     /// It effectively imposes a deadline on the transaction, so a staleness window that is too short
     /// increases the probability that the transaction reverts, especially during chain congestion.
     constructor(
@@ -54,6 +54,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         uint256 _maxPriceStaleness,
         uint256 _maxCacheStaleness
     ) {
+        if (_maxCacheStaleness > _maxPriceStaleness) revert Errors.PriceOracle_InvalidConfiguration();
         base = _base;
         quote = _quote;
         feedId = _feedId;
@@ -78,7 +79,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
 
     /// @notice Validate the timestamp of a Redstone signed price data package.
     /// @param timestampMillis Data package timestamp in milliseconds.
-    /// @dev This function will be called in `getOracleNumericValueFromTxMsg` in `getQuote`,
+    /// @dev This function will be called in `getOracleNumericValueFromTxMsg` in `updatePrice`,
     /// overriding the accepted range to `[now - maxPriceStaleness, now + 1 min]`.
     /// Notably there are cases where the data timestamp is ahead of `block.timestamp`.
     /// This is an artifact of the Redstone system and we don't override this behavior.

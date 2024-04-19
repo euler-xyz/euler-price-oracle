@@ -10,8 +10,10 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 contract PythOracle is BaseAdapter {
-    /// @notice The smallest PythStruct exponent that the oracle can handle.
+    /// @dev The smallest PythStruct exponent that the oracle can handle.
     int256 internal constant MIN_EXPONENT = -20;
+    /// @dev The denominator for basis points values (maxConfWidth).
+    uint256 internal constant BASIS_POINTS = 10_000;
     /// @notice The address of the Pyth oracle proxy.
     address public immutable pyth;
     /// @notice The address of the base asset corresponding to the feed.
@@ -67,19 +69,21 @@ contract PythOracle is BaseAdapter {
         PythStructs.Price memory priceStruct = _fetchPriceStruct();
         uint256 price = uint256(uint64(priceStruct.price));
 
-        // priceStruct.expo will always be negative
+        // priceStruct.expo will always be non-positive
         uint8 feedExponent = uint8(int8(baseDecimals) - int8(priceStruct.expo));
         Scale scale = ScaleUtils.from(quoteDecimals, feedExponent);
         return ScaleUtils.calcOutAmount(inAmount, price, scale, inverse);
     }
 
     /// @notice Get the latest Pyth price and perform sanity checks.
-    /// @dev Reverts conditions: price is negative, confidence interval is too wide,
-    /// exponent is positive, exponent
-    /// confidence is too wide, or exponent is too large.
+    /// @dev Revert conditions: price is negative or zero, confidence interval is too wide, exponent is positive or too small.
+    /// @return The Pyth price struct without modification.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = IPyth(pyth).getPriceNoOlderThan(feedId, maxStaleness);
-        if (p.price < 0 || p.conf > uint64(p.price) * maxConfWidth / 10_000 || p.expo > 0 || p.expo < MIN_EXPONENT) {
+        if (
+            p.price <= 0 || p.conf > uint64(p.price) * maxConfWidth / BASIS_POINTS || p.expo > 0
+                || p.expo < MIN_EXPONENT
+        ) {
             revert Errors.PriceOracle_InvalidAnswer();
         }
         return p;

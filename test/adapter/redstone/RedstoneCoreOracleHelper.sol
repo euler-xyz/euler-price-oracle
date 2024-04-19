@@ -69,8 +69,12 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
         s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
-        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours));
-        s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, 168 hours));
+        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours - 1));
+        if (behaviors[Behavior.Constructor_MaxCacheStalenessTooLarge]) {
+            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, s.maxPriceStaleness + 1, 168 hours));
+        } else {
+            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, s.maxPriceStaleness));
+        }
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));

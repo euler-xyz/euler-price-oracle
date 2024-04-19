@@ -11,7 +11,6 @@ contract SDaiOracleTest is SDaiOracleHelper {
         setUpState(s);
         assertEq(SDaiOracle(oracle).dai(), DAI);
         assertEq(SDaiOracle(oracle).sDai(), SDAI);
-        assertEq(SDaiOracle(oracle).dsrPot(), POT);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
@@ -39,7 +38,7 @@ contract SDaiOracleTest is SDaiOracleHelper {
     function test_Quote_SDai_Dai_Integrity(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount = s.inAmount * s.chi / 1e27;
+        uint256 expectedOutAmount = s.inAmount * s.rate / 1e18;
 
         uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, SDAI, DAI);
         assertEq(outAmount, expectedOutAmount);
@@ -52,37 +51,7 @@ contract SDaiOracleTest is SDaiOracleHelper {
     function test_Quote_Dai_SDai_Integrity(FuzzableState memory s) public {
         setUpState(s);
 
-        uint256 expectedOutAmount = s.inAmount * 1e27 / s.chi;
-
-        uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, DAI, SDAI);
-        assertEq(outAmount, expectedOutAmount);
-
-        (uint256 bidOutAmount, uint256 askOutAmount) = SDaiOracle(oracle).getQuotes(s.inAmount, DAI, SDAI);
-        assertEq(bidOutAmount, expectedOutAmount);
-        assertEq(askOutAmount, expectedOutAmount);
-    }
-
-    function test_Quote_SDai_Dai_Integrity_Stale(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsStaleRate, true);
-        setUpState(s);
-
-        uint256 rate = getUpdatedRate(s);
-        uint256 expectedOutAmount = s.inAmount * rate / 1e27;
-
-        uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, SDAI, DAI);
-        assertEq(outAmount, expectedOutAmount);
-
-        (uint256 bidOutAmount, uint256 askOutAmount) = SDaiOracle(oracle).getQuotes(s.inAmount, SDAI, DAI);
-        assertEq(bidOutAmount, expectedOutAmount);
-        assertEq(askOutAmount, expectedOutAmount);
-    }
-
-    function test_Quote_Dai_SDai_Integrity_Stale(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsStaleRate, true);
-        setUpState(s);
-
-        uint256 rate = getUpdatedRate(s);
-        uint256 expectedOutAmount = s.inAmount * 1e27 / rate;
+        uint256 expectedOutAmount = s.inAmount * 1e18 / s.rate;
 
         uint256 outAmount = SDaiOracle(oracle).getQuote(s.inAmount, DAI, SDAI);
         assertEq(outAmount, expectedOutAmount);
