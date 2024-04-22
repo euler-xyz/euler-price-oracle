@@ -70,8 +70,8 @@ library ScaleUtils {
             // (inAmount * feedScale) / (priceScale * unitPrice)
             return FixedPointMathLib.fullMulDiv(inAmount, feedScale, priceScale * unitPrice);
         } else {
-            // (inAmount * unitPrice * priceScale) / feedScale
-            return FixedPointMathLib.fullMulDiv(inAmount * unitPrice, priceScale, feedScale);
+            // (inAmount * priceScale * unitPrice) / feedScale
+            return FixedPointMathLib.fullMulDiv(inAmount, priceScale * unitPrice, feedScale);
         }
     }
 }
