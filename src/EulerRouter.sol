@@ -9,9 +9,9 @@ import {Governable} from "src/lib/Governable.sol";
 /// @title EulerRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler lending products.
-/// @dev Integrator Note: The router supports pricing via `convertToAssets` for trusted `resolvedVaults`.
+/// @dev Integration Note: The router supports pricing via `convertToAssets` for trusted `resolvedVaults`.
 /// By ERC4626 spec `convert*` ignores liquidity restrictions, fees, slippage and per-user restrictions.
-/// Therefore the reported price may not be realizable through `redeem` or `withdraw`.
+/// Therefore the reported price may not be realizable through `redeem` or `withdraw`.~
 contract EulerRouter is Governable, IPriceOracle {
     /// @notice The PriceOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
@@ -41,7 +41,9 @@ contract EulerRouter is Governable, IPriceOracle {
 
     /// @notice Deploy EulerRouter.
     /// @param _governor The address of the governor.
-    constructor(address _governor) Governable(_governor) {}
+    constructor(address _governor) Governable(_governor) {
+        if (_governor == address(0)) revert Errors.PriceOracle_InvalidConfiguration();
+    }
 
     /// @notice Configure a PriceOracle to resolve base/quote and quote/base.
     /// @param base The address of the base token.

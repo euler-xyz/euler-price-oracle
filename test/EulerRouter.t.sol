@@ -32,6 +32,11 @@ contract EulerRouterTest is Test {
         assertEq(router.fallbackOracle(), address(0));
     }
 
+    function test_Constructor_RevertsWhen_GovernorIsZeroAddress() public {
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new EulerRouter(address(0));
+    }
+
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
         vm.assume(base != quote);
         (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
