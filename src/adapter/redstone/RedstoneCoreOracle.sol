@@ -40,6 +40,11 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Gets updated to `block.timestamp` after calling `updatePrice`.
     uint48 public cacheUpdatedAt;
 
+    /// @notice The cached price was updated.
+    /// @param price The cached price.
+    /// @param updatedAt The timestamp of the update.
+    event CacheUpdated(uint256 price, uint256 updatedAt);
+
     /// @notice Deploy a RedstoneCoreOracle.
     /// @param _base The address of the base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
@@ -86,6 +91,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         if (block.timestamp <= maxCacheStaleness + cacheUpdatedAt) return;
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
+        emit CacheUpdated(price, block.timestamp);
         cachedPrice = uint208(price);
         cacheUpdatedAt = uint48(block.timestamp);
     }

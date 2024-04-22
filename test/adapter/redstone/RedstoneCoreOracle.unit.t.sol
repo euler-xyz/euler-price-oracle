@@ -41,6 +41,8 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_UpdatePrice_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
+        vm.expectEmit();
+        emit RedstoneCoreOracle.CacheUpdated(s.price, s.tsUpdatePrice);
         setPrice(s);
 
         assertEq(RedstoneCoreOracle(oracle).cachedPrice(), s.price);
