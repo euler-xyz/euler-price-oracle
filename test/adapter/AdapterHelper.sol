@@ -27,6 +27,7 @@ contract AdapterHelper is Test {
         Constructor_MaxConfWidthTooHigh,
         Constructor_MaxStalenessTooLow,
         Constructor_MaxStalenessTooHigh,
+        Constructor_MaxCacheStalenessGtMaxPriceStaleness,
         Quote_InAmountTooLarge,
         Quote_ObserveReverts,
         CachedPriceStale

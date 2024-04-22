@@ -20,8 +20,20 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
     }
 
-    function test_Constructor_RevertsWhen_MaxCacheStalenessTooLarge(FuzzableState memory s) public {
+    function test_Constructor_RevertsWhen_MaxPriceStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxCacheStalenessTooHigh(FuzzableState memory s) public {
         setBehavior(Behavior.Constructor_MaxCacheStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxCacheStalenessGtMaxPriceStaleness(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxCacheStalenessGtMaxPriceStaleness, true);
         vm.expectRevert();
         setUpState(s);
     }

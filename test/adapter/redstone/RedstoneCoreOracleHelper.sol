@@ -9,6 +9,9 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
 contract RedstoneCoreOracleHelper is AdapterHelper {
+    uint256 internal constant MAX_PRICE_STALENESS_UPPER_BOUND = 15 minutes;
+    uint256 internal constant MAX_CACHE_STALENESS_UPPER_BOUND = 5 minutes;
+
     struct Bounds {
         uint8 minBaseDecimals;
         uint8 maxBaseDecimals;
@@ -69,11 +72,22 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
         s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
-        s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours - 1));
-        if (behaviors[Behavior.Constructor_MaxCacheStalenessTooHigh]) {
-            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, s.maxPriceStaleness + 1, 168 hours));
+        if (behaviors[Behavior.Constructor_MaxStalenessTooHigh]) {
+            s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, MAX_PRICE_STALENESS_UPPER_BOUND + 1, 168 hours));
         } else {
-            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, s.maxPriceStaleness));
+            s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 0, MAX_PRICE_STALENESS_UPPER_BOUND - 1));
+        }
+
+        if (behaviors[Behavior.Constructor_MaxCacheStalenessTooHigh]) {
+            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, MAX_CACHE_STALENESS_UPPER_BOUND + 1, 168 hours));
+        } else if (behaviors[Behavior.Constructor_MaxCacheStalenessGtMaxPriceStaleness]) {
+            s.maxCacheStaleness =
+                uint32(bound(s.maxCacheStaleness, s.maxPriceStaleness + 1, MAX_CACHE_STALENESS_UPPER_BOUND));
+        } else {
+            uint256 upperBound = s.maxPriceStaleness < MAX_CACHE_STALENESS_UPPER_BOUND
+                ? s.maxPriceStaleness
+                : MAX_CACHE_STALENESS_UPPER_BOUND;
+            s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 0, upperBound));
         }
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
