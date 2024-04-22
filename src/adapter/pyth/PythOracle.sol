@@ -11,7 +11,7 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 /// @dev Integration Note: Pyth is a pull-based oracle which requires price updates to be pushed by the user.
 /// Before calling `getQuote*` dispatch a call `updatePriceFeeds` on the Pyth oracle proxy to refresh the price.
-/// This is best done atomically via a multicall contract e.g. the Ethereum Vault Connector (EVC).
+/// This is best done atomically via a multicall contract such as the Ethereum Vault Connector (EVC).
 contract PythOracle is BaseAdapter {
     /// @notice The maximum length of time that a price can be in the future.
     uint256 internal constant MAX_AHEADNESS = 1 minutes;
