@@ -9,7 +9,7 @@ import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 
 contract RedstoneCoreOracleHelper is AdapterHelper {
-    uint256 internal constant MAX_PRICE_STALENESS_UPPER_BOUND = 15 minutes;
+    uint256 internal constant MAX_PRICE_STALENESS_UPPER_BOUND = 5 minutes;
     uint256 internal constant MAX_CACHE_STALENESS_UPPER_BOUND = 5 minutes;
 
     struct Bounds {
