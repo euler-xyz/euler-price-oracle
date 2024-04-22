@@ -8,19 +8,12 @@ import {IStEth} from "src/adapter/lido/IStEth.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
 contract LidoOracle is BaseAdapter {
-    /// @dev The address of Lido staked Ether.
-    address public immutable stEth;
-    /// @dev The address of Lido wrapped staked Ether.
-    address public immutable wstEth;
-
-    /// @notice Deploy a LidoOracle.
-    /// @param _stEth The address of Lido staked Ether.
-    /// @param _wstEth The address of Lido wrapped staked Ether.
-    /// @dev The oracle will support stEth/wstEth and wstEth/stEth pricing.
-    constructor(address _stEth, address _wstEth) {
-        stEth = _stEth;
-        wstEth = _wstEth;
-    }
+    /// @notice The address of Lido staked Ether.
+    /// @dev This address will not change.
+    address public constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
+    /// @notice The address of Lido wrapped staked Ether
+    /// @dev This address will not change.
+    address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 
     /// @notice Get a quote by querying the exchange rate from the stEth contract.
     /// @dev Calls `getSharesByPooledEth` for stEth/wstEth and `getPooledEthByShares` for wstEth/stEth.
@@ -29,10 +22,10 @@ contract LidoOracle is BaseAdapter {
     /// @param quote The token that is the unit of account. Either `wstEth` or `stEth`.
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
-        if (base == stEth && quote == wstEth) {
-            return IStEth(stEth).getSharesByPooledEth(inAmount);
-        } else if (base == wstEth && quote == stEth) {
-            return IStEth(stEth).getPooledEthByShares(inAmount);
+        if (base == STETH && quote == WSTETH) {
+            return IStEth(STETH).getSharesByPooledEth(inAmount);
+        } else if (base == WSTETH && quote == STETH) {
+            return IStEth(STETH).getPooledEthByShares(inAmount);
         }
         revert Errors.PriceOracle_NotSupported(base, quote);
     }

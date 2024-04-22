@@ -8,7 +8,7 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds.
-/// @dev Integration Note: `maxStaleness` is an immutable parameter set in the constructor. 
+/// @dev Integration Note: `maxStaleness` is an immutable parameter set in the constructor.
 /// If the aggregator's heartbeat changes, this adapter may exhibit unintended behavior.
 contract ChainlinkOracle is BaseAdapter {
     /// @notice The minimum permitted value for `maxStaleness`.

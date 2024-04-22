@@ -6,12 +6,9 @@ import {StubStEth} from "test/adapter/lido/StubStEth.sol";
 import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
 
 contract LidoOracleHelper is AdapterHelper {
-    address internal STETH;
-    address internal WSTETH = makeAddr("WSTETH");
+    address private constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
 
     struct FuzzableState {
-        address base;
-        address quote;
         // Answer
         uint256 rate;
         uint256 inAmount;
@@ -20,11 +17,8 @@ contract LidoOracleHelper is AdapterHelper {
     function setUpState(FuzzableState memory s) internal {
         s.rate = bound(s.rate, 1e18, 1e27);
 
-        STETH = address(new StubStEth());
-        oracle = address(new LidoOracle(STETH, WSTETH));
-
-        s.base = WSTETH;
-        s.quote = STETH;
+        vm.etch(STETH, address(new StubStEth()).code);
+        oracle = address(new LidoOracle());
 
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
 
