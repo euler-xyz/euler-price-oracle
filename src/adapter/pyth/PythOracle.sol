@@ -9,6 +9,9 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @title PythOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
+/// @dev Integration Note: Pyth is a pull-based oracle which requires price updates to be pushed by the user.
+/// Before calling `getQuote*` dispatch a call `updatePriceFeeds` on the Pyth oracle proxy to refresh the price.
+/// This is best done atomically via a multicall contract e.g. the Ethereum Vault Connector (EVC).
 contract PythOracle is BaseAdapter {
     /// @notice The maximum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_UPPER_BOUND = 15 minutes;
