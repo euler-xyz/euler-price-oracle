@@ -18,6 +18,24 @@ contract PythOracleTest is PythOracleHelper {
         assertEq(PythOracle(oracle).maxStaleness(), s.maxStaleness);
     }
 
+    function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxConfWidthTooLow(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxConfWidthTooLow, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxConfWidthTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxConfWidthTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
         otherA = boundAddr(otherA);

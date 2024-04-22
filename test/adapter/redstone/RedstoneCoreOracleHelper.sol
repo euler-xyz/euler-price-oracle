@@ -70,7 +70,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         s.feedDecimals = uint8(bound(s.feedDecimals, bounds.minFeedDecimals, bounds.maxFeedDecimals));
 
         s.maxPriceStaleness = uint32(bound(s.maxPriceStaleness, 1, 168 hours - 1));
-        if (behaviors[Behavior.Constructor_MaxCacheStalenessTooLarge]) {
+        if (behaviors[Behavior.Constructor_MaxCacheStalenessTooHigh]) {
             s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, s.maxPriceStaleness + 1, 168 hours));
         } else {
             s.maxCacheStaleness = uint32(bound(s.maxCacheStaleness, 1, s.maxPriceStaleness));

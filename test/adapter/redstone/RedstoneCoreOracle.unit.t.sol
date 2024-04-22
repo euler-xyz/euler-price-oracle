@@ -21,7 +21,7 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     }
 
     function test_Constructor_RevertsWhen_MaxCacheStalenessTooLarge(FuzzableState memory s) public {
-        setBehavior(Behavior.Constructor_MaxCacheStalenessTooLarge, true);
+        setBehavior(Behavior.Constructor_MaxCacheStalenessTooHigh, true);
         vm.expectRevert();
         setUpState(s);
     }

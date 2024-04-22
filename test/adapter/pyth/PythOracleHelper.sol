@@ -12,6 +12,10 @@ import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 
 contract PythOracleHelper is AdapterHelper {
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 15 minutes;
+    uint256 internal constant MAX_CONF_WIDTH_LOWER_BOUND = 10;
+    uint256 internal constant MAX_CONF_WIDTH_UPPER_BOUND = 500;
+
     struct Bounds {
         uint8 minBaseDecimals;
         uint8 maxBaseDecimals;
@@ -61,21 +65,37 @@ contract PythOracleHelper is AdapterHelper {
         uint256 inAmount;
     }
 
-    function setUpState(FuzzableState memory s) internal {
+    constructor() {
         PYTH = address(new StubPyth());
+    }
+
+    function setUpState(FuzzableState memory s) internal {
         s.base = boundAddr(s.base);
         s.quote = boundAddr(s.quote);
         vm.assume(distinct(s.base, s.quote, PYTH));
         vm.assume(s.feedId != 0);
 
-        s.maxStaleness = bound(s.maxStaleness, 0, type(uint32).max);
-        s.maxConfWidth = bound(s.maxConfWidth, 1, 10_000);
+        if (behaviors[Behavior.Constructor_MaxStalenessTooHigh]) {
+            s.maxStaleness = bound(s.maxStaleness, MAX_STALENESS_UPPER_BOUND + 1, type(uint128).max);
+        } else {
+            s.maxStaleness = bound(s.maxStaleness, 0, MAX_STALENESS_UPPER_BOUND);
+        }
+
+        if (behaviors[Behavior.Constructor_MaxConfWidthTooLow]) {
+            s.maxConfWidth = bound(s.maxConfWidth, 0, MAX_CONF_WIDTH_LOWER_BOUND - 1);
+        } else if (behaviors[Behavior.Constructor_MaxConfWidthTooHigh]) {
+            s.maxConfWidth = bound(s.maxConfWidth, MAX_CONF_WIDTH_UPPER_BOUND + 1, type(uint128).max);
+        } else {
+            s.maxConfWidth = bound(s.maxConfWidth, MAX_CONF_WIDTH_LOWER_BOUND, MAX_CONF_WIDTH_UPPER_BOUND);
+        }
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
 
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
+
+        oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness, s.maxConfWidth));
 
         if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.p.price = int64(bound(s.p.price, type(int64).min, -1));
@@ -104,8 +124,6 @@ contract PythOracleHelper is AdapterHelper {
         }
 
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
-
-        oracle = address(new PythOracle(PYTH, s.base, s.quote, s.feedId, s.maxStaleness, s.maxConfWidth));
     }
 
     function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
