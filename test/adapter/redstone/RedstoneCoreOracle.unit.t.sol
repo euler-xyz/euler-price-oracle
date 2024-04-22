@@ -49,7 +49,19 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), s.tsUpdatePrice);
     }
 
-    function test_UpdatePrice_Overflow(FuzzableState memory s) public {
+    function test_UpdatePrice_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsZeroPrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        setPrice(s);
+
+        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), 0);
+        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
+    }
+
+    function test_UpdatePrice_RevertsWhen_Overflow(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsTooLargePrice, true);
         setUpState(s);
         mockPrice(s);

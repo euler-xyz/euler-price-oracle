@@ -90,6 +90,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         // Use the cache if it has not expired.
         if (block.timestamp <= maxCacheStaleness + cacheUpdatedAt) return;
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
+        if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
         if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
         emit CacheUpdated(price, block.timestamp);
         cachedPrice = uint208(price);
