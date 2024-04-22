@@ -3,14 +3,15 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {SDaiOracleHelper} from "test/adapter/maker/SDaiOracleHelper.sol";
+import {DAI, SDAI} from "test/utils/EthereumAddresses.sol";
 import {SDaiOracle} from "src/adapter/maker/SDaiOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract SDaiOracleTest is SDaiOracleHelper {
     function test_Constructor_Integrity(FuzzableState memory s) public {
         setUpState(s);
-        assertEq(SDaiOracle(oracle).dai(), DAI);
-        assertEq(SDaiOracle(oracle).sDai(), SDAI);
+        assertEq(SDaiOracle(oracle).DAI(), DAI);
+        assertEq(SDaiOracle(oracle).SDAI(), SDAI);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
@@ -27,12 +28,10 @@ contract SDaiOracleTest is SDaiOracleHelper {
         expectNotSupported(s.inAmount, otherA, otherB);
     }
 
-    function test_Quote_RevertsWhen_DsrPotCallReverts(FuzzableState memory s) public {
+    function test_Quote_RevertsWhen_SDaiCallReverts(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReverts, true);
         setUpState(s);
-
-        bytes memory err = abi.encodePacked("oops");
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+        expectRevertForAllQuotePermutations(s.inAmount, DAI, SDAI, "");
     }
 
     function test_Quote_SDai_Dai_Integrity(FuzzableState memory s) public {

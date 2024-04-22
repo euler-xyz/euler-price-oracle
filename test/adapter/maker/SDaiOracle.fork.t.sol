@@ -10,7 +10,7 @@ contract SDaiOracleForkTest is ForkTest {
 
     function setUp() public {
         _setUpFork(19000000);
-        oracle = new SDaiOracle(DAI, SDAI);
+        oracle = new SDaiOracle();
     }
 
     function test_GetQuote_Integrity() public view {

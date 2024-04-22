@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
 import {SDaiOracleHelper} from "test/adapter/maker/SDaiOracleHelper.sol";
+import {DAI, SDAI} from "test/utils/EthereumAddresses.sol";
 
 contract SDaiOraclePropTest is SDaiOracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, Prop_Bidirectional memory p) public {

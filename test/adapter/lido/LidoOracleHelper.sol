@@ -3,11 +3,10 @@ pragma solidity 0.8.23;
 
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {StubStEth} from "test/adapter/lido/StubStEth.sol";
+import {STETH} from "test/utils/EthereumAddresses.sol";
 import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
 
 contract LidoOracleHelper is AdapterHelper {
-    address private constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
-
     struct FuzzableState {
         // Answer
         uint256 rate;

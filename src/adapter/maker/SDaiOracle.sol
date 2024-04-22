@@ -2,37 +2,29 @@
 pragma solidity 0.8.23;
 
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
-import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 
 /// @title SDaiOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Adapter for pricing Maker sDAI <-> DAI.
+/// @notice Adapter for pricing Maker sDai <-> Dai.
 contract SDaiOracle is BaseAdapter {
-    /// @notice The address of the DAI token.
-    address public immutable dai;
-    /// @notice The address of the sDAI token.
-    address public immutable sDai;
-
-    /// @notice Deploy an SDaiOracle.
-    /// @param _dai The address of the DAI token.
-    /// @param _sDai The address of the sDAI token.
-    /// @dev The oracle will support sDAI/DAI and DAI/sDAI pricing.
-    constructor(address _dai, address _sDai) {
-        dai = _dai;
-        sDai = _sDai;
-    }
+    /// @notice The address of the Dai token.
+    /// @dev This address will not change.
+    address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    /// @notice The address of the sDai token.
+    /// @dev This address will not change.
+    address public constant SDAI = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 
     /// @notice Get a quote by querying the exchange rate from the DSR Pot contract.
     /// @param inAmount The amount of `base` to convert.
-    /// @param base The token that is being priced. Either `sDai` or `dai`.
-    /// @param quote The token that is the unit of account. Either `dai` or `sDai`.
+    /// @param base The token that is being priced. Either `SDAI` or `DAI`.
+    /// @param quote The token that is the unit of account. Either `DAI` or `SDAI`.
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
-        if (base == sDai && quote == dai) {
-            return IERC4626(sDai).convertToAssets(inAmount);
-        } else if (base == dai && quote == sDai) {
-            return IERC4626(sDai).convertToShares(inAmount);
+        if (base == SDAI && quote == DAI) {
+            return IERC4626(SDAI).convertToAssets(inAmount);
+        } else if (base == DAI && quote == SDAI) {
+            return IERC4626(SDAI).convertToShares(inAmount);
         }
         revert Errors.PriceOracle_NotSupported(base, quote);
     }
