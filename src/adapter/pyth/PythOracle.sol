@@ -13,6 +13,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// Before calling `getQuote*` dispatch a call `updatePriceFeeds` on the Pyth oracle proxy to refresh the price.
 /// This is best done atomically via a multicall contract e.g. the Ethereum Vault Connector (EVC).
 contract PythOracle is BaseAdapter {
+    /// @notice The maximum length of time that a price can be in the future.
+    uint256 internal constant MAX_AHEADNESS = 1 minutes;
     /// @notice The maximum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_UPPER_BOUND = 15 minutes;
     /// @notice The minimum permitted value for `maxConfWidth`.
@@ -97,10 +99,19 @@ contract PythOracle is BaseAdapter {
     }
 
     /// @notice Get the latest Pyth price and perform sanity checks.
-    /// @dev Revert conditions: price is negative or zero, confidence interval is too wide, exponent is positive or too small.
+    /// @dev Revert conditions: update timestamp is too stale or too ahead, price is negative or zero,
+    /// confidence interval is too wide, exponent is positive or too small.
     /// @return The Pyth price struct without modification.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
-        PythStructs.Price memory p = IPyth(pyth).getPriceNoOlderThan(feedId, maxStaleness);
+        PythStructs.Price memory p = IPyth(pyth).getPriceUnsafe(feedId);
+        if (p.publishTime < block.timestamp) {
+            uint256 staleness = block.timestamp - p.publishTime;
+            if (staleness > maxStaleness) revert Errors.PriceOracle_InvalidAnswer();
+        } else {
+            uint256 aheadness = p.publishTime - block.timestamp;
+            if (aheadness > MAX_AHEADNESS) revert Errors.PriceOracle_InvalidAnswer();
+        }
+
         if (
             p.price <= 0 || p.conf > uint64(p.price) * maxConfWidth / BASIS_POINTS || p.expo > 0
                 || p.expo < MIN_EXPONENT
