@@ -9,6 +9,9 @@ import {Governable} from "src/lib/Governable.sol";
 /// @title EulerRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler lending products.
+/// @dev Integrator Note: The router supports pricing via `convertToAssets` for trusted `resolvedVaults`.
+/// By ERC4626 spec `convert*` ignores liquidity restrictions, fees, slippage and per-user restrictions.
+/// Therefore the reported price may not be realizable through `redeem` or `withdraw`.
 contract EulerRouter is Governable, IPriceOracle {
     /// @notice The PriceOracle to call if this router is not configured for base/quote.
     /// @dev If `address(0)` then there is no fallback.
@@ -57,8 +60,7 @@ contract EulerRouter is Governable, IPriceOracle {
     /// @param vault The address of the ERC4626 vault.
     /// @param set True to configure the vault, false to clear the record.
     /// @dev Callable only by the governor. Vault must implement ERC4626.
-    /// Only configure internal pricing after verifying that the implementation of
-    /// `convertToAssets` and `convertToShares` cannot be manipulated.
+    /// Note: Before configuring a vault verify that its `convertToAssets` is secure.
     function govSetResolvedVault(address vault, bool set) external onlyGovernor {
         address asset = set ? IERC4626(vault).asset() : address(0);
         resolvedVaults[vault] = asset;
