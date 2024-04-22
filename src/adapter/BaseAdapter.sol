@@ -21,10 +21,12 @@ abstract contract BaseAdapter is IPriceOracle {
         return (outAmount, outAmount);
     }
 
-    /// @notice Get the decimals of the asset or fall back to 18 decimals.
+    /// @notice Call `decimals()`, falling back to 18 decimals.
     /// @param asset ERC20 token address or other asset.
-    /// @dev Oracles can use ERC-7535, ISO 4217 or other conventions to represent non-ERC20 assets as addresses,
-    /// as long as these addresses are not contracts. Their decimals will be 18.
+    /// @dev Oracles can use ERC-7535, ISO 4217 or other conventions to represent non-ERC20 assets as addresses.
+    /// Integrator Note: `_getDecimals` will return 18 if `asset` is:
+    /// - an EOA or a to-be-deployed contract (which may implement `decimals()` after deployment)
+    /// - a contract that does not implement `decimals()`.
     /// @return The decimals of the asset.
     function _getDecimals(address asset) internal view returns (uint8) {
         (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IERC20.decimals, ()));
