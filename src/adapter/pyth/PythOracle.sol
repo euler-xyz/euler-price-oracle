@@ -10,6 +10,14 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 contract PythOracle is BaseAdapter {
+    /// @notice The maximum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 15 minutes;
+    /// @notice The maximum permitted value for `maxConfWidth`.
+    /// @dev Equal to 0.1%.
+    uint256 internal constant MAX_CONF_WIDTH_LOWER_BOUND = 10;
+    /// @notice The maximum permitted value for `maxConfWidth`.
+    /// @dev Equal to 5%.
+    uint256 internal constant MAX_CONF_WIDTH_UPPER_BOUND = 500;
     /// @dev The smallest PythStruct exponent that the oracle can handle.
     int256 internal constant MIN_EXPONENT = -20;
     /// @dev The denominator for basis points values (maxConfWidth).
@@ -48,6 +56,13 @@ contract PythOracle is BaseAdapter {
         uint256 _maxStaleness,
         uint256 _maxConfWidth
     ) {
+        if (_maxStaleness > MAX_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+        if (_maxConfWidth < MAX_CONF_WIDTH_LOWER_BOUND || _maxConfWidth > MAX_CONF_WIDTH_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+
         pyth = _pyth;
         base = _base;
         quote = _quote;

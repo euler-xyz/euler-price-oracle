@@ -11,6 +11,10 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Redstone pull-based price feeds.
 contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
+    /// @notice The maximum permitted value for `maxPriceStaleness`.
+    uint256 internal constant MAX_PRICE_STALENESS_UPPER_BOUND = 15 minutes;
+    /// @notice The maximum permitted value for `maxCacheStaleness`.
+    uint256 internal constant MAX_CACHE_STALENESS_UPPER_BOUND = 5 minutes;
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed.
@@ -54,7 +58,16 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         uint256 _maxPriceStaleness,
         uint256 _maxCacheStaleness
     ) {
-        if (_maxCacheStaleness > _maxPriceStaleness) revert Errors.PriceOracle_InvalidConfiguration();
+        if (_maxPriceStaleness > MAX_PRICE_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+        if (_maxCacheStaleness > MAX_CACHE_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+        if (_maxCacheStaleness > _maxPriceStaleness) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+
         base = _base;
         quote = _quote;
         feedId = _feedId;

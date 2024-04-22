@@ -12,6 +12,10 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @dev Note: Chronicle price feeds currently have a caller whitelist.
 /// To be able read price data, the caller (this contract) must be explicitly authorized.
 contract ChronicleOracle is BaseAdapter {
+    /// @notice The minimum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
+    /// @notice The maximum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 72 hours;
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed
@@ -31,6 +35,10 @@ contract ChronicleOracle is BaseAdapter {
     /// @param _feed The address of the Chronicle price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
+        if (_maxStaleness < MAX_STALENESS_LOWER_BOUND || _maxStaleness > MAX_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+
         base = _base;
         quote = _quote;
         feed = _feed;
