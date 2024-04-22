@@ -12,7 +12,7 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 contract PythOracle is BaseAdapter {
     /// @notice The maximum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_UPPER_BOUND = 15 minutes;
-    /// @notice The maximum permitted value for `maxConfWidth`.
+    /// @notice The minimum permitted value for `maxConfWidth`.
     /// @dev Equal to 0.1%.
     uint256 internal constant MAX_CONF_WIDTH_LOWER_BOUND = 10;
     /// @notice The maximum permitted value for `maxConfWidth`.
@@ -48,6 +48,9 @@ contract PythOracle is BaseAdapter {
     /// @param _feedId The id of the feed in the Pyth network.
     /// @param _maxStaleness The maximum allowed age of the price.
     /// @param _maxConfWidth The maximum width of the confidence interval in basis points.
+    /// @dev Note: A high confidence interval indicates market volatility or Pyth consensus instability.
+    /// Consider a lower `_maxConfWidth` for highly-correlated pairs and a higher value for uncorrelated pairs.
+    /// Pairs with few data sources and low liquidity are more prone to volatility spikes and consensus instability.
     constructor(
         address _pyth,
         address _base,
