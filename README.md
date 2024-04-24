@@ -1,10 +1,10 @@
 # Euler Price Oracles
 
-Euler Price Oracles is a library of minimal and immutable oracle adapters. It implements [IPriceOracle](https://github.com/euler-xyz/IPriceOracle), an opinionated quote-based interface for on-chain pricing. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), refer the section in the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
+Euler Price Oracles is a library of minimal and immutable oracle adapters. Contracts in this library follow [IPriceOracle](https://github.com/euler-xyz/IPriceOracle), an opinionated quote-based interface for on-chain pricing. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), refer the section in the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
 
 ## `IPriceOracle`
 
-Euler Price Oracles implement the [IPriceOracle](https://github.com/euler-xyz/IPriceOracle) interface.
+All contracts in this library implement the [IPriceOracle](https://github.com/euler-xyz/IPriceOracle) interface.
 ```solidity
 /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
 function getQuote(
@@ -22,13 +22,13 @@ function getQuotes(
 ) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
 ```
 
-This interface shapes oracle interactions in an important way: it forces the consumer to think in [amounts rather than prices](https://hackernoon.com/getting-prices-right).
+This interface shapes oracle interactions in an important way: it forces the consumer to think in [amounts rather than prices.](https://hackernoon.com/getting-prices-right)
 
-### Quoting Interface
+### Quotes
 
 Euler Price Oracles are unique in that they expose a flexible quoting interface instead of reporting a static price.
 
-> Imagine a Chainlink price feed which reports the value `1 EUL/ETH`, the *unit price* of `EUL`. Now consider an `IPriceOracle` adapter for the feed. In `getQuote` it fetches the unit price, multiplies it by `inAmount`, and returns the quantity `inAmount EUL/ETH`. We call this a *quote* as it functionally resembles a swap on a decentralized exchange.
+> Imagine a Chainlink price feed which reports the value `1 EUL/ETH`, the *unit price* of `EUL`. Now consider an `IPriceOracle` adapter for the feed. It will fetch the unit price, multiply it by `inAmount`, and return the quantity `inAmount EUL/ETH`. We call this a *quote* as it functionally resembles a swap on a decentralized exchange.
 
 The quoting interface offers several benefits to consumers:
 - **More intuitive queries:** Oracles are commonly used in DeFi to determine the value of assets. `getQuote` does exactly that.
