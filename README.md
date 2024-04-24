@@ -41,7 +41,7 @@ Euler Price Oracles additionally expose `getQuotes` which returns two prices: th
 
 Bid/ask prices are inherently safer to use in lending markets as they can accurately reflect instantaneous price spreads. While few oracles support bid/ask prices currently, we anticipate their wider adoption in DeFi as on-chain liquidity matures. 
 
-Importantly `getQuotes` allows for custom pricing strategies to be built under the `IPriceOracle` interface. Examples include:
+Importantly `getQuotes` allows for custom pricing strategies to be built under the `IPriceOracle` interface:
  - Querying two oracles and returning the lower and higher prices.
  - Reporting two prices from a single source e.g. a TWAP and a [median.](https://github.com/euler-xyz/median-oracle)
  - Applying a synthetic spread or a volatility-dependent confidence interval around a mid-price.
