@@ -130,29 +130,14 @@ Parameters and acceptance criteria are easily observed on-chain.
 | Redstone      | External  | Any           | feed, staleness   |
 | Uniswap V3    | On-chain  | Any           | fee, twap window  |
 
-### Security Questions
-1. Adapters check whether the raw price data is valid or indicates an error condition (e.g. negative price or invalid signature). Are all cases caught?
-
-1. Is the validation of the `PythStructs.Price` in the Pyth adapter correct? Should the `expo` boundary be increased or decreased?
-
-1. Are there real-world cases where we would need a scaling factor larger than 10^38 in `ScaleUtils`? Interested in examples for Pyth, Redstone and Chainlink feeds. Note that we consider pricing "by analogy" a valid use case, i.e. using a ETH/USD feed for pricing WETH/GUSD.
-
-1. Are there quirky feeds in Pyth, Redstone and Chainlink which break the assumptions of the adapters? For example, the Redstone adapter has `FEED_DECIMALS=8` hardcoded as a constant, whereas the Chainlink adapter relies that the aggregator decimals correctly correspond to the actual decimals.
-
-1. Are there timing games / OEV opportunities that arise from the price caching logic in Redstone and Pyth adapters?
-
-1. Are the on-chain exchange rate oracles (sDAI, stEth) immune to manipulation? Are there additional conditions that we can check which could signal that these rates cannot be trusted? 
-
-1. Could any of the hardcoded addresses change under normal operation conditions e.g. as part of an upgrade?
-
 ## Safety
 This software is **experimental** and is provided "as is" and "as available".
 
 **No warranties are provided** and **no liability will be accepted for any loss** incurred through the use of this codebase.
 
-Always include thorough tests when using Price Oracles to ensure it interacts correctly with your code.
+Always include thorough tests when using Euler Price Oracles to ensure it interacts correctly with your code.
 
-Price Oracles is currently undergoing security audits and should not be used in production.
+Euler Price Oracles is currently undergoing security audits and should not be used in production.
 
 ## License
 (c) 2024 Euler Labs Ltd.
