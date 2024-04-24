@@ -33,7 +33,7 @@ Euler Price Oracles are unique in that they expose a flexible quoting interface 
 The quoting interface offers several benefits to consumers:
 - **More intuitive queries:** Oracles are commonly used in DeFi to determine the value of assets. `getQuote` does exactly that.
 - **More expressive interface:** The unit price is a special case of a quote where `inAmount` is one whole unit of `base`.
-- **Safe and flexible integrations:** Under `IPriceOracle` adapters are internally responsible for decimals conversions. This allows consumers to more easily switch pricing sources as they can remain agnostic to the internals of a particular provider.
+- **Safe and flexible integrations:** Under `IPriceOracle` adapters are internally responsible for converting decimals. This allows consumers to decouple themselves from a particular provider as they can remain agnostic to its implementation details.
 
 ### Bid/Ask Pricing
 
