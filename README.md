@@ -4,7 +4,7 @@ Euler Price Oracles is a library of minimal and immutable oracle adapters. It im
 
 ## `IPriceOracle`
 
-Euler Price Oracles implement [IPriceOracle](https://github.com/euler-xyz/IPriceOracle).
+Euler Price Oracles implement the [IPriceOracle](https://github.com/euler-xyz/IPriceOracle) interface.
 ```solidity
 /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
 function getQuote(
@@ -52,7 +52,7 @@ An adapter is a minimal, fully immutable contract that queries an external price
 
 ### Design Principles
 
-The `IPriceOracle` interface is permissive in that it does not prescribe a particular way to implement it. However the adapters in this library are implemented according to a strict set of prices that we believe are crucial for safe, open, and self-governed markets.
+The `IPriceOracle` interface is permissive in that it does not prescribe a particular way to implement it. However the adapters in this library adhere to a strict set of rules that we believe are necessary to enable safe, open, and self-governed markets to flourish.
 
 #### Immutable
 
