@@ -1,10 +1,6 @@
 # Euler Price Oracles
 
-Euler Price Oracles is a library of immutable oracle adapters. Components implement [IPriceOracle](https://github.com/euler-xyz/IPriceOracle), an opinionated quote-based interface for on-chain pricing.
-
-To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), refer to the relevant section of the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
-
-To explore and build on Euler Price Oracles, refer to [Development](#development).
+Euler Price Oracles is a library of immutable oracle adapters. Its components implement [IPriceOracle](https://github.com/euler-xyz/IPriceOracle), an opinionated quote-based interface for on-chain pricing. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), read the section in the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
 
 ## `IPriceOracle`
 
