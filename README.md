@@ -4,7 +4,7 @@ Euler Price Oracles is a library of immutable oracle adapters. Its components im
 
 ## `IPriceOracle`
 
-Euler Price Oracles implement [IPriceOracle](https://github.com/euler-xyz/IPriceOracle), an opinionated quoting interface.
+Euler Price Oracles implement [IPriceOracle](https://github.com/euler-xyz/IPriceOracle).
 ```solidity
 /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
 function getQuote(
@@ -22,7 +22,7 @@ function getQuotes(
 ) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
 ```
 
-The interface makes two innovations for better oracle integrations: the quoting interface and bid/ask pricing.
+This interface shapes oracle interactions in an important way: it forces the consumer to think in [amounts rather than prices](https://hackernoon.com/getting-prices-right).
 
 ### Quoting Interface
 
