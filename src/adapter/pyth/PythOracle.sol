@@ -26,7 +26,7 @@ contract PythOracle is BaseAdapter {
     /// @dev The smallest PythStruct exponent that the oracle can handle.
     int256 internal constant MIN_EXPONENT = -20;
     /// @dev The largest PythStruct exponent that the oracle can handle.
-    int256 internal constant MAX_EXPONENT = 20;
+    int256 internal constant MAX_EXPONENT = 12;
     /// @dev The denominator for basis points values (maxConfWidth).
     uint256 internal constant BASIS_POINTS = 10_000;
     /// @notice The address of the Pyth oracle proxy.
@@ -92,8 +92,8 @@ contract PythOracle is BaseAdapter {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
         PythStructs.Price memory priceStruct = _fetchPriceStruct();
-        uint256 price = uint256(uint64(priceStruct.price));
 
+        uint256 price = uint256(uint64(priceStruct.price));
         int8 feedExponent = int8(baseDecimals) - int8(priceStruct.expo);
 
         Scale scale;
