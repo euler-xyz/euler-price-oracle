@@ -39,7 +39,7 @@ contract PythOracleHelper is AdapterHelper {
         minPrice: 1,
         maxPrice: 1_000_000_000_000,
         minExpo: -20,
-        maxExpo: 0
+        maxExpo: 12
     });
 
     Bounds internal bounds = DEFAULT_BOUNDS;
@@ -63,6 +63,7 @@ contract PythOracleHelper is AdapterHelper {
         PythStructs.Price p;
         // Environment
         uint256 inAmount;
+        uint256 timestamp;
     }
 
     constructor() {
@@ -99,6 +100,8 @@ contract PythOracleHelper is AdapterHelper {
 
         if (behaviors[Behavior.FeedReturnsNegativePrice]) {
             s.p.price = int64(bound(s.p.price, type(int64).min, -1));
+        } else if (behaviors[Behavior.FeedReturnsZeroPrice]) {
+            s.p.price = 0;
         } else {
             s.p.price = int64(bound(s.p.price, bounds.minPrice, bounds.maxPrice));
         }
@@ -112,9 +115,19 @@ contract PythOracleHelper is AdapterHelper {
         if (behaviors[Behavior.FeedReturnsExpoTooLow]) {
             s.p.expo = int32(bound(s.p.expo, type(int32).min, -21));
         } else if (behaviors[Behavior.FeedReturnsExpoTooHigh]) {
-            s.p.expo = int32(bound(s.p.expo, 1, type(int32).max));
+            s.p.expo = int32(bound(s.p.expo, 21, type(int32).max));
         } else {
             s.p.expo = int32(bound(s.p.expo, bounds.minExpo, bounds.maxExpo));
+        }
+
+        s.p.publishTime = bound(s.p.publishTime, 1 minutes + 1, type(uint128).max);
+
+        if (behaviors[Behavior.FeedReturnsStalePrice]) {
+            s.timestamp = bound(s.timestamp, s.p.publishTime + s.maxStaleness + 1, type(uint144).max);
+        } else if (behaviors[Behavior.FeedReturnsTooAheadPrice]) {
+            s.timestamp = bound(s.timestamp, 0, s.p.publishTime - 1 minutes - 1);
+        } else {
+            s.timestamp = bound(s.timestamp, s.p.publishTime - 1 minutes, s.p.publishTime + s.maxStaleness);
         }
 
         if (behaviors[Behavior.FeedReverts]) {
@@ -124,6 +137,7 @@ contract PythOracleHelper is AdapterHelper {
         }
 
         s.inAmount = bound(s.inAmount, 1, type(uint128).max);
+        vm.warp(s.timestamp);
     }
 
     function calcOutAmount(FuzzableState memory s) internal pure returns (uint256) {
