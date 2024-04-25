@@ -33,7 +33,8 @@ contract ChainlinkOracle is BaseAdapter {
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chainlink price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
-    /// @dev Consider setting `_maxStaleness` to the heartbeat + latency allowance (e.g. 5 minutes).
+    /// @dev Consider setting `_maxStaleness` to slightly more than the feed's heartbeat
+    /// to account for possible network delays when the heartbeat is triggered.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
         if (_maxStaleness < MAX_STALENESS_LOWER_BOUND || _maxStaleness > MAX_STALENESS_UPPER_BOUND) {
             revert Errors.PriceOracle_InvalidConfiguration();

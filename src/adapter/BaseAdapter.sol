@@ -25,7 +25,7 @@ abstract contract BaseAdapter is IPriceOracle {
     /// @param asset ERC20 token address or other asset.
     /// @dev Oracles can use ERC-7535, ISO 4217 or other conventions to represent non-ERC20 assets as addresses.
     /// Integrator Note: `_getDecimals` will return 18 if `asset` is:
-    /// - an EOA or a to-be-deployed contract (which may implement `decimals()` after deployment)
+    /// - an EOA or a to-be-deployed contract (which may implement `decimals()` after deployment).
     /// - a contract that does not implement `decimals()`.
     /// @return The decimals of the asset.
     function _getDecimals(address asset) internal view returns (uint8) {
