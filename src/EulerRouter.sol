@@ -11,7 +11,7 @@ import {Governable} from "src/lib/Governable.sol";
 /// @notice Default Oracle resolver for Euler lending products.
 /// @dev Integration Note: The router supports pricing via `convertToAssets` for trusted `resolvedVaults`.
 /// By ERC4626 spec `convert*` ignores liquidity restrictions, fees, slippage and per-user restrictions.
-/// Therefore the reported price may not be realizable through `redeem` or `withdraw`.~
+/// Therefore the reported price may not be realizable through `redeem` or `withdraw`.
 contract EulerRouter is Governable, IPriceOracle {
     /// @inheritdoc IPriceOracle
     string public constant name = "EulerRouter";
