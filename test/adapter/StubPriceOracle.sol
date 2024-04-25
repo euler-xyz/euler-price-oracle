@@ -17,6 +17,8 @@ contract StubPriceOracle {
     }
 
     function _calcQuote(uint256 inAmount, address base, address quote) internal view returns (uint256) {
-        return inAmount * prices[base][quote] / 1e18;
+        if (prices[base][quote] != 0) return inAmount * prices[base][quote] / 1e18;
+        if (prices[quote][base] != 0) return inAmount * 1e18 / prices[quote][base];
+        revert("Price not set.");
     }
 }
