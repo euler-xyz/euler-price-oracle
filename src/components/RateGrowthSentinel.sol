@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
+import {BaseAdapter, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
 contract RateGrowthSentinel is BaseAdapter {
@@ -35,9 +34,9 @@ contract RateGrowthSentinel is BaseAdapter {
         uint256 maxRate = snapshotRate + maxGrowthPerSecond * (block.timestamp - snapshotAt);
         uint256 maxOutAmount;
         if (inverse) {
-            maxOutAmount = inAmount * 10 ** quoteDecimals / maxRate;
+            maxOutAmount = FixedPointMathLib.mulDiv(inAmount, 10 ** quoteDecimals, maxRate);
         } else {
-            maxOutAmount = inAmount * maxRate / 10 ** baseDecimals;
+            maxOutAmount = FixedPointMathLib.mulDiv(inAmount, maxRate, 10 ** baseDecimals);
         }
         return outAmount < maxOutAmount ? outAmount : maxOutAmount;
     }

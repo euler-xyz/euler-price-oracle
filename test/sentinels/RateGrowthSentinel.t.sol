@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Test} from "forge-std/Test.sol";
 import {StubPriceOracle} from "test/adapter/StubPriceOracle.sol";
-import {RateGrowthSentinel} from "src/sentinels/RateGrowthSentinel.sol";
+import {RateGrowthSentinel} from "src/components/RateGrowthSentinel.sol";
 
 contract RateGrowthSentinelTest is Test {
     address base = makeAddr("BASE");
