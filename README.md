@@ -1,10 +1,10 @@
 # Euler Price Oracles
 
-Euler Price Oracles is a library of minimal and immutable oracle adapters. Contracts in this library follow [IPriceOracle,](https://github.com/euler-xyz/IPriceOracle), an opinionated quote-based interface for on-chain pricing. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), read the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
+Euler Price Oracles is a library of minimal and immutable oracle adapters. Contracts in this library implement `IPriceOracle`, an opinionated quote-based interface for price oracles. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), read the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
 
 ## `IPriceOracle`
 
-All contracts in this library implement the [IPriceOracle](https://github.com/euler-xyz/IPriceOracle) interface.
+All contracts in this library implement the `IPriceOracle` interface.
 ```solidity
 /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
 function getQuote(
