@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 /// @title IPriceOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Common PriceOracle interface.
 interface IPriceOracle {
+    /// @notice Get the name of the oracle.
+    /// @return The name of the oracle.
+    function name() external view returns (string memory);
+
     /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price spread.
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.

@@ -2,12 +2,14 @@
 pragma solidity 0.8.23;
 
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 
 /// @title SDaiOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Maker sDai <-> Dai.
 contract SDaiOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "SDaiOracle";
     /// @notice The address of the Dai token.
     /// @dev This address will not change.
     address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;

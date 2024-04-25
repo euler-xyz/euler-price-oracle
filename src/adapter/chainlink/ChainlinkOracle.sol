@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
@@ -11,6 +11,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @dev Integration Note: `maxStaleness` is an immutable parameter set in the constructor.
 /// If the aggregator's heartbeat changes, this adapter may exhibit unintended behavior.
 contract ChainlinkOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "ChainlinkOracle";
     /// @notice The minimum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
     /// @notice The maximum permitted value for `maxStaleness`.

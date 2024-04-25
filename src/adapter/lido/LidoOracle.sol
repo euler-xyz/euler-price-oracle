@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {IStEth} from "src/adapter/lido/IStEth.sol";
 
 /// @title LidoOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
 contract LidoOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "LidoOracle";
     /// @notice The address of Lido staked Ether.
     /// @dev This address will not change.
     address public constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;

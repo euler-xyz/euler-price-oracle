@@ -271,6 +271,118 @@ contract EulerRouterTest is Test {
         router.getQuotes(inAmount, base, quote);
     }
 
+    function test_ResolveOracle_BaseEqQuote(uint256 inAmount, address base) public view {
+        (uint256 resolvedInAmount, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, base);
+
+        assertEq(resolvedInAmount, inAmount);
+        assertEq(resolvedBase, base);
+        assertEq(resolvedQuote, base);
+        assertEq(resolvedOracle, address(0));
+    }
+
+    function test_ResolveOracle_HasOracle(uint256 inAmount, address base, address quote, address oracle) public {
+        vm.assume(base != quote);
+        vm.assume(oracle != address(0));
+        vm.prank(GOVERNOR);
+        router.govSetConfig(base, quote, oracle);
+
+        (uint256 resolvedInAmount, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, quote);
+        assertEq(resolvedInAmount, inAmount);
+        assertEq(resolvedBase, base);
+        assertEq(resolvedQuote, quote);
+        assertEq(resolvedOracle, oracle);
+    }
+
+    function test_ResolveOracle_BaseIsVault(
+        uint256 inAmount,
+        address baseAsset,
+        address quote,
+        uint256 rate1,
+        uint256 rate2
+    ) public {
+        baseAsset = boundAddr(baseAsset);
+        quote = boundAddr(quote);
+        rate1 = bound(rate1, 1, 1e24);
+        rate2 = bound(rate2, 1, 1e24);
+
+        address oracle = address(new StubPriceOracle());
+        address base = address(new StubERC4626(baseAsset, rate2));
+        vm.assume(distinct(base, baseAsset, quote, oracle));
+
+        vm.startPrank(GOVERNOR);
+        StubPriceOracle(oracle).setPrice(baseAsset, quote, rate1);
+        router.govSetConfig(baseAsset, quote, oracle);
+        router.govSetResolvedVault(base, true);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        (, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, quote);
+        assertEq(resolvedBase, baseAsset);
+        assertEq(resolvedQuote, quote);
+        assertEq(resolvedOracle, oracle);
+    }
+
+    function test_ResolveOracle_BaseIsVaultWithAssetEqQuote(uint256 inAmount, address baseAsset, uint256 rate1)
+        public
+    {
+        baseAsset = boundAddr(baseAsset);
+        rate1 = bound(rate1, 1, 1e24);
+
+        address oracle = address(new StubPriceOracle());
+        address base = address(new StubERC4626(baseAsset, rate1));
+        vm.assume(distinct(base, baseAsset, oracle));
+
+        vm.startPrank(GOVERNOR);
+        router.govSetResolvedVault(base, true);
+        inAmount = bound(inAmount, 1, type(uint128).max);
+
+        (, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, baseAsset);
+        assertEq(resolvedBase, baseAsset);
+        assertEq(resolvedQuote, baseAsset);
+        assertEq(resolvedOracle, address(0));
+    }
+
+    function test_ResolveOracle_HasOracleInverse(uint256 inAmount, address base, address quote, address oracle)
+        public
+    {
+        vm.assume(base != quote);
+        vm.assume(oracle != address(0));
+        vm.prank(GOVERNOR);
+        router.govSetConfig(base, quote, oracle);
+
+        (uint256 resolvedInAmount, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, quote);
+        assertEq(resolvedInAmount, inAmount);
+        assertEq(resolvedBase, base);
+        assertEq(resolvedQuote, quote);
+        assertEq(resolvedOracle, oracle);
+    }
+
+    function test_ResolveOracle_NoOracleButHasFallback(uint256 inAmount, address base, address quote, address oracle)
+        public
+    {
+        vm.assume(base != quote);
+        vm.assume(oracle != address(0));
+        vm.prank(GOVERNOR);
+        router.govSetFallbackOracle(oracle);
+
+        (uint256 resolvedInAmount, address resolvedBase, address resolvedQuote, address resolvedOracle) =
+            router.resolveOracle(inAmount, base, quote);
+        assertEq(resolvedInAmount, inAmount);
+        assertEq(resolvedBase, base);
+        assertEq(resolvedQuote, quote);
+        assertEq(resolvedOracle, oracle);
+    }
+
+    function test_ResolveOracle_NoOracleNoFallback(uint256 inAmount, address base, address quote) public {
+        vm.assume(base != quote);
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_NotSupported.selector, base, quote));
+        router.resolveOracle(inAmount, base, quote);
+    }
+
     function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {
         vm.assume(caller != GOVERNOR);
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);

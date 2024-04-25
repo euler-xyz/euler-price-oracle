@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
-import {Errors} from "src/lib/Errors.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title ChronicleOracle
@@ -12,6 +11,8 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @dev Note: Chronicle price feeds currently have a caller whitelist.
 /// To be able read price data, the caller (this contract) must be explicitly authorized.
 contract ChronicleOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "ChronicleOracle";
     /// @notice The minimum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
     /// @notice The maximum permitted value for `maxStaleness`.

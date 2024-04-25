@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title PythOracle
@@ -29,6 +29,8 @@ contract PythOracle is BaseAdapter {
     int256 internal constant MAX_EXPONENT = 12;
     /// @dev The denominator for basis points values (maxConfWidth).
     uint256 internal constant BASIS_POINTS = 10_000;
+    /// @inheritdoc IPriceOracle
+    string public constant name = "PythOracle";
     /// @notice The address of the Pyth oracle proxy.
     address public immutable pyth;
     /// @notice The address of the base asset corresponding to the feed.

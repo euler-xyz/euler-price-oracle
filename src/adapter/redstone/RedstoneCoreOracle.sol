@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title RedstoneCoreOracle
@@ -15,6 +15,8 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     uint256 internal constant MAX_PRICE_STALENESS_UPPER_BOUND = 5 minutes;
     /// @notice The maximum permitted value for `maxCacheStaleness`.
     uint256 internal constant MAX_CACHE_STALENESS_UPPER_BOUND = 5 minutes;
+    /// @inheritdoc IPriceOracle
+    string public constant name = "RedstoneCoreOracle";
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed.
