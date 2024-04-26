@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
+import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
 import {BaseAdapter, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
@@ -11,8 +12,8 @@ contract RateGrowthSentinel is BaseAdapter {
     uint256 public immutable maxGrowthPerSecond;
     uint256 public immutable snapshotRate;
     uint256 public immutable snapshotAt;
-    uint8 internal immutable baseDecimals;
-    uint8 internal immutable quoteDecimals;
+    uint256 internal immutable baseScalar;
+    uint256 internal immutable quoteScalar;
 
     constructor(address _wrappedAdapter, address _base, address _quote, uint256 _maxGrowthPerSecond) {
         wrappedAdapter = _wrappedAdapter;
@@ -20,10 +21,10 @@ contract RateGrowthSentinel is BaseAdapter {
         quote = _quote;
         maxGrowthPerSecond = _maxGrowthPerSecond;
 
-        baseDecimals = _getDecimals(base);
-        quoteDecimals = _getDecimals(quote);
+        baseScalar = 10 ** _getDecimals(base);
+        quoteScalar = 10 ** _getDecimals(quote);
 
-        snapshotRate = IPriceOracle(wrappedAdapter).getQuote(10 ** baseDecimals, base, quote);
+        snapshotRate = IPriceOracle(wrappedAdapter).getQuote(baseScalar, base, quote);
         snapshotAt = block.timestamp;
     }
 
@@ -34,9 +35,9 @@ contract RateGrowthSentinel is BaseAdapter {
         uint256 maxRate = snapshotRate + maxGrowthPerSecond * (block.timestamp - snapshotAt);
         uint256 maxOutAmount;
         if (inverse) {
-            maxOutAmount = FixedPointMathLib.mulDiv(inAmount, 10 ** quoteDecimals, maxRate);
+            maxOutAmount = FixedPointMathLib.fullMulDiv(inAmount, quoteScalar, maxRate);
         } else {
-            maxOutAmount = FixedPointMathLib.mulDiv(inAmount, maxRate, 10 ** baseDecimals);
+            maxOutAmount = FixedPointMathLib.fullMulDiv(inAmount, maxRate, baseScalar);
         }
         return outAmount < maxOutAmount ? outAmount : maxOutAmount;
     }
