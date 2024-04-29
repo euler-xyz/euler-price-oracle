@@ -41,14 +41,14 @@ contract AnchoredOracle is BaseAdapter {
     /// @param quote The token that is the unit of account.
     /// @return The quote returned by `primaryOracle`.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
-        uint256 outAmount = IPriceOracle(primaryOracle).getQuote(inAmount, base, quote);
+        uint256 primaryOutAmount = IPriceOracle(primaryOracle).getQuote(inAmount, base, quote);
         uint256 anchorOutAmount = IPriceOracle(anchorOracle).getQuote(inAmount, base, quote);
 
-        if (outAmount < anchorOutAmount) {
-            uint256 divergence = FixedPointMathLib.fullMulDivUp(outAmount, WAD, anchorOutAmount);
+        if (primaryOutAmount < anchorOutAmount) {
+            uint256 divergence = FixedPointMathLib.fullMulDivUp(primaryOutAmount, WAD, anchorOutAmount);
             if (divergence > maxDivergence) revert Errors.PriceOracle_InvalidAnswer();
         } else {
-            uint256 divergence = FixedPointMathLib.fullMulDivUp(anchorOutAmount, WAD, outAmount);
+            uint256 divergence = FixedPointMathLib.fullMulDivUp(anchorOutAmount, WAD, primaryOutAmount);
             if (divergence > maxDivergence) revert Errors.PriceOracle_InvalidAnswer();
         }
         return outAmount;

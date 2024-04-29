@@ -32,8 +32,8 @@ contract LowHighOracle is IPriceOracle {
         (bool successA, bool successB, uint256 outAmountA, uint256 outAmountB) = _tryGetQuote(inAmount, base, quote);
 
         if (successA && successB) return (outAmountA + outAmountB) / 2; // Both succeeded, return the average.
-        if (successA) return outAmountA; // `oracleA` succeeded only, return its quote.
-        if (successB) return outAmountB; // `oracleA` succeeded only, return its quote.=
+        if (successA) return outAmountA; // Only `oracleA` succeeded, return its quote only.
+        if (successB) return outAmountB; // Only `oracleB` succeeded, return its quote only.
         revert Errors.PriceOracle_InvalidAnswer();
     }
 
@@ -47,13 +47,13 @@ contract LowHighOracle is IPriceOracle {
         (bool successA, bool successB, uint256 outAmountA, uint256 outAmountB) = _tryGetQuote(inAmount, base, quote);
 
         if (successA && successB) {
-            // Both succeeded, sort the quotes and return the them.
+            // Both succeeded, return quotes in increasing order.
             (uint256 outAmountLow, uint256 outAmountHigh) =
                 outAmountA < outAmountB ? (outAmountA, outAmountB) : (outAmountB, outAmountA);
             return (outAmountLow, outAmountHigh);
         }
-        if (successA) return (outAmountA, outAmountA); // Only `oracleA` succeeded, return its quote twice.
-        if (successB) return (outAmountB, outAmountB); // Only `oracleB` succeeded, return its quote twice.
+        if (successA) return (outAmountA, outAmountA); // Only `oracleA` succeeded, return its quote only.
+        if (successB) return (outAmountB, outAmountB); // Only `oracleB` succeeded, return its quote only.
         revert Errors.PriceOracle_InvalidAnswer(); // Neither oracles succeeded, revert.
     }
 
