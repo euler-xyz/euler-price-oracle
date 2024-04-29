@@ -51,6 +51,6 @@ contract AnchoredOracle is BaseAdapter {
             uint256 divergence = FixedPointMathLib.fullMulDivUp(anchorOutAmount, WAD, primaryOutAmount);
             if (divergence > maxDivergence) revert Errors.PriceOracle_InvalidAnswer();
         }
-        return outAmount;
+        return primaryOutAmount;
     }
 }
