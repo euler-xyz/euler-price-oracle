@@ -109,7 +109,7 @@ contract PythOracle is BaseAdapter {
 
     /// @notice Get the latest Pyth price and perform sanity checks.
     /// @dev Revert conditions: update timestamp is too stale or too ahead, price is negative or zero,
-    /// confidence interval is too wide, exponent is positive or too small.
+    /// confidence interval is too wide, exponent is too large or too small.
     /// @return The Pyth price struct without modification.
     function _fetchPriceStruct() internal view returns (PythStructs.Price memory) {
         PythStructs.Price memory p = IPyth(pyth).getPriceUnsafe(feedId);
