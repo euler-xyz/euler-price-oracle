@@ -10,7 +10,7 @@ contract FixedSpread is IPriceOracle {
     /// @notice The address of the wrapped oracle or adapter.
     address public immutable wrapped;
 
-    /// @notice The fixed spread, in 18-decimal fixed point. IE: 0.1e18 means 10% (5% on each side)
+    /// @notice The fixed spread, in 18-decimal fixed point. IE: 0.1e18 means 10% (on each side, so ~20% total)
     uint256 public immutable spread;
 
     /// @notice Deploy a FixedSpread oracle.
