@@ -29,19 +29,21 @@ contract AnchoredOracleTest is Test {
         assertEq(oracle.maxDivergence(), MAX_DIVERGENCE);
     }
 
-    function test_Constructor_RevertsWhen_MaxDivergenceTooLow(address base, address quote, uint256 maxDivergence) public {
+    function test_Constructor_RevertsWhen_MaxDivergenceTooLow(address base, address quote, uint256 maxDivergence)
+        public
+    {
         maxDivergence = bound(maxDivergence, 0, MAX_DIVERGENCE_LOWER_BOUND - 1);
         vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
         new AnchoredOracle(base, quote, maxDivergence);
     }
 
-    function test_Constructor_RevertsWhen_MaxDivergenceTooHigh(address base, address quote, uint256 maxDivergence) public {
+    function test_Constructor_RevertsWhen_MaxDivergenceTooHigh(address base, address quote, uint256 maxDivergence)
+        public
+    {
         maxDivergence = bound(maxDivergence, MAX_DIVERGENCE_UPPER_BOUND + 1, type(uint256).max);
         vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
         new AnchoredOracle(base, quote, maxDivergence);
     }
 
-    function test_Quote_Integrity(uint256 inAmount, address base, address quote, uint256 prim, uint256 priceB) public {
-
-    }
+    function test_Quote_Integrity(uint256 inAmount, address base, address quote, uint256 prim, uint256 priceB) public {}
 }

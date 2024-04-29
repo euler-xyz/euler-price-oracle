@@ -14,12 +14,12 @@ contract StubPriceOracle {
     }
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        if(doRevert) revert("oops");
+        if (doRevert) revert("oops");
         return _calcQuote(inAmount, base, quote);
     }
 
     function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256, uint256) {
-        if(doRevert) revert("oops");
+        if (doRevert) revert("oops");
         return (_calcQuote(inAmount, base, quote), _calcQuote(inAmount, base, quote));
     }
 
