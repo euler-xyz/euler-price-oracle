@@ -75,7 +75,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, _feedDecimals);
-        // Price = 0 will be rejected in `get
         cache = Cache({price: 0, priceTimestamp: uint48(block.timestamp), updatePriceContext: FLAG_UPDATE_PRICE_EXITED});
     }
 
@@ -99,7 +98,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice Validate the timestamp of a Redstone signed price data package.
     /// @param timestampMillis Data package timestamp in milliseconds.
     /// @dev Internally called in `updatePrice` for every signed data package in the payload.
-    /// Note: Despite that this function is exported as `view`, it may in fact perform state updates.
+    /// Note: Although this function is exported as `view`, it may in fact perform state updates.
     /// External calls will revert due to the context guard in `validateTimestampInternal`.
     function validateTimestamp(uint256 timestampMillis) public view virtual override {
         // Cast the state mutability of `validateTimestampInternal` to `view`.
@@ -112,11 +111,15 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev The price timestamp must lie in the defined acceptance range relative to `block.timestamp`.
     /// Note: The Redstone SDK allows the price timestamp to be up to 1 minute in the future.
     function validateTimestampInternal(uint256 timestampMillis) internal {
-        // Checking `updatePriceContext` effectively blocks external calls to `validateTimestamp`.
+        // The `updatePriceContext` guard effectively blocks external / direct calls to `validateTimestamp`.
         Cache memory _cache = cache;
         if (_cache.updatePriceContext != FLAG_UPDATE_PRICE_ENTERED) revert Errors.PriceOracle_InvalidAnswer();
 
         uint256 timestamp = timestampMillis / 1000;
+        // Avoid redundant storage writes as `validateTimestamp` is called for every signer in the payload (3 times).
+        // The inherited Redstone consumer contract enforces that the timestamps are the same for all signers.
+        if (timestamp == _cache.priceTimestamp) return;
+
         if (block.timestamp > timestamp) {
             // Verify that the timestamp is not too stale.
             uint256 priceStaleness = block.timestamp - timestamp;

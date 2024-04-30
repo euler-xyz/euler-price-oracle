@@ -81,7 +81,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.quote, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        s.tsDeploy = bound(s.tsDeploy, 2 ** 30, 2 ** 36);
+        s.tsDeploy = bound(s.tsDeploy, 2 ** 30, 2 ** 36 - 1);
         vm.warp(s.tsDeploy);
         oracle = address(new RedstoneCoreOracleHarness(s.base, s.quote, s.feedId, s.feedDecimals, s.maxStaleness));
 
@@ -93,7 +93,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
             s.price = bound(s.price, bounds.minPrice, bounds.maxPrice);
         }
 
-        s.tsDataPackage = bound(s.tsDataPackage, s.tsDeploy, 2 ** 36);
+        s.tsDataPackage = bound(s.tsDataPackage, s.tsDeploy + 1, 2 ** 36);
         if (behaviors[Behavior.FeedReturnsStalePrice]) {
             s.tsUpdatePrice = bound(s.tsUpdatePrice, s.tsDataPackage + s.maxStaleness + 1, 2 ** 36 + s.maxStaleness + 1);
         } else if (behaviors[Behavior.FeedReturnsTooAheadPrice]) {
