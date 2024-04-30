@@ -43,7 +43,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @dev Redstone price feeds have 8 decimals by default, however certain exceptions exist.
     uint8 public immutable feedDecimals;
     /// @notice The maximum allowed age of the Redstone price.
-    /// @dev Compares `block.timestamp` against the timestamp of the Redstone data package in `updatePrice`.
+    /// @dev Compares `block.timestamp` against the timestamp of the Redstone data package.
     uint256 public immutable maxStaleness;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
@@ -148,8 +148,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         Cache memory _cache = cache;
 
         if (block.timestamp > _cache.priceTimestamp) {
-            // Redstone data packages may have a timestamp in the future.
-            // If it was already accepted it can only get more recent with time.
+            // No need to check price timestamps in the future as they can only get more recent with time.
             uint256 priceStaleness = block.timestamp - _cache.priceTimestamp;
             if (priceStaleness > maxStaleness) {
                 revert Errors.PriceOracle_TooStale(priceStaleness, maxStaleness);
