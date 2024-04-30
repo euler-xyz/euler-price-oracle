@@ -99,18 +99,19 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @param timestampMillis Data package timestamp in milliseconds.
     /// @dev Internally called in `updatePrice` for every signed data package in the payload.
     /// Note: Although this function is exported as `view`, it may in fact perform state updates.
-    /// External calls will revert due to the context guard in `validateTimestampInternal`.
+    /// External calls will revert due to the context guard in `_validateTimestamp`.
     function validateTimestamp(uint256 timestampMillis) public view virtual override {
-        // Cast the state mutability of `validateTimestampInternal` to `view`.
+        // Cast the state mutability of `validateTimestamp` to `view`.
         // Updating storage in an internal call to a function marked as `view` does not result in a runtime error.
         // This is because internal calls are entered with a `JUMP` instruction rather than `STATICCALL`.
-        asView(validateTimestampInternal)(timestampMillis);
+        asView(_validateTimestamp)(timestampMillis);
     }
 
     /// @notice Validate the timestamp of a Redstone signed price data package and cache the response.
+    /// @param timestampMillis Data package timestamp in milliseconds.
     /// @dev The price timestamp must lie in the defined acceptance range relative to `block.timestamp`.
     /// Note: The Redstone SDK allows the price timestamp to be up to 1 minute in the future.
-    function validateTimestampInternal(uint256 timestampMillis) internal {
+    function _validateTimestamp(uint256 timestampMillis) internal {
         // The `updatePriceContext` guard effectively blocks external / direct calls to `validateTimestamp`.
         Cache memory _cache = cache;
         if (_cache.updatePriceContext != FLAG_UPDATE_PRICE_ENTERED) revert Errors.PriceOracle_InvalidAnswer();
