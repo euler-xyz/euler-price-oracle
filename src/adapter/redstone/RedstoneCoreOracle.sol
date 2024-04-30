@@ -18,7 +18,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         /// @notice The timestamp contained within the price data packages.
         uint48 priceTimestamp;
         /// @notice The call context.
-        /// @dev Set to 1 if within a call to `updatePrice` or 1 otherwise.
+        /// @dev Set to 2 if within a call to `updatePrice` or 1 otherwise.
         uint8 updatePriceContext;
     }
 
@@ -75,7 +75,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, _feedDecimals);
-        cache = Cache({price: 0, priceTimestamp: uint48(block.timestamp), updatePriceContext: FLAG_UPDATE_PRICE_EXITED});
+        cache = Cache({price: 0, priceTimestamp: 0, updatePriceContext: FLAG_UPDATE_PRICE_EXITED});
     }
 
     /// @notice Ingest a signed update message and cache it on the contract.
@@ -154,8 +154,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
                 revert Errors.PriceOracle_TooStale(priceStaleness, maxStaleness);
             }
         }
-        // Reject `getQuote` before first update.
-        if (_cache.price == 0) revert Errors.PriceOracle_InvalidAnswer();
         return ScaleUtils.calcOutAmount(inAmount, _cache.price, scale, inverse);
     }
 

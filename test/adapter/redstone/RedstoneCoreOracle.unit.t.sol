@@ -18,7 +18,7 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
         (uint200 price, uint48 priceTimestamp, uint8 updatePriceContext) = RedstoneCoreOracle(oracle).cache();
         assertEq(price, 0);
-        assertEq(priceTimestamp, s.tsDeploy);
+        assertEq(priceTimestamp, 0);
         assertEq(updatePriceContext, 1);
     }
 
@@ -129,7 +129,7 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     function test_Quote_RevertsWhen_NoUpdate(FuzzableState memory s) public {
         setUpState(s);
 
-        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
+        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsDeploy, s.maxStaleness);
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
