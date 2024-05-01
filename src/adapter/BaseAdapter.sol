@@ -33,5 +33,7 @@ abstract contract BaseAdapter is IPriceOracle {
         return success && data.length == 32 ? abi.decode(data, (uint8)) : 18;
     }
 
+    /// @notice Return the quote for the given price query.
+    /// @dev Must be overridden in the inheriting contract.
     function _getQuote(uint256, address, address) internal view virtual returns (uint256);
 }

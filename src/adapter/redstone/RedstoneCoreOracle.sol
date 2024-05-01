@@ -146,7 +146,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
         Cache memory _cache = cache;
-
         if (block.timestamp > _cache.priceTimestamp) {
             // No need to check price timestamps in the future as they can only get more recent with time.
             uint256 priceStaleness = block.timestamp - _cache.priceTimestamp;
