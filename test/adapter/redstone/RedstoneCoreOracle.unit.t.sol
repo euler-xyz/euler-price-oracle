@@ -14,31 +14,70 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).quote(), s.quote);
         assertEq(RedstoneCoreOracle(oracle).feedId(), s.feedId);
         assertEq(RedstoneCoreOracle(oracle).feedDecimals(), s.feedDecimals);
-        assertEq(RedstoneCoreOracle(oracle).maxPriceStaleness(), s.maxPriceStaleness);
-        assertEq(RedstoneCoreOracle(oracle).maxCacheStaleness(), s.maxCacheStaleness);
-        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), 0);
-        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
+        assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
+
+        (uint200 price, uint48 priceTimestamp, uint8 updatePriceContext) = RedstoneCoreOracle(oracle).cache();
+        assertEq(price, 0);
+        assertEq(priceTimestamp, 0);
+        assertEq(updatePriceContext, 1);
+    }
+
+    function test_Constructor_RevertsWhen_MaxPriceStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
     }
 
     function test_UpdatePrice_Integrity(FuzzableState memory s) public {
         setUpState(s);
         mockPrice(s);
+        vm.expectEmit();
+        emit RedstoneCoreOracle.CacheUpdated(s.price, s.tsDataPackage);
         setPrice(s);
 
-        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), s.price);
-        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), s.tsUpdatePrice);
+        (uint200 price, uint48 priceTimestamp,) = RedstoneCoreOracle(oracle).cache();
+        assertEq(price, s.price);
+        assertEq(priceTimestamp, s.tsDataPackage);
     }
 
-    function test_UpdatePrice_Overflow(FuzzableState memory s) public {
+    function test_UpdatePrice_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsZeroPrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        setPrice(s);
+    }
+
+    function test_UpdatePrice_RevertsWhen_Overflow(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsTooLargePrice, true);
         setUpState(s);
         mockPrice(s);
 
         vm.expectRevert(Errors.PriceOracle_Overflow.selector);
         setPrice(s);
+    }
 
-        assertEq(RedstoneCoreOracle(oracle).cachedPrice(), 0);
-        assertEq(RedstoneCoreOracle(oracle).cacheUpdatedAt(), 0);
+    function test_UpdatePrice_RevertsWhen_PriceTimestampTooStale(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsStalePrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.PriceOracle_TooStale.selector, s.tsUpdatePrice - s.tsDataPackage, s.maxStaleness
+            )
+        );
+        setPrice(s);
+    }
+
+    function test_UpdatePrice_RevertsWhen_PriceTimestampTooAhead(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsTooAheadPrice, true);
+        setUpState(s);
+        mockPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        setPrice(s);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
@@ -87,25 +126,11 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(askOutAmount, expectedOutAmount);
     }
 
-    function test_Quote_RevertsWhen_PriceTooStale(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsStalePrice, true);
+    function test_Quote_RevertsWhen_NoUpdate(FuzzableState memory s) public {
         setUpState(s);
-        mockPrice(s);
 
-        bytes memory err = abi.encodeWithSelector(
-            Errors.PriceOracle_TooStale.selector, s.tsUpdatePrice - s.tsDataPackage, s.maxPriceStaleness
-        );
-        vm.expectRevert(err);
-        setPrice(s);
-    }
-
-    function test_Quote_RevertsWhen_PriceTooAhead(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsTooAheadPrice, true);
-        setUpState(s);
-        mockPrice(s);
-
-        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
-        setPrice(s);
+        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsDeploy, s.maxStaleness);
+        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
     function test_Quote_RevertsWhen_CacheTooStale(FuzzableState memory s) public {
@@ -114,22 +139,20 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         mockPrice(s);
         setPrice(s);
 
-        bytes memory err = abi.encodeWithSelector(
-            Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsUpdatePrice, s.maxCacheStaleness
-        );
+        bytes memory err =
+            abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsDataPackage, s.maxStaleness);
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 
-    function test_ValidateTimestamp_Ahead_Within1Min(FuzzableState memory s, uint256 timestamp) public {
+    function test_ValidateTimestamp_AlwaysReverts(FuzzableState memory s, uint256 timestampMillis) public {
         setUpState(s);
-        timestamp = bound(timestamp, block.timestamp, block.timestamp + 1 minutes);
-        RedstoneCoreOracle(oracle).validateTimestamp(timestamp * 1000);
-    }
-
-    function test_ValidateTimestamp_Ahead_Over1Min(FuzzableState memory s, uint256 timestamp) public {
-        setUpState(s);
-        timestamp = bound(timestamp, block.timestamp + 1 minutes + 1, type(uint256).max / 1000);
         vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
-        RedstoneCoreOracle(oracle).validateTimestamp(timestamp * 1000);
+        RedstoneCoreOracle(oracle).validateTimestamp(timestampMillis);
+
+        mockPrice(s);
+        setPrice(s);
+
+        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
+        RedstoneCoreOracle(oracle).validateTimestamp(timestampMillis);
     }
 }

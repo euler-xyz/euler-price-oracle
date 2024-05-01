@@ -1,14 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title ChainlinkOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds.
+/// @dev Integration Note: `maxStaleness` is an immutable parameter set in the constructor.
+/// If the aggregator's heartbeat changes, this adapter may exhibit unintended behavior.
 contract ChainlinkOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "ChainlinkOracle";
+    /// @notice The minimum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
+    /// @notice The maximum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 72 hours;
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed.
@@ -27,7 +35,13 @@ contract ChainlinkOracle is BaseAdapter {
     /// @param _quote The address of the quote asset corresponding to the feed.
     /// @param _feed The address of the Chainlink price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
+    /// @dev Consider setting `_maxStaleness` to slightly more than the feed's heartbeat
+    /// to account for possible network delays when the heartbeat is triggered.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
+        if (_maxStaleness < MAX_STALENESS_LOWER_BOUND || _maxStaleness > MAX_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+
         base = _base;
         quote = _quote;
         feed = _feed;

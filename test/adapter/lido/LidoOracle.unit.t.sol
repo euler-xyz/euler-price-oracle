@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {LidoOracleHelper} from "test/adapter/lido/LidoOracleHelper.sol";
+import {STETH, WSTETH} from "test/utils/EthereumAddresses.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {IStEth} from "src/adapter/lido/IStEth.sol";
 import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
@@ -11,8 +12,8 @@ import {Errors} from "src/lib/Errors.sol";
 contract LidoOracleTest is LidoOracleHelper {
     function test_Constructor_Integrity(FuzzableState memory s) public {
         setUpState(s);
-        assertEq(LidoOracle(oracle).stEth(), STETH);
-        assertEq(LidoOracle(oracle).wstEth(), WSTETH);
+        assertEq(LidoOracle(oracle).STETH(), STETH);
+        assertEq(LidoOracle(oracle).WSTETH(), WSTETH);
     }
 
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
@@ -34,9 +35,7 @@ contract LidoOracleTest is LidoOracleHelper {
     function test_Quote_RevertsWhen_StEthCallReverts(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReverts, true);
         setUpState(s);
-
-        bytes memory err = abi.encodePacked("oops");
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+        expectRevertForAllQuotePermutations(s.inAmount, STETH, WSTETH, "");
     }
 
     function test_Quote_StEth_WstEth_Integrity(FuzzableState memory s) public {

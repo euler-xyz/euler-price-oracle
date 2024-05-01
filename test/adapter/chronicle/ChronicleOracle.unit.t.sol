@@ -16,6 +16,18 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
         assertEq(ChronicleOracle(oracle).maxStaleness(), s.maxStaleness);
     }
 
+    function test_Constructor_RevertsWhen_MaxStalenessTooLow(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooLow, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
         otherA = boundAddr(otherA);
@@ -37,14 +49,6 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
         setUpState(s);
 
         bytes memory err = abi.encodePacked("oops");
-        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
-    }
-
-    function test_Quote_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
-        setBehavior(Behavior.FeedReturnsZeroPrice, true);
-        setUpState(s);
-
-        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
     }
 

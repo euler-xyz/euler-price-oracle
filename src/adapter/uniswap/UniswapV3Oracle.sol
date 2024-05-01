@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 
 /// @title UniswapV3Oracle
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -14,10 +14,12 @@ import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
 /// Instead, consider using another provider as a primary price source.
 /// Under PoS a validator may be chosen to propose consecutive blocks, allowing risk-free multi-block manipulation.
 /// The chosen pool must have enough total liquidity and some full-range liquidity to resist manipulation.
-/// The cardinality of the observation buffer must be grown sufficiently to accomodate for the chosen TWAP window.
+/// The cardinality of the observation buffer must be grown sufficiently to accommodate for the chosen TWAP window.
 contract UniswapV3Oracle is BaseAdapter {
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
+    /// @inheritdoc IPriceOracle
+    string public constant name = "UniswapV3Oracle";
     /// @notice One of the tokens in the pool.
     address public immutable tokenA;
     /// @notice The other token in the pool.

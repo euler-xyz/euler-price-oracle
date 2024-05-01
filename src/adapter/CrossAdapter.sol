@@ -10,6 +10,8 @@ import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 /// @notice PriceOracle that chains two PriceOracles.
 /// @dev For example, CrossAdapter can price wstETH/USD by querying a wstETH/stETH oracle and a stETH/USD oracle.
 contract CrossAdapter is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "CrossAdapter";
     /// @notice The address of the base asset.
     address public immutable base;
     /// @notice The address of the cross/through asset.
@@ -40,8 +42,8 @@ contract CrossAdapter is BaseAdapter {
     }
 
     /// @notice Get a quote by chaining the cross oracles.
+    /// @dev For the inverse direction it calculates quote/cross * cross/base.
     /// For the forward direction it calculates base/cross * cross/quote.
-    /// For the inverse direction it calculates quote/cross * cross/base.
     /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.

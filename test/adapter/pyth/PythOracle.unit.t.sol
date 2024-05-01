@@ -18,6 +18,24 @@ contract PythOracleTest is PythOracleHelper {
         assertEq(PythOracle(oracle).maxStaleness(), s.maxStaleness);
     }
 
+    function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxConfWidthTooLow(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxConfWidthTooLow, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxConfWidthTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxConfWidthTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
         otherA = boundAddr(otherA);
@@ -34,8 +52,32 @@ contract PythOracleTest is PythOracleHelper {
         expectNotSupported(s.inAmount, otherA, otherB);
     }
 
+    function test_Quote_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsZeroPrice, true);
+        setUpState(s);
+
+        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
+        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+    }
+
     function test_Quote_RevertsWhen_NegativePrice(FuzzableState memory s) public {
         setBehavior(Behavior.FeedReturnsNegativePrice, true);
+        setUpState(s);
+
+        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
+        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+    }
+
+    function test_Quote_RevertsWhen_StalePrice(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsStalePrice, true);
+        setUpState(s);
+
+        bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
+        expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
+    }
+
+    function test_Quote_RevertsWhen_AheadPrice(FuzzableState memory s) public {
+        setBehavior(Behavior.FeedReturnsTooAheadPrice, true);
         setUpState(s);
 
         bytes memory err = abi.encodeWithSelector(Errors.PriceOracle_InvalidAnswer.selector);
