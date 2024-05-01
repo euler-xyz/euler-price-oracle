@@ -99,6 +99,16 @@ Clone the repo:
 ```sh
 git clone https://github.com/euler-xyz/euler-price-oracle.git && cd euler-price-oracle
 ```
+Install dependencies:
+```sh
+forge install
+```
+
+### Build
+
+```sh
+forge build
+```
 
 ### Testing
 
