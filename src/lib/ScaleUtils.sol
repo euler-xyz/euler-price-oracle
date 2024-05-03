@@ -18,6 +18,8 @@ library ScaleUtils {
     /// @notice Create a `Scale` by packing 2 powers of 10.
     /// @dev Upper 128 bits occupied by 10^feedExponent.
     /// Lower 128 bits occupied by 10^priceExponent.
+    /// @param priceExponent The power for `priceScale = 10**priceExponent`.
+    /// @param feedExponent The power for `feedScale = 10**feedExponent`.
     /// @return The two scale factors packed in `Scale`.
     function from(uint8 priceExponent, uint8 feedExponent) internal pure returns (Scale) {
         if (priceExponent > MAX_EXPONENT || feedExponent > MAX_EXPONENT) {
@@ -68,8 +70,8 @@ library ScaleUtils {
             // (inAmount * feedScale) / (priceScale * unitPrice)
             return FixedPointMathLib.fullMulDiv(inAmount, feedScale, priceScale * unitPrice);
         } else {
-            // (inAmount * unitPrice * priceScale) / feedScale
-            return FixedPointMathLib.fullMulDiv(inAmount * unitPrice, priceScale, feedScale);
+            // (inAmount * priceScale * unitPrice) / feedScale
+            return FixedPointMathLib.fullMulDiv(inAmount, priceScale * unitPrice, feedScale);
         }
     }
 }

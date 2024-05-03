@@ -9,6 +9,9 @@ import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 
 contract ChainlinkOracleHelper is AdapterHelper {
+    uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 72 hours;
+
     struct Bounds {
         uint8 minBaseDecimals;
         uint8 maxBaseDecimals;
@@ -67,7 +70,13 @@ contract ChainlinkOracleHelper is AdapterHelper {
         s.feed = boundAddr(s.feed);
         vm.assume(distinct(s.base, s.quote, s.feed));
 
-        s.maxStaleness = bound(s.maxStaleness, 0, type(uint128).max);
+        if (behaviors[Behavior.Constructor_MaxStalenessTooLow]) {
+            s.maxStaleness = bound(s.maxStaleness, 0, MAX_STALENESS_LOWER_BOUND - 1);
+        } else if (behaviors[Behavior.Constructor_MaxStalenessTooHigh]) {
+            s.maxStaleness = bound(s.maxStaleness, MAX_STALENESS_UPPER_BOUND + 1, type(uint128).max);
+        } else {
+            s.maxStaleness = bound(s.maxStaleness, MAX_STALENESS_LOWER_BOUND, MAX_STALENESS_UPPER_BOUND);
+        }
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));

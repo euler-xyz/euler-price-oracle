@@ -15,6 +15,18 @@ contract ChainlinkOracleTest is ChainlinkOracleHelper {
         assertEq(ChainlinkOracle(oracle).maxStaleness(), s.maxStaleness);
     }
 
+    function test_Constructor_RevertsWhen_MaxStalenessTooLow(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooLow, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
+    function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Quote_RevertsWhen_InvalidTokens(FuzzableState memory s, address otherA, address otherB) public {
         setUpState(s);
         otherA = boundAddr(otherA);

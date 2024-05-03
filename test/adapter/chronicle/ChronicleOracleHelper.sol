@@ -9,6 +9,9 @@ import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 
 contract ChronicleOracleHelper is AdapterHelper {
+    uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 72 hours;
+
     struct Bounds {
         uint8 minBaseDecimals;
         uint8 maxBaseDecimals;
@@ -64,7 +67,13 @@ contract ChronicleOracleHelper is AdapterHelper {
         s.feed = boundAddr(s.feed);
         vm.assume(distinct(s.base, s.quote, s.feed));
 
-        s.maxStaleness = bound(s.maxStaleness, 0, type(uint128).max);
+        if (behaviors[Behavior.Constructor_MaxStalenessTooLow]) {
+            s.maxStaleness = bound(s.maxStaleness, 0, MAX_STALENESS_LOWER_BOUND - 1);
+        } else if (behaviors[Behavior.Constructor_MaxStalenessTooHigh]) {
+            s.maxStaleness = bound(s.maxStaleness, MAX_STALENESS_UPPER_BOUND + 1, type(uint128).max);
+        } else {
+            s.maxStaleness = bound(s.maxStaleness, MAX_STALENESS_LOWER_BOUND, MAX_STALENESS_UPPER_BOUND);
+        }
 
         s.baseDecimals = uint8(bound(s.baseDecimals, bounds.minBaseDecimals, bounds.maxBaseDecimals));
         s.quoteDecimals = uint8(bound(s.quoteDecimals, bounds.minQuoteDecimals, bounds.maxQuoteDecimals));
@@ -76,11 +85,7 @@ contract ChronicleOracleHelper is AdapterHelper {
 
         oracle = address(new ChronicleOracle(s.base, s.quote, s.feed, s.maxStaleness));
 
-        if (behaviors[Behavior.FeedReturnsZeroPrice]) {
-            s.value = 0;
-        } else {
-            s.value = bound(s.value, bounds.minValue, bounds.maxValue);
-        }
+        s.value = bound(s.value, bounds.minValue, bounds.maxValue);
 
         s.age = bound(s.age, 0, type(uint128).max);
         if (behaviors[Behavior.FeedReturnsStalePrice]) {

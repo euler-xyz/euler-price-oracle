@@ -22,6 +22,10 @@ contract AdapterHelper is Test {
         Constructor_NoPool,
         Constructor_TwapWindowTooShort,
         Constructor_TwapWindowTooLong,
+        Constructor_MaxConfWidthTooLow,
+        Constructor_MaxConfWidthTooHigh,
+        Constructor_MaxStalenessTooLow,
+        Constructor_MaxStalenessTooHigh,
         Quote_InAmountTooLarge,
         Quote_ObserveReverts,
         CachedPriceStale

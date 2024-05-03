@@ -16,12 +16,8 @@ contract StubPyth {
         doRevert = _doRevert;
     }
 
-    function getPriceNoOlderThan(bytes32, uint256) external view returns (PythStructs.Price memory) {
+    function getPriceUnsafe(bytes32) external view returns (PythStructs.Price memory) {
         if (doRevert) revert(revertMsg);
         return price;
-    }
-
-    function updatePriceFeeds(bytes[] calldata) external payable {
-        if (doRevert) revert(revertMsg);
     }
 }

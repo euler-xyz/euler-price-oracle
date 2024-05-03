@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
-import {Errors} from "src/lib/Errors.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title ChronicleOracle
@@ -12,6 +11,12 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @dev Note: Chronicle price feeds currently have a caller whitelist.
 /// To be able read price data, the caller (this contract) must be explicitly authorized.
 contract ChronicleOracle is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "ChronicleOracle";
+    /// @notice The minimum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_LOWER_BOUND = 1 minutes;
+    /// @notice The maximum permitted value for `maxStaleness`.
+    uint256 internal constant MAX_STALENESS_UPPER_BOUND = 72 hours;
     /// @notice The address of the base asset corresponding to the feed.
     address public immutable base;
     /// @notice The address of the quote asset corresponding to the feed
@@ -20,7 +25,7 @@ contract ChronicleOracle is BaseAdapter {
     /// @dev https://chroniclelabs.org/dashboard/oracles
     address public immutable feed;
     /// @notice The maximum allowed age of the price.
-    /// @dev Reverts if age > maxStaleness.
+    /// @dev Reverts if `block.timestamp - age > maxStaleness`.
     uint256 public immutable maxStaleness;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
@@ -31,6 +36,10 @@ contract ChronicleOracle is BaseAdapter {
     /// @param _feed The address of the Chronicle price feed.
     /// @param _maxStaleness The maximum allowed age of the price.
     constructor(address _base, address _quote, address _feed, uint256 _maxStaleness) {
+        if (_maxStaleness < MAX_STALENESS_LOWER_BOUND || _maxStaleness > MAX_STALENESS_UPPER_BOUND) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
+
         base = _base;
         quote = _quote;
         feed = _feed;
@@ -51,9 +60,8 @@ contract ChronicleOracle is BaseAdapter {
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
+        // Note: `readWithAge` will revert if `price == 0`.
         (uint256 price, uint256 age) = IChronicle(feed).readWithAge();
-        if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
-
         uint256 staleness = block.timestamp - age;
         if (staleness > maxStaleness) revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
 

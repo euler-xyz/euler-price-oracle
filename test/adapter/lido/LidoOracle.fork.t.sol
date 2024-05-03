@@ -11,7 +11,7 @@ contract LidoOracleForkTest is ForkTest {
 
     function setUp() public {
         _setUpFork(19000000);
-        oracle = new LidoOracle(STETH, WSTETH);
+        oracle = new LidoOracle();
     }
 
     function test_GetQuote_Integrity() public view {

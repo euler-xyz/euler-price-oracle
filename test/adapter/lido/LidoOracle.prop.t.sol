@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
 import {LidoOracleHelper} from "test/adapter/lido/LidoOracleHelper.sol";
+import {STETH, WSTETH} from "test/utils/EthereumAddresses.sol";
 
 contract LidoOraclePropTest is LidoOracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, Prop_Bidirectional memory p) public {
