@@ -6,6 +6,8 @@ import {BaseAdapter, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
 contract RateGrowthSentinel is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "RateGrowthSentinel";
     address public immutable wrappedAdapter;
     address public immutable base;
     address public immutable quote;

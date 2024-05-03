@@ -14,6 +14,8 @@ contract AnchoredOracle is BaseAdapter {
     uint256 internal constant MAX_DIVERGENCE_UPPER_BOUND = 0.5e18;
     /// @notice The denominator for `maxDivergence`.
     uint256 internal constant WAD = 1e18;
+    /// @inheritdoc IPriceOracle
+    string public constant name = "AnchoredOracle";
     /// @notice The address of the primary oracle.
     address public immutable primaryOracle;
     /// @notice The address of the anchor oracle.

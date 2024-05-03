@@ -8,6 +8,8 @@ import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Oracle that bundles an L2 sequencer liveness check with the price.
 contract L2SequencerLivenessSentinel is BaseAdapter {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "L2SequencerLivenessSentinel";
     /// @notice The address of the oracle.
     address public immutable oracle;
     /// @notice The address of the Chainlink L2 sequencer uptime feed.

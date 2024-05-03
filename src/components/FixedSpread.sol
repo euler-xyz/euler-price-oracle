@@ -7,9 +7,10 @@ import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adds a fixed spread to the bid/ask quotes.
 contract FixedSpread is IPriceOracle {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "FixedSpread";
     /// @notice The address of the wrapped oracle or adapter.
     address public immutable wrapped;
-
     /// @notice The fixed spread, in 18-decimal fixed point. IE: 0.1e18 means 10% (on each side, so ~20% total)
     uint256 public immutable spread;
 

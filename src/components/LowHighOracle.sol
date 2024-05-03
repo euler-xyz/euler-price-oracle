@@ -9,6 +9,8 @@ import {Errors} from "src/lib/Errors.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Combines the answers of two PriceOracles.
 contract LowHighOracle is IPriceOracle {
+    /// @inheritdoc IPriceOracle
+    string public constant name = "LowHighOracle";
     /// @notice The address of the first oracle.
     address public immutable oracleA;
     /// @notice The address of the second oracle.
