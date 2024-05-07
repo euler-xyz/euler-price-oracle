@@ -6,6 +6,7 @@ import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {ScaleUtils} from "src/lib/ScaleUtils.sol";
 
 /// @title CrossAdapter
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle that chains two PriceOracles.
 /// @dev For example, CrossAdapter can price wstETH/USD by querying a wstETH/stETH oracle and a stETH/USD oracle.
