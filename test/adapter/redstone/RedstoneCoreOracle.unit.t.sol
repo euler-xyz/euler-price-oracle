@@ -16,10 +16,9 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).feedDecimals(), s.feedDecimals);
         assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
 
-        (uint160 price, uint48 priceTimestamp, uint48 tempTimestamp) = RedstoneCoreOracle(oracle).cache();
+        (uint208 price, uint48 priceTimestamp) = RedstoneCoreOracle(oracle).cache();
         assertEq(price, 0);
         assertEq(priceTimestamp, 0);
-        assertEq(tempTimestamp, type(uint48).max);
     }
 
     function test_Constructor_RevertsWhen_MaxPriceStalenessTooHigh(FuzzableState memory s) public {
@@ -35,10 +34,9 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         emit RedstoneCoreOracle.CacheUpdated(s.price, s.tsDataPackage);
         setPrice(s);
 
-        (uint160 price, uint48 priceTimestamp, uint48 tempTimestamp) = RedstoneCoreOracle(oracle).cache();
+        (uint208 price, uint48 priceTimestamp) = RedstoneCoreOracle(oracle).cache();
         assertEq(price, s.price);
         assertEq(priceTimestamp, s.tsDataPackage);
-        assertEq(tempTimestamp, type(uint48).max);
     }
 
     function test_UpdatePrice_RevertsWhen_ZeroPrice(FuzzableState memory s) public {
@@ -143,17 +141,5 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         bytes memory err =
             abi.encodeWithSelector(Errors.PriceOracle_TooStale.selector, s.tsGetQuote - s.tsDataPackage, s.maxStaleness);
         expectRevertForAllQuotePermutations(s.inAmount, s.base, s.quote, err);
-    }
-
-    function test_ValidateTimestamp_AlwaysReverts(FuzzableState memory s, uint256 timestampMillis) public {
-        setUpState(s);
-        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
-        RedstoneCoreOracle(oracle).validateTimestamp(timestampMillis);
-
-        mockPrice(s);
-        setPrice(s);
-
-        vm.expectRevert(Errors.PriceOracle_InvalidAnswer.selector);
-        RedstoneCoreOracle(oracle).validateTimestamp(timestampMillis);
     }
 }

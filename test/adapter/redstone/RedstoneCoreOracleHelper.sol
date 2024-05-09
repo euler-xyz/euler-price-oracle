@@ -88,7 +88,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.price = 0;
         } else if (behaviors[Behavior.FeedReturnsTooLargePrice]) {
-            s.price = bound(s.price, uint256(type(uint160).max) + 1, type(uint256).max);
+            s.price = bound(s.price, uint256(type(uint208).max) + 1, type(uint256).max);
         } else {
             s.price = bound(s.price, bounds.minPrice, bounds.maxPrice);
         }
@@ -117,7 +117,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
     function setPrice(FuzzableState memory s) internal {
         vm.warp(s.tsUpdatePrice);
-        RedstoneCoreOracleHarness(oracle).updatePrice();
+        RedstoneCoreOracleHarness(oracle).updatePrice(abi.encode(s.tsDataPackage, hex"00"));
         vm.warp(s.tsGetQuote);
     }
 
