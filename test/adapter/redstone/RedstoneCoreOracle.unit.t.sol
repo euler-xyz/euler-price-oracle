@@ -16,10 +16,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         assertEq(RedstoneCoreOracle(oracle).feedDecimals(), s.feedDecimals);
         assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
 
-        (uint200 price, uint48 priceTimestamp, uint8 updatePriceContext) = RedstoneCoreOracle(oracle).cache();
+        (uint160 price, uint48 priceTimestamp, uint48 tempTimestamp) = RedstoneCoreOracle(oracle).cache();
         assertEq(price, 0);
         assertEq(priceTimestamp, 0);
-        assertEq(updatePriceContext, 1);
+        assertEq(tempTimestamp, type(uint48).max);
     }
 
     function test_Constructor_RevertsWhen_MaxPriceStalenessTooHigh(FuzzableState memory s) public {
@@ -35,9 +35,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         emit RedstoneCoreOracle.CacheUpdated(s.price, s.tsDataPackage);
         setPrice(s);
 
-        (uint200 price, uint48 priceTimestamp,) = RedstoneCoreOracle(oracle).cache();
+        (uint160 price, uint48 priceTimestamp, uint48 tempTimestamp) = RedstoneCoreOracle(oracle).cache();
         assertEq(price, s.price);
         assertEq(priceTimestamp, s.tsDataPackage);
+        assertEq(tempTimestamp, type(uint48).max);
     }
 
     function test_UpdatePrice_RevertsWhen_ZeroPrice(FuzzableState memory s) public {

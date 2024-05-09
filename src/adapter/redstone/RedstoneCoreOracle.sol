@@ -14,22 +14,17 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice Struct holding information about the latest price.
     struct Cache {
         /// @notice The Redstone price.
-        uint200 price;
+        uint160 price;
         /// @notice The timestamp contained within the price data packages.
         uint48 priceTimestamp;
-        /// @notice The call context.
-        /// @dev Set to 2 if within a call to `updatePrice` or 1 otherwise.
-        uint8 updatePriceContext;
+        /// @notice A transient value to enforce consistent timestamps in data packages.
+        uint48 tempTimestamp;
     }
 
     /// @notice The maximum permitted value for `maxStaleness`.
     uint256 internal constant MAX_STALENESS_UPPER_BOUND = 5 minutes;
-    /// @notice Flag indicating that the execution context is within a call to `updatePrice`.
-    /// @dev Used to detect internal calls in `validateTimestamp`.
-    uint8 internal constant FLAG_UPDATE_PRICE_EXITED = 1;
-    /// @notice Flag indicating that the execution context is not within a call to `updatePrice`.
-    /// @dev Used to detect internal calls in `validateTimestamp`.
-    uint8 internal constant FLAG_UPDATE_PRICE_ENTERED = 2;
+    /// @notice The initial value for the `cache.tempTimestamp`.
+    uint48 internal constant TEMP_TIMESTAMP_INITIAL = type(uint48).max;
     /// @inheritdoc IPriceOracle
     string public constant name = "RedstoneCoreOracle";
     /// @notice The address of the base asset corresponding to the feed.
@@ -47,8 +42,8 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     uint256 public immutable maxStaleness;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
-    /// @notice The cached Redstone price.
-    /// @dev The cache is updated in`updatePrice`.
+    /// @notice The last updated Redstone price and its timestamp.
+    /// @dev The cache is updated in `updatePrice`.
     Cache public cache;
 
     /// @notice The cache timestamp was updated.
@@ -75,66 +70,74 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, _feedDecimals);
-        cache = Cache({price: 0, priceTimestamp: 0, updatePriceContext: FLAG_UPDATE_PRICE_EXITED});
+        cache = Cache({price: 0, priceTimestamp: 0, tempTimestamp: TEMP_TIMESTAMP_INITIAL});
     }
 
     /// @notice Ingest a signed update message and cache it on the contract.
     /// @dev Validation logic inherited from `PrimaryProdDataServiceConsumerBase`.
-    /// During execution the context flag is set to `FLAG_UPDATE_PRICE_ENTERED`.
-    /// The execution context is checked in `validateTimestamp` to revert external calls.
+    /// The price timestamp must lie in the defined acceptance range relative to `block.timestamp`.
+    /// Note: The Redstone SDK allows the price timestamp to be up to 1 minute in the future.
     function updatePrice() external {
-        cache.updatePriceContext = FLAG_UPDATE_PRICE_ENTERED;
-
         // The internal call chain also dispatches calls to `validateTimestamp`.
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
-        if (price > type(uint200).max) revert Errors.PriceOracle_Overflow();
+        if (price > type(uint160).max) revert Errors.PriceOracle_Overflow();
 
-        cache.price = uint200(price);
-        cache.updatePriceContext = FLAG_UPDATE_PRICE_EXITED;
-        emit CacheUpdated(price, cache.priceTimestamp);
-    }
-
-    /// @notice Validate the timestamp of a Redstone signed price data package.
-    /// @param timestampMillis Data package timestamp in milliseconds.
-    /// @dev Internally called in `updatePrice` for every signed data package in the payload.
-    /// Note: Although this function is exported as `view`, it may in fact perform state updates.
-    /// External calls will revert due to the context guard in `_validateTimestamp`.
-    function validateTimestamp(uint256 timestampMillis) public view virtual override {
-        // Cast the state mutability of `validateTimestamp` to `view`.
-        // Updating storage in an internal call to a function marked as `view` does not result in a runtime error.
-        // This is because internal calls are entered with a `JUMP` instruction rather than `STATICCALL`.
-        asView(_validateTimestamp)(timestampMillis);
-    }
-
-    /// @notice Validate the timestamp of a Redstone signed price data package and cache the response.
-    /// @param timestampMillis Data package timestamp in milliseconds.
-    /// @dev The price timestamp must lie in the defined acceptance range relative to `block.timestamp`.
-    /// Note: The Redstone SDK allows the price timestamp to be up to 1 minute in the future.
-    function _validateTimestamp(uint256 timestampMillis) internal {
-        // The `updatePriceContext` guard effectively blocks external / direct calls to `validateTimestamp`.
         Cache memory _cache = cache;
-        if (_cache.updatePriceContext != FLAG_UPDATE_PRICE_ENTERED) revert Errors.PriceOracle_InvalidAnswer();
-
-        uint256 timestamp = timestampMillis / 1000;
-        // Avoid redundant storage writes as `validateTimestamp` is called for every signer in the payload (3 times).
-        // The inherited Redstone consumer contract enforces that the timestamps are the same for all signers.
-        if (timestamp == _cache.priceTimestamp) return;
+        // `tempTimestamp` currently holds the timestamp of the ingested Redstone payload.
+        uint256 timestamp = _cache.tempTimestamp;
+        if (timestamp == _cache.priceTimestamp) {
+            // The price was already updated at this timestamp. Reset `tempTimestamp` and return early.
+            cache.tempTimestamp = TEMP_TIMESTAMP_INITIAL;
+            return;
+        }
+        // Price updates must have a more recent timestamp.
+        if (timestamp < _cache.priceTimestamp) revert Errors.PriceOracle_InvalidAnswer();
 
         if (block.timestamp > timestamp) {
             // Verify that the timestamp is not too stale.
-            uint256 priceStaleness = block.timestamp - timestamp;
-            if (priceStaleness > maxStaleness) {
-                revert Errors.PriceOracle_TooStale(priceStaleness, maxStaleness);
+            uint256 staleness = block.timestamp - timestamp;
+            if (staleness > maxStaleness) {
+                revert Errors.PriceOracle_TooStale(staleness, maxStaleness);
             }
         } else if (timestamp - block.timestamp > RedstoneDefaultsLib.DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS) {
             // Verify that the timestamp is not too long in the future (1 min). Redstone SDK explicitly allows this.
             revert Errors.PriceOracle_InvalidAnswer();
         }
 
-        // Enforce that cached price updates have a monotonically increasing timestamp.
-        if (timestamp < _cache.priceTimestamp) revert Errors.PriceOracle_InvalidAnswer();
-        cache.priceTimestamp = uint48(timestamp);
+        // Store the price and timestamp in the cache. Reset the temp timestamp to the magic value.
+        cache = Cache({price: uint160(price), priceTimestamp: uint48(timestamp), tempTimestamp: TEMP_TIMESTAMP_INITIAL});
+        emit CacheUpdated(price, timestamp);
+    }
+
+    /// @notice Validate the timestamp of a Redstone signed price data package.
+    /// @param timestampMillis Data package timestamp in milliseconds.
+    /// @dev Internally called in `updatePrice` for every signed data package in the payload.
+    /// Note: Although this function is `view`, it may in fact perform state updates when called via `updatePrice`.
+    /// External calls will revert due to the `msg.sig` guard. Visibility is kept `public` to override the SDK.
+    function validateTimestamp(uint256 timestampMillis) public view virtual override {
+        // Block external calls to `validateTimestamp`.
+        if (msg.sig != RedstoneCoreOracle.updatePrice.selector) revert Errors.PriceOracle_InvalidAnswer();
+        // Cast the state mutability of `validateTimestamp` to `view`.
+        // Updating storage in an internal call to a function marked as `view` does not result in a runtime error.
+        // This is because internal calls are entered with a `JUMP` instruction rather than `STATICCALL`.
+        asView(_validateTimestamp)(timestampMillis);
+    }
+
+    /// @notice Enforce that all data packages in the `updatePrice` payload have the same timestamp.
+    /// @param timestampMillis Data package timestamp in milliseconds.
+    function _validateTimestamp(uint256 timestampMillis) internal {
+        uint256 timestamp = timestampMillis / 1000;
+        // This function is called for each signer in the `updatePrice` payload.
+        // We store the first timestamp in `cache.tempTimestamp` and compare the rest against it.
+        uint256 tempTimestamp = cache.tempTimestamp;
+        if (tempTimestamp == TEMP_TIMESTAMP_INITIAL) {
+            // We store the first data package's timestamp temporarily compare it against subsequent timestamps.
+            cache.tempTimestamp = uint48(timestamp);
+        } else if (tempTimestamp != timestamp) {
+            // Verify that all subsequent data packages in the payload have the same timestamp as the first one.
+            revert Errors.PriceOracle_InvalidAnswer();
+        }
     }
 
     /// @notice Get the quote from the Redstone feed.
