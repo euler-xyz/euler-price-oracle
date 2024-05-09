@@ -6,6 +6,7 @@ libs = ["lib"]
 solc = "0.8.23"
 optimizer = true
 optimizer_runs = 100_000
+ffi = true
 
 [profile.coverage]
 optimizer = true
