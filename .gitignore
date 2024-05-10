@@ -25,3 +25,5 @@ lcov.info
 forge-pruned-lcov.info
 
 .DS_Store
+
+node_modules
