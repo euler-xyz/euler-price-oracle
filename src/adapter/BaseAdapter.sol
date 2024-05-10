@@ -6,6 +6,7 @@ import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 /// @title BaseAdapter
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Abstract adapter with virtual bid/ask pricing.
 abstract contract BaseAdapter is IPriceOracle {

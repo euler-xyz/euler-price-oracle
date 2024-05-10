@@ -7,6 +7,7 @@ import {Errors} from "src/lib/Errors.sol";
 import {Governable} from "src/lib/Governable.sol";
 
 /// @title EulerRouter
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Default Oracle resolver for Euler lending products.
 /// @dev Integration Note: The router supports pricing via `convertToAssets` for trusted `resolvedVaults`.

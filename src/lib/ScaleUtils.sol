@@ -7,6 +7,7 @@ import {Errors} from "src/lib/Errors.sol";
 type Scale is uint256;
 
 /// @title ScaleUtils
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for handling decimal conversion of unit price feeds.
 library ScaleUtils {

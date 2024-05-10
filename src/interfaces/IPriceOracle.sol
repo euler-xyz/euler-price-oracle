@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 /// @title IPriceOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Common PriceOracle interface.
 interface IPriceOracle {
