@@ -66,7 +66,7 @@ contract UniswapV3OracleHelper is AdapterHelper {
             int56[] memory tickCumulatives = new int56[](2);
             tickCumulatives[0] = s.tickCumulative0;
             tickCumulatives[1] = s.tickCumulative1;
-            uint208[] memory secondsPerLiquidityCumulativeX128s = new uint208[](2);
+            uint160[] memory secondsPerLiquidityCumulativeX128s = new uint160[](2);
             vm.mockCall(
                 s.pool,
                 abi.encodeWithSelector(IUniswapV3PoolDerivedState.observe.selector),
