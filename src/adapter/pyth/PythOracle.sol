@@ -7,6 +7,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title PythOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Pyth pull-based price feeds.
 /// @dev Integration Note: Pyth is a pull-based oracle which requires price updates to be pushed by the user.

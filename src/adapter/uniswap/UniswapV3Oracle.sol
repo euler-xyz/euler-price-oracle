@@ -7,6 +7,7 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
 import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 
 /// @title UniswapV3Oracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Uniswap V3's TWAP oracle.
 /// @dev This oracle supports quoting tokenA/tokenB and tokenB/tokenA of the given pool.

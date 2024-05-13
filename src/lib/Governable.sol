@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {Errors} from "src/lib/Errors.sol";
 
 /// @title Governable
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract mixin for governance.
 abstract contract Governable {

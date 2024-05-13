@@ -12,9 +12,13 @@ contract ForkTest is Test {
     }
 
     function _setUpFork(uint256 blockNumber) public {
+        _setUpForkLatest();
+        vm.rollFork(blockNumber);
+    }
+
+    function _setUpForkLatest() public {
         string memory ETHEREUM_RPC_URL = vm.envString("ETHEREUM_RPC_URL");
         ethereumFork = vm.createFork(ETHEREUM_RPC_URL);
         vm.selectFork(ethereumFork);
-        vm.rollFork(blockNumber);
     }
 }

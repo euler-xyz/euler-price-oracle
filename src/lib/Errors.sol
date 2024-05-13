@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 /// @title Errors
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Collects common errors in PriceOracles.
 library Errors {

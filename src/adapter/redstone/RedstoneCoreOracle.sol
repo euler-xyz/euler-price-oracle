@@ -8,6 +8,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title RedstoneCoreOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Redstone pull-based price feeds.
 contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
@@ -83,6 +84,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// During execution the context flag is set to `FLAG_UPDATE_PRICE_ENTERED`.
     /// The execution context is checked in `validateTimestamp` to revert external calls.
     function updatePrice() external {
+        if (cache.updatePriceContext != FLAG_UPDATE_PRICE_EXITED) revert Errors.PriceOracle_InvalidAnswer();
         cache.updatePriceContext = FLAG_UPDATE_PRICE_ENTERED;
 
         // The internal call chain also dispatches calls to `validateTimestamp`.
