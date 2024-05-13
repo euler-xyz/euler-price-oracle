@@ -68,16 +68,16 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, _feedDecimals);
     }
 
-    /// @notice Ingest a signed update message and cache it on the contract.
-    /// @dev Validation logic inherited from `PrimaryProdDataServiceConsumerBase`.
+    /// @notice Ingest a Redstone payload, decode and verify it, and cache the price in storage.
+    /// @param timestamp The expected timestamp of the Redstone payload. All data packages must have this timestamp.
+    /// @dev Redstone payload must be appended at the end of the abi-encoded calldata to this function.
+    /// Decoding and validation inherited from `PrimaryProdDataServiceConsumerBase`.
     /// The price timestamp must lie in the defined acceptance range relative to `block.timestamp`.
     /// Note: The Redstone SDK allows the price timestamp to be up to 1 minute in the future.
-    function updatePrice(bytes calldata data) external {
-        uint48 timestamp = abi.decode(data, (uint48));
-
-        // Price updates must have an increasing timestamp.
+    function updatePrice(uint48 timestamp) external {
+        // The cache can only be updated if it has a more recent timestamp.
         Cache memory _cache = cache;
-        if (timestamp <= _cache.priceTimestamp) return;
+        if (timestamp <= _cache.priceTimestamp) return; // Do not revert to avoid DoS attacks.
 
         if (block.timestamp > timestamp) {
             // Verify that the timestamp is not too stale.
@@ -93,7 +93,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         // Optimistically update the price timestamp.
         cache.priceTimestamp = timestamp;
 
-        // The internal call chain also dispatches calls to `validateTimestamp`.
+        // Calls `validateTimestamp` for every package, comparing the extracted timestamp against the price timestamp.
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
         if (price == 0) revert Errors.PriceOracle_InvalidAnswer();
         if (price > type(uint208).max) revert Errors.PriceOracle_Overflow();
@@ -104,8 +104,6 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
     /// @notice Validate the timestamp of a Redstone signed price data package.
     /// @param timestampMillis Data package timestamp in milliseconds.
     /// @dev Internally called in `updatePrice` for every signed data package in the payload.
-    /// Note: Although this function is `view`, it may in fact perform state updates when called via `updatePrice`.
-    /// External calls will revert due to the `msg.sig` guard. Visibility is kept `public` to override the SDK.
     function validateTimestamp(uint256 timestampMillis) public view virtual override {
         uint256 timestamp = timestampMillis / 1000;
         if (timestamp != cache.priceTimestamp) revert Errors.PriceOracle_InvalidAnswer();

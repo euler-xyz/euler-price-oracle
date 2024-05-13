@@ -117,7 +117,7 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
     function setPrice(FuzzableState memory s) internal {
         vm.warp(s.tsUpdatePrice);
-        RedstoneCoreOracleHarness(oracle).updatePrice(abi.encode(s.tsDataPackage, hex"00"));
+        RedstoneCoreOracleHarness(oracle).updatePrice(uint48(s.tsDataPackage));
         vm.warp(s.tsGetQuote);
     }
 
