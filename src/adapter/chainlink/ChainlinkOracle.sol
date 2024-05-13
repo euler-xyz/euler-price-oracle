@@ -6,6 +6,7 @@ import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title ChainlinkOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds.
 /// @dev Integration Note: `maxStaleness` is an immutable parameter set in the constructor.

@@ -5,6 +5,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {IStEth} from "src/adapter/lido/IStEth.sol";
 
 /// @title LidoOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
 contract LidoOracle is BaseAdapter {

@@ -8,6 +8,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title RedstoneCoreOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Redstone pull-based price feeds.
 contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {

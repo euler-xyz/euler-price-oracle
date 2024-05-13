@@ -6,6 +6,7 @@ import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
 import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 
 /// @title ChronicleOracle
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chronicle push-based price feeds.
 /// @dev Note: Chronicle price feeds currently have a caller whitelist.
