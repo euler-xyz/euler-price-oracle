@@ -92,7 +92,7 @@ contract RedstoneCoreOracle is PrimaryProdDataServiceConsumerBase, BaseAdapter {
         }
 
         // Optimistically update the price timestamp.
-        cache.priceTimestamp = timestamp;
+        cache = Cache({price: _cache.price, priceTimestamp: timestamp});
 
         // Calls `validateTimestamp` for every package, comparing the extracted timestamp against the price timestamp.
         uint256 price = getOracleNumericValueFromTxMsg(feedId);
