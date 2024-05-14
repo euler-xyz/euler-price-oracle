@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {StubPriceOracle} from "test/adapter/StubPriceOracle.sol";
-import {AnchoredOracle} from "src/components/AnchoredOracle.sol";
+import {AnchoredOracle} from "src/aggregator/AnchoredOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract AnchoredOracleTest is Test {
