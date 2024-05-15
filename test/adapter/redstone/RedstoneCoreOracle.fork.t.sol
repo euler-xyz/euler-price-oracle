@@ -15,8 +15,8 @@ contract RedstoneCoreOracleForkTest is ForkTest {
 
     function test_UpdatePrice_WETH_USDC() public {
         oracle = new RedstoneCoreOracle(WETH, USDC, REDSTONE_ETH_USD_FEED, 8, 3 minutes);
-        bytes memory payload = _fetchRedstonePayload("ETH");
-        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, ()), payload);
+        (uint256 tsMillis, bytes memory payload) = _fetchRedstonePayload("ETH");
+        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, (uint48(tsMillis / 1000))), payload);
 
         (bool success,) = address(oracle).call(data);
         assertTrue(success);
@@ -26,8 +26,8 @@ contract RedstoneCoreOracleForkTest is ForkTest {
 
     function test_UpdatePrice_USDC_DAI() public {
         oracle = new RedstoneCoreOracle(USDC, DAI, REDSTONE_USDC_DAI_FEED, 14, 3 minutes);
-        bytes memory payload = _fetchRedstonePayload("USDC.DAI");
-        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, ()), payload);
+        (uint256 tsMillis, bytes memory payload) = _fetchRedstonePayload("USDC.DAI");
+        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, (uint48(tsMillis / 1000))), payload);
 
         (bool success,) = address(oracle).call(data);
         assertTrue(success);
@@ -37,18 +37,24 @@ contract RedstoneCoreOracleForkTest is ForkTest {
 
     function test_UpdatePrice_RevertsWhen_WrongFeed() public {
         oracle = new RedstoneCoreOracle(USDC, DAI, REDSTONE_ETH_USD_FEED, 14, 3 minutes);
-        bytes memory payload = _fetchRedstonePayload("BTC");
-        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, ()), payload);
+        (uint256 tsMillis, bytes memory payload) = _fetchRedstonePayload("BTC");
+        bytes memory data = abi.encodePacked(abi.encodeCall(oracle.updatePrice, (uint48(tsMillis / 1000))), payload);
 
         (bool success,) = address(oracle).call(data);
         assertFalse(success);
     }
 
-    function _fetchRedstonePayload(string memory feedSymbol) internal returns (bytes memory) {
+    function _fetchRedstonePayload(string memory feedSymbol)
+        internal
+        returns (uint256 tsMillis, bytes memory payload)
+    {
         string[] memory cmds = new string[](3);
         cmds[0] = "node";
         cmds[1] = "test/adapter/redstone/get_redstone_payload.js";
         cmds[2] = feedSymbol;
-        return vm.ffi(cmds);
+        payload = vm.ffi(cmds);
+        assembly {
+            tsMillis := shr(208, mload(add(payload, 0x60)))
+        }
     }
 }

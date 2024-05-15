@@ -2,11 +2,12 @@ const {DataServiceWrapper} = require("@redstone-finance/evm-connector");
 
 async function getPayload() {
   const feed = process.argv[2];
-  const redstonePayload = await (new DataServiceWrapper({
+  const wrapper = new DataServiceWrapper({
     dataServiceId: "redstone-primary-prod",
     dataFeeds: [feed],
     uniqueSignersCount: 3
-  }).getBytesDataForAppending());
+  });
+  const redstonePayload = await wrapper.getBytesDataForAppending();
   console.log(redstonePayload);
 }
 
