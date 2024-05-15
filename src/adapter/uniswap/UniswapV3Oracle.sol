@@ -14,8 +14,10 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 /// WARNING: Do not use Uniswap V3 as an oracle unless you understand its security implications.
 /// Instead, consider using another provider as a primary price source.
 /// Under PoS a validator may be chosen to propose consecutive blocks, allowing risk-free multi-block manipulation.
-/// The chosen pool must have enough total liquidity and some full-range liquidity to resist manipulation.
 /// The cardinality of the observation buffer must be grown sufficiently to accommodate for the chosen TWAP window.
+/// The observation buffer must contain enough observations to accommodate for the chosen TWAP window.
+/// The chosen pool must have enough total liquidity and some full-range liquidity to resist manipulation.
+/// The chosen pool must have had sufficient liquidity when past observations were recorded in the buffer.
 contract UniswapV3Oracle is BaseAdapter {
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
