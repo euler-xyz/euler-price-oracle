@@ -1,3 +1,5 @@
+@axiom-crypto/axiom-std/=lib/axiom-std/sr
+@axiom-crypto/v2-periphery/=lib/axiom-v2-periphery/src
 @solady/=lib/solady/src/
 @uniswap/v3-core/=lib/v3-core/
 @uniswap/v3-periphery/=lib/v3-periphery/
