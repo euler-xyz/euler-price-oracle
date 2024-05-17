@@ -38,6 +38,7 @@ This interface shapes oracle interactions in an important way: it forces the con
 
 Euler Price Oracles are unique in that they expose a flexible quoting interface instead of reporting a static price.
 
+> [!NOTE] 
 > Imagine a Chainlink price feed which reports the value `1 EUL/ETH`, the *unit price* of `EUL`. Now consider an `IPriceOracle` adapter for the feed. It will fetch the unit price, multiply it by `inAmount`, and return the quantity `inAmount EUL/ETH`. We call this a *quote* as it functionally resembles a swap on a decentralized exchange.
 
 The quoting interface offers several benefits to consumers:
@@ -147,7 +148,10 @@ forge test --no-match-contract Fork
 ## Contributing
 Euler Price Oracles is a [free and open-source](LICENSE) public good. We encourage you to engage and contribute. 
 
-Feel free to [open](https://github.com/euler-xyz/euler-price-oracle/issues/new) a GitHub issue discussing your ideas. Submit testing- and documentation-related PRs to [`development`](https://github.com/euler-xyz/euler-price-oracle/tree/master) and changes under `src/` to [`experiments`](https://github.com/euler-xyz/euler-price-oracle/tree/experiments).
+Feel free to [open](https://github.com/euler-xyz/euler-price-oracle/issues/new) a GitHub issue discussing your ideas.
+
+> [!TIP]
+> Submit testing- and documentation-related PRs to [`development`](https://github.com/euler-xyz/euler-price-oracle/tree/master) and changes under `src/` to [`experiments`](https://github.com/euler-xyz/euler-price-oracle/tree/experiments).
 
 Here are a few ideas how you can improve Euler Price Oracles:
 
