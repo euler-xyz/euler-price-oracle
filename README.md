@@ -2,11 +2,15 @@
 
 Euler Price Oracles is a library of modular oracle adapters and components that implement `IPriceOracle`, an opinionated quote-based interface.
 
-To read more about the design and motivation behind `IPriceOracle`, as well as a more in-depth discussion of the oracles in this repo, check out the [whitepaper](docs/whitepaper.md).
+- To read more about the design and motivation behind `IPriceOracle` and the oracles in this repo, check out the [whitepaper](docs/whitepaper.md).
 
-To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the price oracles section of the [EVK whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles).
+- To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the [price oracles section](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles) of the EVK whitepaper.
 
-To use and contribute
+- To use or develop with Euler Price Oracles, check out the [Usage](#usage) section.
+
+- To find out ways to contribute to Euler Price Oracles, check out the [Contributing](#contributing) section.
+
+Euler Price Oracles has been [audited](audits/) by Spearbit, OpenZeppelin, ChainSecurity, Omniscia and yAudit. Cantina [competition](https://cantina.xyz/competitions/41306bb9-2bb8-4da6-95c3-66b85e11639f) is underway.
 
 ## `IPriceOracle`
 
@@ -139,6 +143,37 @@ forge test --no-match-contract Fork
 
 > [!IMPORTANT]  
 > Tests in `RedstoneCoreOracle.fork.t.sol` use the [`ffi`](https://book.getfoundry.sh/cheatcodes/ffi#ffi) cheatcode to invoke a script that retrieves Redstone update data. FFI mode is **not enabled by default** for safety reasons. To run the Redstone Fork tests set `ffi = true` in `foundry.toml`.
+
+## Contributing
+Euler Price Oracles is a [free and open-source](LICENSE) public good. We encourage you to engage and contribute, no matter how small! 
+
+Feel free to [open](https://github.com/euler-xyz/euler-price-oracle/issues/new) a GitHub issue discussing your ideas. Submit testing- and documentation-related PRs to the `master` branch and changes that touch files under `src/` to the `experiments` branch.
+
+Here are a few ideas how you can improve Euler Price Oracles:
+
+### Research and Development
+ - Write an adapter for a new [oracle vendor](https://defillama.com/oracles/chain/Ethereum) or an AMM such as [Curve V2](https://resources.curve.fi/factory-pools/understanding-oracles/#exponential-moving-average) or [Pendle](https://docs.pendle.finance/Developers/Integration/HowToIntegratePtAndLpOracle).
+ - `getQuotes` returns bid/ask prices, however we are not aware of any oracle vendors that currently support them. Write an `IPriceOracle` wrapper that applies a price spread around a mid-point price. The spread could be dynamic based on proxy metrics such as liquidity, volume, (implied) volatility, correlation. We are highly interested in research towards this direction.
+ - ZK Coprocessors like [Axiom](https://www.axiom.xyz/) and [Lagrange](https://www.lagrange.dev/) allow you to [verifiably compute](https://blog.axiom.xyz/what-is-a-zk-coprocessor/) over historical blockchain state in ZK circuits. This unlocks a new design space for trust-minimized manipulation-resistant oracles. Write a proof-of-concept oracle using a ZK Coprocessor. Some ideas: an [implied volatility oracle](https://lambert-guillaume.medium.com/on-chain-volatility-and-uniswap-v3-d031b98143d1) based on Uniswap V3, a [median filtering oracle](https://github.com/euler-xyz/median-oracle) over an AMM.
+ - Write an `IPriceOracle` wrapper that implements a trustless circuit-breaker mechanism that detects failure conditions. Upon detection it could switch to another oracle or redeploy the adapter with different parameters.
+ - Write an alternative router to `EulerRouter` that supports more flexible configuration.
+ - Research whether a DEX aggregator API can be used as a pull-based price oracle and write a proof-of-concept adapter.
+ - Some oracle vendors are compatible with Chainlink's `AggregatorV3Interface` either directly or through a facade contract. Are they safe to use through `ChainlinkOracle` in this library?
+ - Write a sanity checking script that verifies an adapter is correctly configured by comparing the quote against a price API.
+ - Write a simulation script that generates a line plot comparing a given adapter's prices against a price API historically.
+
+### Security
+ - Expand the fork test suite to include more pairs and to historically backtest the adapter.
+ - Write fuzz and invariant tests using [echidna](https://github.com/crytic/echidna), [medusa](https://github.com/crytic/medusa), or [foundry](https://book.getfoundry.sh/forge/invariant-testing).
+ - Write formal verification tests using [Certora](https://docs.certora.com/en/latest/), [halmos](https://github.com/a16z/halmos), or [kontrol](https://github.com/runtimeverification/kontrol).
+ - `EulerRouter` can price ERC4626 shares to assets by calling [`convertToAssets`](https://eips.ethereum.org/EIPS/eip-4626#converttoassets). Which of the [currently live](https://erc4626.info/vaults/) vaults have a manipulation-resistant pricing function?
+ - With pull-based oracles users control the price update flow. What is an appropriate value for `maxStaleness` on Ethereum considering network delays and possible censorship? Are there ways `maxStaleness` can be safely reduced?
+ - Are these oracles readily usable on the various L2s or are there additional considerations that must be had? 
+
+### Technical Documentation
+ - Write an smart contract integration guide for Euler Price Oracles.
+ - Write a frontend integration guide for fetching the price of pull-based oracles. 
+ - Write or compile risk research for a vendor, detailing how it works, its failure modes and trust assumptions.
 
 ## Safety
 
