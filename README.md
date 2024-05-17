@@ -145,9 +145,9 @@ forge test --no-match-contract Fork
 > Tests in `RedstoneCoreOracle.fork.t.sol` use the [`ffi`](https://book.getfoundry.sh/cheatcodes/ffi#ffi) cheatcode to invoke a script that retrieves Redstone update data. FFI mode is **not enabled by default** for safety reasons. To run the Redstone Fork tests set `ffi = true` in `foundry.toml`.
 
 ## Contributing
-Euler Price Oracles is a [free and open-source](LICENSE) public good. We encourage you to engage and contribute, no matter how small! 
+Euler Price Oracles is a [free and open-source](LICENSE) public good. We encourage you to engage and contribute. 
 
-Feel free to [open](https://github.com/euler-xyz/euler-price-oracle/issues/new) a GitHub issue discussing your ideas. Submit testing- and documentation-related PRs to the `master` branch and changes that touch files under `src/` to the `experiments` branch.
+Feel free to [open](https://github.com/euler-xyz/euler-price-oracle/issues/new) a GitHub issue discussing your ideas. Submit testing- and documentation-related PRs to [`development`](https://github.com/euler-xyz/euler-price-oracle/tree/master) and changes under `src/` to [`experiments`](https://github.com/euler-xyz/euler-price-oracle/tree/experiments).
 
 Here are a few ideas how you can improve Euler Price Oracles:
 
