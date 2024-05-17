@@ -1,6 +1,10 @@
 # Euler Price Oracles
 
-Euler Price Oracles is a library of minimal and immutable oracle adapters. Contracts in this library implement `IPriceOracle`, an opinionated quote-based interface for price oracles. To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), read the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
+Euler Price Oracles is a library of modular oracle adapters and components that implement `IPriceOracle`, an opinionated quote-based interface.
+
+To read more about the design and motivation behind `IPriceOracle`, as well as a more in-depth discussion of the oracles in this repo, check out the [whitepaper](docs/whitepaper.md).
+
+To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the price oracles section of the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
 
 ## `IPriceOracle`
 
@@ -79,11 +83,10 @@ An adapter's parameters and acceptance logic are easily observed on-chain.
 | Pyth          | External  | Pull    | Vendor feeds  | feed, max staleness, max confidence interval |
 | Redstone      | External  | Pull    | Vendor feeds  | feed, max staleness, cache ttl               |
 | Lido          | On-chain  | Rate    | wstEth, stEth | -                                            |
-| sDai          | On-chain  | Rate    | sDai, Dai     | -                                            |
 | Uniswap V3    | On-chain  | TWAP    | UniV3 pools   | fee, twap window                             |
 
 
-## Development
+## Usage
 
 ### Install
 
@@ -100,18 +103,35 @@ Clone the repo:
 git clone https://github.com/euler-xyz/euler-price-oracle.git && cd euler-price-oracle
 ```
 
+Install forge dependencies:
+```sh
+forge install
+```
+
+[Optional] Install Node.js dependencies:
+```sh
+npm install
+```
+
 ### Testing
 
-There are Ethereum fork tests under `test/fork`. To run fork tests set the `ETHEREUM_RPC_URL` variable in your environment:
+The repo contains 4 types of tests: unit, property, bounds, fork, identified by their filename suffix.
+
+#### Fork Tests
+
+To run fork tests set the `ETHEREUM_RPC_URL` variable in your environment:
 ```sh
 # File: .env
 ETHEREUM_RPC_URL=...
 ```
 
-To omit fork tests:
+Alternatively, to exclude fork tests:
 ```sh
 forge test --no-match-contract Fork
 ```
+
+> [!IMPORTANT]  
+> Tests in `RedstoneCoreOracle.fork.t.sol` use the [`ffi`](https://book.getfoundry.sh/cheatcodes/ffi#ffi) cheatcode to invoke a script that retrieves Redstone update data. FFI mode is **not enabled by default** for safety reasons. To run the Redstone Fork tests set `ffi = true` in `foundry.toml`.
 
 ## Safety
 
