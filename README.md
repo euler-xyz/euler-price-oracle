@@ -6,6 +6,8 @@ To read more about the design and motivation behind `IPriceOracle`, as well as a
 
 To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the price oracles section of the [EVK whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles).
 
+To use and contribute
+
 ## `IPriceOracle`
 
 All contracts in this library implement the `IPriceOracle` interface.
@@ -111,6 +113,11 @@ forge install
 [Optional] Install Node.js dependencies:
 ```sh
 npm install
+```
+
+Compile the contracts:
+```sh
+forge build
 ```
 
 ### Testing
