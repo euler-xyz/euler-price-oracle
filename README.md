@@ -4,7 +4,7 @@ Euler Price Oracles is a library of modular oracle adapters and components that 
 
 To read more about the design and motivation behind `IPriceOracle`, as well as a more in-depth discussion of the oracles in this repo, check out the [whitepaper](docs/whitepaper.md).
 
-To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the price oracles section of the [EVK whitepaper.](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles)
+To understand how Price Oracles fit into the [Euler Vault Kit](https://github.com/euler-xyz/euler-vault-kit), check out the price oracles section of the [EVK whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/#price-oracles).
 
 ## `IPriceOracle`
 
