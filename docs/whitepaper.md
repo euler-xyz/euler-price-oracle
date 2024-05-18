@@ -46,7 +46,7 @@ We also implement a contract called `EulerRouter`. Just like the adapters, route
 ## `IPriceOracle`
 ```solidity
 interface IPriceOracle {
-    /// @return General description of this oracle implementation
+    /// @return General description of this oracle implementation.
     function name() external view returns (string memory);
 
     /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
