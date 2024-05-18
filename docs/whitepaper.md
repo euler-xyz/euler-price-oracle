@@ -44,27 +44,27 @@ In our modular reference implementation, external pricing oracles are integrated
 We also implement a contract called `EulerRouter`. Just like the adapters, router instances expose the `IPriceOracle` interface. However, their function is to delegate pricing operations to other `IPriceOracle` providers (adapters, other routers, etc). Routers are immutable, but may optionally be governed, which allows the governor to change which providers are queried.
 
 ## `IPriceOracle`
+```solidity
+interface IPriceOracle {
+    /// @return General description of this oracle implementation
+    function name() external view returns (string memory);
 
-    interface IPriceOracle {
-        /// @return General description of this oracle implementation
-        function name() external view returns (string memory);
+    /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
+    function getQuote(
+        uint256 inAmount,
+        address base,
+        address quote
+    ) external view returns (uint256 outAmount);
 
-        /// @return outAmount The amount of `quote` that is equivalent to `inAmount` of `base`.
-        function getQuote(
-            uint256 inAmount,
-            address base,
-            address quote
-        ) external view returns (uint256 outAmount);
-
-        /// @return bidOutAmount The amount of `quote` you would get for selling `inAmount` of `base`.
-        /// @return askOutAmount The amount of `quote` you would spend for buying `inAmount` of `base`.
-        function getQuotes(
-            uint256 inAmount,
-            address base,
-            address quote
-        ) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
-    }
-
+    /// @return bidOutAmount The amount of `quote` you would get for selling `inAmount` of `base`.
+    /// @return askOutAmount The amount of `quote` you would spend for buying `inAmount` of `base`.
+    function getQuotes(
+        uint256 inAmount,
+        address base,
+        address quote
+    ) external view returns (uint256 bidOutAmount, uint256 askOutAmount);
+}
+```
 ## Currencies
 
 In foreign exchange terminology, prices are specified for pairs of currencies called *base* and *quote*, like this: `BASE/QUOTE`. The price represents the amount of the quote currency with the same value as 1 unit of the base currency. For example, if the price for `EUR/USD` is 1.1, then 1.1 USD is worth 1 EUR.
