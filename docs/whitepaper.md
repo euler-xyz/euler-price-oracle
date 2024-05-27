@@ -158,7 +158,7 @@ The `EulerRouter` component contains an internal mapping from pairs to adapters.
 
 1. If base and quote are the same, simply return the input amount.
 2. If there is a mapping for the provided pair, query the configured adapter and return the result.
-3. If the base asset is configured as a resolvable vault, then use the ERC-4626 `convertAssets` method to convert the input amount of shares to the underlying token amount, substitute the input amount for this value, change the base to the vault's underlying token, and restart the algorithm. Note that not all ERC-4626 vaults implement `convertAssets` [securely enough](#erc-4626) to be used for price oracles.
+3. If the base asset is configured as a resolvable vault, then use the ERC-4626 `convertToAssets` method to convert the input amount of shares to the underlying token amount, substitute the input amount for this value, change the base to the vault's underlying token, and restart the algorithm. Note that not all ERC-4626 vaults implement `convertToAssets` [securely enough](#erc-4626) to be used for price oracles.
 4. If a fallback oracle is configured, query it and return the result, otherwise fail with a `PriceOracle_NotSupported` error.
 
 If an invocation to an external `IPriceOracle` provider fails, the error is propagated (not handled). This means that a router will not attempt to call the fallback router in the event of an error. A given pair is mapped to at most one provider. If it is desired to use an alternate provider to recover from errors, the [OracleWithBackup](#experimental-components) component can be used. This could be placed in front of an individual adapter to handle failures for one particular pair, or in front of the router itself to handle all pairs.
