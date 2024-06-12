@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.23;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
 import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelper.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.23;
 
 address constant PYTH = 0x4305FB66699C3B2702D4d05CF36551390A4c69C6;
 
