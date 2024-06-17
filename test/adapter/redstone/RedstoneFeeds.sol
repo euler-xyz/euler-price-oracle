@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 bytes32 constant REDSTONE_VST_USD_FEED = bytes32("VST");
 bytes32 constant REDSTONE_USDC_USD_FEED = bytes32("USDC");
