@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.0;
 
 import {PythOracleHelper} from "test/adapter/pyth/PythOracleHelper.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";

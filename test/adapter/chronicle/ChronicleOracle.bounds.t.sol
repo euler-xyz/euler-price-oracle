@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.0;
 
 import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelper.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
