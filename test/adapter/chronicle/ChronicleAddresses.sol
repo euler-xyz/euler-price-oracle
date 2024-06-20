@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 address constant CHRONICLE_BTC_USD_FEED = 0x24C392CDbF32Cf911B258981a66d5541d85269ce;
 address constant CHRONICLE_ETH_USD_FEED = 0x46ef0071b1E2fF6B42d36e5A177EA43Ae5917f4E;

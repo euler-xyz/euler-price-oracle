@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity >=0.8.0;
 
 /// @title IStEth
 /// @author Lido (https://github.com/lidofinance/lido-dao/blob/5fcedc6e9a9f3ec154e69cff47c2b9e25503a78a/contracts/0.6.12/interfaces/IStETH.sol)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 import {IChronicle} from "src/adapter/chronicle/IChronicle.sol";
