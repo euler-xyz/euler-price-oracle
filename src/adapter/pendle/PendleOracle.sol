@@ -23,7 +23,7 @@ contract PendleOracle is BaseAdapter {
     }
 
     /// @inheritdoc IPriceOracle
-    string public constant name = "UniswapV3Oracle";
+    string public constant name = "PendleOracle";
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
     /// @notice The address of the Pendle market.
