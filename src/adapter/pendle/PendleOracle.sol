@@ -21,8 +21,8 @@ contract PendleOracle is BaseAdapter {
         YT_SY,
         YT_ASSET
     }
-    /// @inheritdoc IPriceOracle
 
+    /// @inheritdoc IPriceOracle
     string public constant name = "UniswapV3Oracle";
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
@@ -48,13 +48,15 @@ contract PendleOracle is BaseAdapter {
     /// @param _pair The Pendle token pair to price.
     constructor(address _pendleOracle, address _pendleMarket, uint32 _twapWindow, OraclePair _pair) {
         if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
+
+        // Verify that the observations buffer is adequately sized and populated.
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
             IPPYLpOracle(_pendleOracle).getOracleState(_pendleMarket, _twapWindow);
         if (increaseCardinalityRequired || !oldestObservationSatisfied) {
             revert Errors.PriceOracle_InvalidConfiguration();
         }
 
-        pendleMarket = _pendleMarket;
+        // Pendle oracle can be used to price 4 different pairs.
         (IStandardizedYield _SY, IPPrincipalToken _PT, IPYieldToken _YT) = IPMarket(_pendleMarket).readTokens();
 
         if (_pair == OraclePair.PT_SY) {
@@ -77,9 +79,11 @@ contract PendleOracle is BaseAdapter {
                 getRate = PendlePYOracleLib.getYtToAssetRate;
             }
         }
+
+        pendleMarket = _pendleMarket;
+        twapWindow = _twapWindow;
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
-        twapWindow = _twapWindow;
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, 18);
     }
 
