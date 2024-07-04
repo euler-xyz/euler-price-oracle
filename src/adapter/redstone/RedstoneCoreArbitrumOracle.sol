@@ -29,7 +29,7 @@ contract RedstoneCoreArbitrumOracle is ArbitrumProdDataServiceConsumerBase, Base
     /// @notice The address of the quote asset corresponding to the feed.
     address public immutable quote;
     /// @notice The identifier of the price feed.
-    /// @dev See https://app.redstone.finance/#/app/data-services/redstone-primary-prod
+    /// @dev See https://app.redstone.finance/#/app/data-services/redstone-arbitrum-prod
     bytes32 public immutable feedId;
     /// @notice The decimals of the Redstone price feed.
     /// @dev Redstone price feeds have 8 decimals by default, however certain exceptions exist.
