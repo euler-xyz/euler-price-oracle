@@ -11,13 +11,15 @@ import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Uniswap V3's TWAP oracle.
 /// @dev This oracle supports quoting tokenA/tokenB and tokenB/tokenA of the given pool.
-/// WARNING: Do not use Uniswap V3 as an oracle unless you understand its security implications.
+/// WARNING: READ THIS BEFORE DEPLOYING
+/// Do not use Uniswap V3 as an oracle unless you understand its security implications.
 /// Instead, consider using another provider as a primary price source.
 /// Under PoS a validator may be chosen to propose consecutive blocks, allowing risk-free multi-block manipulation.
 /// The cardinality of the observation buffer must be grown sufficiently to accommodate for the chosen TWAP window.
 /// The observation buffer must contain enough observations to accommodate for the chosen TWAP window.
 /// The chosen pool must have enough total liquidity and some full-range liquidity to resist manipulation.
 /// The chosen pool must have had sufficient liquidity when past observations were recorded in the buffer.
+/// Networks with short block times are highly susceptible to TWAP manipulation due to the reduced attack cost.
 contract UniswapV3Oracle is BaseAdapter {
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
