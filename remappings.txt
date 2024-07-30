@@ -4,3 +4,4 @@
 @redstone/evm-connector/=lib/redstone-oracles-monorepo/packages/evm-connector/contracts/
 @openzeppelin/contracts=lib/openzeppelin-contracts/contracts/
 @pyth/=lib/pyth-sdk-solidity/
+ethereum-vault-connector/=lib/ethereum-vault-connector/src/

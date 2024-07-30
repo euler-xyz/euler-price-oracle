@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
+import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {StubERC4626} from "test/StubERC4626.sol";
+import {StubEVCAuth} from "test/StubEVCAuth.sol";
 import {StubPriceOracle} from "test/adapter/StubPriceOracle.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
@@ -12,6 +14,7 @@ import {EulerRouter} from "src/EulerRouter.sol";
 
 contract EulerRouterTest is Test {
     address GOVERNOR = makeAddr("GOVERNOR");
+    StubEVCAuth evc;
     EulerRouter router;
 
     address WETH = makeAddr("WETH");
@@ -25,7 +28,8 @@ contract EulerRouterTest is Test {
     StubPriceOracle eOracle;
 
     function setUp() public {
-        router = new EulerRouter(GOVERNOR);
+        evc = new StubEVCAuth();
+        router = new EulerRouter(address(evc), GOVERNOR);
     }
 
     function test_Constructor_Integrity() public view {
@@ -34,7 +38,12 @@ contract EulerRouterTest is Test {
 
     function test_Constructor_RevertsWhen_GovernorIsZeroAddress() public {
         vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
-        new EulerRouter(address(0));
+        new EulerRouter(address(evc), address(0));
+    }
+
+    function test_Constructor_RevertsWhen_EVCIsZeroAddress() public {
+        vm.expectRevert(EVCUtil.EVC_InvalidAddress.selector);
+        new EulerRouter(address(0), GOVERNOR);
     }
 
     function test_GovSetConfig_Integrity(address base, address quote, address oracle) public {
@@ -44,6 +53,21 @@ contract EulerRouterTest is Test {
         emit EulerRouter.ConfigSet(token0, token1, oracle);
         vm.prank(GOVERNOR);
         router.govSetConfig(base, quote, oracle);
+
+        assertEq(router.getConfiguredOracle(base, quote), oracle);
+        assertEq(router.getConfiguredOracle(quote, base), oracle);
+    }
+
+    function test_GovSetConfig_Integrity_EVCAuth(address base, address quote, address oracle) public {
+        vm.assume(base != quote);
+        (address token0, address token1) = base < quote ? (base, quote) : (quote, base);
+
+        evc.setAccountOwner(GOVERNOR, GOVERNOR);
+        evc.setCurrentOnBehalfOfAccount(GOVERNOR);
+        vm.expectEmit();
+        emit EulerRouter.ConfigSet(token0, token1, oracle);
+
+        evc.makeCall(address(router), abi.encodeCall(router.govSetConfig, (base, quote, oracle)));
 
         assertEq(router.getConfiguredOracle(base, quote), oracle);
         assertEq(router.getConfiguredOracle(quote, base), oracle);
@@ -75,11 +99,25 @@ contract EulerRouterTest is Test {
         address oracle
     ) public {
         vm.assume(base != quote);
-        vm.assume(caller != GOVERNOR);
+        vm.assume(caller != GOVERNOR && caller != address(evc));
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.govSetConfig(base, quote, oracle);
+    }
+
+    function test_GovSetConfig_RevertsWhen_CallerNotGovernor_EVCAuth(
+        address caller,
+        address base,
+        address quote,
+        address oracle
+    ) public {
+        vm.assume(base != quote);
+        vm.assume(caller != GOVERNOR && caller != address(evc));
+
+        evc.setCurrentOnBehalfOfAccount(caller);
+        vm.expectRevert();
+        evc.makeCall(address(router), abi.encodeCall(router.govSetConfig, (base, quote, oracle)));
     }
 
     function test_GovSetConfig_RevertsWhen_BaseEqQuote(address base, address oracle) public {
@@ -100,6 +138,19 @@ contract EulerRouterTest is Test {
         assertEq(router.resolvedVaults(vault), asset);
     }
 
+    function test_GovSetVaultResolver_Integrity_EVCAuth(address vault, address asset) public {
+        vault = boundAddr(vault);
+        evc.setAccountOwner(GOVERNOR, GOVERNOR);
+        evc.setCurrentOnBehalfOfAccount(GOVERNOR);
+
+        vm.mockCall(vault, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
+        vm.expectEmit();
+        emit EulerRouter.ResolvedVaultSet(vault, asset);
+        evc.makeCall(address(router), abi.encodeCall(router.govSetResolvedVault, (vault, true)));
+
+        assertEq(router.resolvedVaults(vault), asset);
+    }
+
     function test_GovSetVaultResolver_Integrity_OverwriteOk(address vault, address assetA, address assetB) public {
         vault = boundAddr(vault);
         vm.mockCall(vault, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(assetA));
@@ -114,16 +165,32 @@ contract EulerRouterTest is Test {
     }
 
     function test_GovSetVaultResolver_RevertsWhen_CallerNotGovernor(address caller, address vault) public {
-        vm.assume(caller != GOVERNOR);
+        vm.assume(caller != GOVERNOR && caller != address(evc));
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.govSetResolvedVault(vault, true);
     }
 
+    function test_GovSetVaultResolver_RevertsWhen_CallerNotGovernor_EVCAuth(address caller, address vault) public {
+        vm.assume(caller != GOVERNOR && caller != address(evc));
+
+        evc.setCurrentOnBehalfOfAccount(caller);
+        vm.expectRevert();
+        evc.makeCall(address(router), abi.encodeCall(router.govSetResolvedVault, (vault, true)));
+    }
+
     function test_GovSetFallbackOracle_Integrity(address fallbackOracle) public {
         vm.prank(GOVERNOR);
         router.govSetFallbackOracle(fallbackOracle);
+
+        assertEq(router.fallbackOracle(), fallbackOracle);
+    }
+
+    function test_GovSetFallbackOracle_Integrity_EVCAuth(address fallbackOracle) public {
+        evc.setAccountOwner(GOVERNOR, GOVERNOR);
+        evc.setCurrentOnBehalfOfAccount(GOVERNOR);
+        evc.makeCall(address(router), abi.encodeCall(router.govSetFallbackOracle, (fallbackOracle)));
 
         assertEq(router.fallbackOracle(), fallbackOracle);
     }
@@ -146,11 +213,21 @@ contract EulerRouterTest is Test {
     }
 
     function test_GovSetFallbackOracle_RevertsWhen_CallerNotGovernor(address caller, address fallbackOracle) public {
-        vm.assume(caller != GOVERNOR);
+        vm.assume(caller != GOVERNOR && caller != address(evc));
 
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.govSetFallbackOracle(fallbackOracle);
+    }
+
+    function test_GovSetFallbackOracle_RevertsWhen_CallerNotGovernor_EVCAuth(address caller, address fallbackOracle)
+        public
+    {
+        vm.assume(caller != GOVERNOR && caller != address(evc));
+
+        evc.setCurrentOnBehalfOfAccount(caller);
+        vm.expectRevert();
+        evc.makeCall(address(router), abi.encodeCall(router.govSetFallbackOracle, (fallbackOracle)));
     }
 
     function test_Quote_Integrity_BaseEqQuote(uint256 inAmount, address base, address oracle) public view {
@@ -384,16 +461,34 @@ contract EulerRouterTest is Test {
     }
 
     function test_TransferGovernance_RevertsWhen_CallerNotGovernor(address caller, address newGovernor) public {
-        vm.assume(caller != GOVERNOR);
+        vm.assume(caller != GOVERNOR && caller != address(evc));
         vm.expectRevert(Errors.Governance_CallerNotGovernor.selector);
         vm.prank(caller);
         router.transferGovernance(newGovernor);
+    }
+
+    function test_TransferGovernance_RevertsWhen_CallerNotGovernor_EVCAuth(address caller, address newGovernor)
+        public
+    {
+        vm.assume(caller != GOVERNOR && caller != address(evc));
+        evc.setCurrentOnBehalfOfAccount(caller);
+        vm.expectRevert();
+        evc.makeCall(address(router), abi.encodeCall(router.transferGovernance, (newGovernor)));
     }
 
     function test_TransferGovernance_Integrity(address newGovernor) public {
         vm.assume(newGovernor != address(0));
         vm.prank(GOVERNOR);
         router.transferGovernance(newGovernor);
+
+        assertEq(router.governor(), newGovernor);
+    }
+
+    function test_TransferGovernance_Integrity_EVCAuth(address newGovernor) public {
+        vm.assume(newGovernor != address(0));
+        evc.setAccountOwner(GOVERNOR, GOVERNOR);
+        evc.setCurrentOnBehalfOfAccount(GOVERNOR);
+        evc.makeCall(address(router), abi.encodeCall(router.transferGovernance, (newGovernor)));
 
         assertEq(router.governor(), newGovernor);
     }
