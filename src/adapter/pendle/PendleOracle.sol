@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {IPMarket} from "@pendle/core-v2/interfaces/IPMarket.sol";
 import {IPPrincipalToken} from "@pendle/core-v2/interfaces/IPPrincipalToken.sol";
 import {IPPYLpOracle} from "@pendle/core-v2/interfaces/IPPYLpOracle.sol";
-import {IPYieldToken} from "@pendle/core-v2/interfaces/IPYieldToken.sol";
 import {IStandardizedYield} from "@pendle/core-v2/interfaces/IStandardizedYield.sol";
 import {PendlePYOracleLib} from "@pendle/core-v2/oracles/PendlePYOracleLib.sol";
 import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
@@ -23,11 +22,11 @@ contract PendleOracle is BaseAdapter {
     address public immutable pendleMarket;
     /// @notice The desired length of the twap window.
     uint32 public immutable twapWindow;
-    /// @notice The address of the base asset (SY, PT or YT).
+    /// @notice The address of the base asset, the PT address.
     address public immutable base;
-    /// @notice The address of the quote asset (SY, PT or YT).
+    /// @notice The address of the quote asset, the SY or underlying address.
     address public immutable quote;
-    /// @dev The PendlePYOracleLib function to call.
+    /// @notice The PendlePYOracleLib function to call.
     function (IPMarket, uint32) view returns (uint256) internal immutable getRate;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
@@ -42,6 +41,7 @@ contract PendleOracle is BaseAdapter {
     /// @param _quote The address of the SY token or the underlying asset.
     /// @param _twapWindow The desired length of the twap window.
     constructor(address _pendleOracle, address _pendleMarket, address _base, address _quote, uint32 _twapWindow) {
+        // Verify that the TWAP window is sufficiently long.
         if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
 
         // Verify that the observations buffer is adequately sized and populated.
@@ -51,11 +51,12 @@ contract PendleOracle is BaseAdapter {
             revert Errors.PriceOracle_InvalidConfiguration();
         }
 
-        // Pendle oracle can be used to price 4 different pairs.
         (IStandardizedYield sy, IPPrincipalToken pt,) = IPMarket(_pendleMarket).readTokens();
 
+        // Base must be PT
         if (_base != address(pt)) revert Errors.PriceOracle_InvalidConfiguration();
 
+        // Quote must be SY or Asset.
         if (_quote == address(sy)) {
             getRate = PendlePYOracleLib.getPtToSyRate;
         } else {
@@ -76,11 +77,12 @@ contract PendleOracle is BaseAdapter {
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, 18);
     }
 
-    /// @notice Get a quote by calling the pool's TWAP oracle.
+    /// @notice Get a quote by calling the Pendle oracle.
     /// @param inAmount The amount of `base` to convert.
-    /// @param _base The token that is being priced. Either `tokenA` or `tokenB`.
-    /// @param _quote The token that is the unit of account. Either `tokenB` or `tokenA`.
-    /// @return The converted amount.
+    /// @param _base The token that is being priced.
+    /// @param _quote The token that is the unit of account.
+    /// @dev Note that the quote does not include instantaneous DEX slippage.
+    /// @return The converted amount using the Pendle oracle.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
         uint256 unitPrice = getRate(IPMarket(pendleMarket), twapWindow);
