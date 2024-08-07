@@ -15,13 +15,6 @@ import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for Pendle PT Oracle.
 contract PendleOracle is BaseAdapter {
-    enum OraclePair {
-        PT_SY,
-        PT_ASSET,
-        YT_SY,
-        YT_ASSET
-    }
-
     /// @inheritdoc IPriceOracle
     string public constant name = "PendleOracle";
     /// @dev The minimum length of the TWAP window.
@@ -40,13 +33,15 @@ contract PendleOracle is BaseAdapter {
     Scale internal immutable scale;
 
     /// @notice Deploy a PendleOracle.
-    /// @dev The oracle can price PT/SY, PT/Asset, YT/SY, or YT/Asset. Whether to use SY or Asset depends on the market.
+    /// @dev The oracle can price PT/SY and PT/Asset. Whether to use SY or Asset depends on the underlying.
     /// Consult https://docs.pendle.finance/Developers/Contracts/StandardizedYield#standard-sys for more information.
+    /// Before deploying this adapter ensure that the oracle is initialized and the observation buffer is filled.
     /// @param _pendleOracle The address of the PendlePYLpOracle contract. Used only in the constructor.
     /// @param _pendleMarket The address of the Pendle market.
+    /// @param _base The address of the PT.
+    /// @param _quote The address of the SY token or the underlying asset.
     /// @param _twapWindow The desired length of the twap window.
-    /// @param _pair The Pendle token pair to price.
-    constructor(address _pendleOracle, address _pendleMarket, uint32 _twapWindow, OraclePair _pair) {
+    constructor(address _pendleOracle, address _pendleMarket, address _base, address _quote, uint32 _twapWindow) {
         if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
 
         // Verify that the observations buffer is adequately sized and populated.
@@ -57,30 +52,24 @@ contract PendleOracle is BaseAdapter {
         }
 
         // Pendle oracle can be used to price 4 different pairs.
-        (IStandardizedYield _SY, IPPrincipalToken _PT, IPYieldToken _YT) = IPMarket(_pendleMarket).readTokens();
+        (IStandardizedYield sy, IPPrincipalToken pt,) = IPMarket(_pendleMarket).readTokens();
 
-        if (_pair == OraclePair.PT_SY) {
-            base = address(_PT);
-            quote = address(_SY);
+        if (_base != address(pt)) revert Errors.PriceOracle_InvalidConfiguration();
+
+        if (_quote == address(sy)) {
             getRate = PendlePYOracleLib.getPtToSyRate;
-        } else if (_pair == OraclePair.YT_SY) {
-            base = address(_YT);
-            quote = address(_SY);
-            getRate = PendlePYOracleLib.getYtToSyRate;
         } else {
-            (, address assetAddress,) = _SY.assetInfo();
-            if (_pair == OraclePair.PT_ASSET) {
-                base = address(_PT);
-                quote = assetAddress;
+            (, address asset,) = sy.assetInfo();
+            if (_quote == asset) {
                 getRate = PendlePYOracleLib.getPtToAssetRate;
             } else {
-                base = address(_YT);
-                quote = assetAddress;
-                getRate = PendlePYOracleLib.getYtToAssetRate;
+                revert Errors.PriceOracle_InvalidConfiguration();
             }
         }
 
         pendleMarket = _pendleMarket;
+        base = _base;
+        quote = _quote;
         twapWindow = _twapWindow;
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);

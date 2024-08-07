@@ -6,119 +6,112 @@ import {
     PENDLE_EETH_0624_MARKET,
     PENDLE_EETH_0624_PT,
     PENDLE_EETH_0624_SY,
-    PENDLE_EETH_0624_YT,
-    PENDLE_FUSDC_1224_MARKET,
-    PENDLE_FUSDC_1224_PT,
-    PENDLE_FUSDC_1224_SY,
-    PENDLE_FUSDC_1224_YT
+    PENDLE_STETH_1227_MARKET,
+    PENDLE_STETH_1227_PT,
+    PENDLE_STETH_1227_SY,
+    PENDLE_SUSDE_0924_MARKET,
+    PENDLE_SUSDE_0924_PT,
+    PENDLE_SUSDE_0924_SY
 } from "test/adapter/pendle/PendleAddresses.sol";
-import {EETH, USDC} from "test/utils/EthereumAddresses.sol";
+import {EETH, USDC, USDE} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {PendleOracle} from "src/adapter/pendle/PendleOracle.sol";
+import {Errors} from "src/lib/Errors.sol";
 
 contract PendleOracleForkTest is ForkTest {
+    /// @dev 1%
+    uint256 constant REL_PRECISION = 0.01e18;
+
     function setUp() public {
-        _setUpFork(20153426);
+        _setUpFork(20475432);
     }
 
     function test_Constructor_Integrity() public {
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, 15 minutes, PendleOracle.OraclePair.PT_SY);
+        PendleOracle oracle = new PendleOracle(
+            PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, PENDLE_EETH_0624_PT, PENDLE_EETH_0624_SY, 15 minutes
+        );
         assertEq(oracle.pendleMarket(), PENDLE_EETH_0624_MARKET);
         assertEq(oracle.twapWindow(), 15 minutes);
         assertEq(oracle.base(), PENDLE_EETH_0624_PT);
         assertEq(oracle.quote(), PENDLE_EETH_0624_SY);
     }
 
-    function test_GetQuote_eETH0624_PT_SY() public {
+    /// @dev This market is active. 1 PT-sUSDe0924 = 0.8931 sUSDe. Oracle has no slippage.
+    function test_GetQuote_ActiveMarket_sUSDe0924_PT_SY() public {
+        PendleOracle oracle = new PendleOracle(
+            PENDLE_ORACLE, PENDLE_SUSDE_0924_MARKET, PENDLE_SUSDE_0924_PT, PENDLE_SUSDE_0924_SY, 15 minutes
+        );
+
+        uint256 outAmount = oracle.getQuote(1e18, PENDLE_SUSDE_0924_PT, PENDLE_SUSDE_0924_SY);
+        uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_SUSDE_0924_PT, PENDLE_SUSDE_0924_SY);
+        assertApproxEqRel(outAmount, 0.8931e18, REL_PRECISION);
+        assertEq(outAmount1000, outAmount * 1000);
+
+        uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_SUSDE_0924_SY, PENDLE_SUSDE_0924_PT);
+        assertEq(outAmountInv, 1e18);
+        uint256 outAmountInv1000 = oracle.getQuote(outAmount1000, PENDLE_SUSDE_0924_SY, PENDLE_SUSDE_0924_PT);
+        assertEq(outAmountInv1000, 1000e18);
+    }
+
+    /// @dev This market is active. 1 PT-sUSDe0924 = 0.9727 USDe. Oracle has no slippage.
+    function test_GetQuote_ActiveMarket_sUSDe0924_PT_Asset() public {
         PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, 15 minutes, PendleOracle.OraclePair.PT_SY);
+            new PendleOracle(PENDLE_ORACLE, PENDLE_SUSDE_0924_MARKET, PENDLE_SUSDE_0924_PT, USDE, 15 minutes);
+
+        uint256 outAmount = oracle.getQuote(1e18, PENDLE_SUSDE_0924_PT, USDE);
+        uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_SUSDE_0924_PT, USDE);
+        assertApproxEqRel(outAmount, 0.9727e18, REL_PRECISION);
+        assertEq(outAmount1000, outAmount * 1000);
+
+        uint256 outAmountInv = oracle.getQuote(outAmount, USDE, PENDLE_SUSDE_0924_PT);
+        assertEq(outAmountInv, 1e18);
+        uint256 outAmountInv1000 = oracle.getQuote(outAmount1000, USDE, PENDLE_SUSDE_0924_PT);
+        assertEq(outAmountInv1000, 1000e18);
+    }
+
+    /// @dev This market has expired, so 1 PT = 0.95712 weETH without slippage.
+    function test_GetQuote_ExpiredMarket_eETH0624_PT_SY() public {
+        PendleOracle oracle = new PendleOracle(
+            PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, PENDLE_EETH_0624_PT, PENDLE_EETH_0624_SY, 15 minutes
+        );
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_EETH_0624_PT, PENDLE_EETH_0624_SY);
-        assertLt(outAmount, 1e18);
-        assertGt(outAmount, 0.95e18);
+        uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_EETH_0624_PT, PENDLE_EETH_0624_SY);
+        assertApproxEqRel(outAmount, 0.95712e18, REL_PRECISION);
+        assertApproxEqRel(outAmount1000, 0.95712e18 * 1000, REL_PRECISION);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_EETH_0624_SY, PENDLE_EETH_0624_PT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
+        assertEq(outAmountInv, 1e18);
+        uint256 outAmountInv1000 = oracle.getQuote(outAmount1000, PENDLE_EETH_0624_SY, PENDLE_EETH_0624_PT);
+        assertEq(outAmountInv1000, 1000e18);
     }
 
-    function test_GetQuote_eETH0624_PT_Asset() public {
+    /// @dev This market has expired, so 1 PT = 1 eETHH without slippage.
+    function test_GetQuote_ExpiredMarket_eETH0624_PT_Asset() public {
         PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, 15 minutes, PendleOracle.OraclePair.PT_ASSET);
+            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, PENDLE_EETH_0624_PT, EETH, 15 minutes);
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_EETH_0624_PT, EETH);
-        assertLt(outAmount, 1e18);
-        assertGt(outAmount, 0.99e18);
+        uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_EETH_0624_PT, EETH);
+        assertEq(outAmount, 1e18);
+        assertEq(outAmount1000, 1000e18);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, EETH, PENDLE_EETH_0624_PT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
+        assertEq(outAmountInv, 1e18);
+        uint256 outAmountInv1000 = oracle.getQuote(outAmount1000, EETH, PENDLE_EETH_0624_PT);
+        assertEq(outAmountInv1000, 1000e18);
     }
 
-    function test_GetQuote_eETH0624_YT_SY() public {
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, 15 minutes, PendleOracle.OraclePair.YT_SY);
-        uint256 outAmount = oracle.getQuote(1e18, PENDLE_EETH_0624_YT, PENDLE_EETH_0624_SY);
-        assertLt(outAmount, 0.01e18);
-        assertGt(outAmount, 0);
+    /// @dev This market's oracle buffer is not initialized, so deployment should revert.
+    function test_Constructor_OracleBufferNotInitialized() public {
+        // Oracle does not support 15 minutes.
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new PendleOracle(PENDLE_ORACLE, PENDLE_STETH_1227_MARKET, PENDLE_STETH_1227_PT, PENDLE_STETH_1227_SY, 900);
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new PendleOracle(PENDLE_ORACLE, PENDLE_STETH_1227_MARKET, PENDLE_STETH_1227_PT, USDE, 900);
 
-        uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_EETH_0624_SY, PENDLE_EETH_0624_YT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
-    }
-
-    function test_GetQuote_eETH0624_YT_Asset() public {
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_EETH_0624_MARKET, 15 minutes, PendleOracle.OraclePair.YT_ASSET);
-        uint256 outAmount = oracle.getQuote(1e18, PENDLE_EETH_0624_YT, EETH);
-        assertLt(outAmount, 0.01e18);
-        assertGt(outAmount, 0);
-
-        uint256 outAmountInv = oracle.getQuote(outAmount, EETH, PENDLE_EETH_0624_YT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
-    }
-
-    function test_GetQuote_fUSDC1224_PT_SY() public {
-        vm.skip(true);
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_FUSDC_1224_MARKET, 15 minutes, PendleOracle.OraclePair.PT_SY);
-        uint256 outAmount = oracle.getQuote(1e6, PENDLE_FUSDC_1224_PT, PENDLE_FUSDC_1224_SY);
-        assertLt(outAmount, 45e8);
-        // assertGt(outAmount, 0.95e6);
-
-        uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_FUSDC_1224_SY, PENDLE_FUSDC_1224_PT);
-        assertApproxEqRel(outAmountInv, 1e6, 1e15);
-    }
-
-    function test_GetQuote_fUSDC1224_PT_Asset() public {
-        vm.skip(true);
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_FUSDC_1224_MARKET, 15 minutes, PendleOracle.OraclePair.PT_ASSET);
-        uint256 outAmount = oracle.getQuote(1e6, PENDLE_FUSDC_1224_PT, USDC);
-        assertLt(outAmount, 1e6);
-        assertGt(outAmount, 0.95e6);
-
-        uint256 outAmountInv = oracle.getQuote(outAmount, USDC, PENDLE_FUSDC_1224_PT);
-        assertApproxEqRel(outAmountInv, 1e6, 1e15);
-    }
-
-    function test_GetQuote_fUSDC1224_YT_SY() public {
-        vm.skip(true);
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_FUSDC_1224_MARKET, 15 minutes, PendleOracle.OraclePair.YT_SY);
-        uint256 outAmount = oracle.getQuote(1e18, PENDLE_FUSDC_1224_YT, PENDLE_FUSDC_1224_SY);
-        assertLt(outAmount, 0.01e18);
-        assertGt(outAmount, 0);
-
-        uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_FUSDC_1224_SY, PENDLE_FUSDC_1224_YT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
-    }
-
-    function test_GetQuote_fUSDC1224_Asset() public {
-        vm.skip(true);
-        PendleOracle oracle =
-            new PendleOracle(PENDLE_ORACLE, PENDLE_FUSDC_1224_MARKET, 15 minutes, PendleOracle.OraclePair.YT_ASSET);
-        uint256 outAmount = oracle.getQuote(1e18, PENDLE_FUSDC_1224_YT, USDC);
-        assertLt(outAmount, 0.01e18);
-        assertGt(outAmount, 0);
-
-        uint256 outAmountInv = oracle.getQuote(outAmount, USDC, PENDLE_FUSDC_1224_YT);
-        assertApproxEqRel(outAmountInv, 1e18, 1e9);
+        // Oracle does not support 5 minutes.
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new PendleOracle(PENDLE_ORACLE, PENDLE_STETH_1227_MARKET, PENDLE_STETH_1227_PT, PENDLE_STETH_1227_SY, 300);
+        vm.expectRevert(Errors.PriceOracle_InvalidConfiguration.selector);
+        new PendleOracle(PENDLE_ORACLE, PENDLE_STETH_1227_MARKET, PENDLE_STETH_1227_PT, USDE, 900);
     }
 }
