@@ -18,6 +18,8 @@ contract PendleOracle is BaseAdapter {
     string public constant name = "PendleOracle";
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
+    /// @notice The decimals of the Pendle Oracle. Fixed to 18.
+    uint8 internal constant FEED_DECIMALS = 18;
     /// @notice The address of the Pendle market.
     address public immutable pendleMarket;
     /// @notice The desired length of the twap window.
@@ -74,7 +76,7 @@ contract PendleOracle is BaseAdapter {
         twapWindow = _twapWindow;
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
-        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, 18);
+        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, FEED_DECIMALS);
     }
 
     /// @notice Get a quote by calling the Pendle oracle.
