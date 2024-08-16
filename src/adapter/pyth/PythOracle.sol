@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title PythOracle
 /// @custom:security-contact security@euler.xyz
