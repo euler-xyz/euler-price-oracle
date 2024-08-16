@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
+import {AggregatorV3Interface} from "./AggregatorV3Interface.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title ChainlinkOracle
 /// @custom:security-contact security@euler.xyz
