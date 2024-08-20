@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {BaseAdapter,IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, IPriceOracle} from "../BaseAdapter.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 import {IRateProvider} from "./IRateProvider.sol";
 
 /// @title RateProviderOracle

@@ -6,8 +6,8 @@ import {IPPrincipalToken} from "@pendle/core-v2/interfaces/IPPrincipalToken.sol"
 import {IPPYLpOracle} from "@pendle/core-v2/interfaces/IPPYLpOracle.sol";
 import {IStandardizedYield} from "@pendle/core-v2/interfaces/IStandardizedYield.sol";
 import {PendlePYOracleLib} from "@pendle/core-v2/oracles/PendlePYOracleLib.sol";
-import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title PendleOracle
 /// @custom:security-contact security@euler.xyz

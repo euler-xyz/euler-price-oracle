@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
-import {Governable} from "src/lib/Governable.sol";
+import {IPriceOracle} from "./interfaces/IPriceOracle.sol";
+import {Errors} from "./lib/Errors.sol";
+import {Governable} from "./lib/Governable.sol";
 
 /// @title EulerRouterWithSequencerCheck
 /// @custom:security-contact security@euler.xyz
@@ -163,7 +163,7 @@ contract EulerRouterWithSequencerCheck is Governable, IPriceOracle {
     /// Reverts if the sequencer has recovered from an outage before less than `SEQUENCER_GRACE_PERIOD` seconds.
     function _checkSequencer() internal view {
         (, int256 answer, uint256 startedAt,,) = AggregatorV3Interface(sequencerUptimeFeed).latestRoundData();
-        if (answer == 1) revert PriceOracle_InvalidAnswer();
-        if (block.timestamp - startedAt <= SEQUENCER_GRACE_PERIOD) revert PriceOracle_InvalidAnswer();
+        if (answer == 1) revert Errors.PriceOracle_InvalidAnswer();
+        if (block.timestamp - startedAt <= SEQUENCER_GRACE_PERIOD) revert Errors.PriceOracle_InvalidAnswer();
     }
 }

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {IDapiProxy} from "src/adapter/api3/IDapiProxy.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {IDapiProxy} from "./IDapiProxy.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title API3Oracle
 /// @custom:security-contact security@euler.xyz
