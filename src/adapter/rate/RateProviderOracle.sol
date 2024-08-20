@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {BaseAdapter, IPriceOracle} from "../BaseAdapter.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 import {IRateProvider} from "./IRateProvider.sol";
 
@@ -18,21 +18,21 @@ contract RateProviderOracle is BaseAdapter {
     /// @notice The address of the quote asset corresponding to the feed.
     address public immutable quote;
     /// @notice The address of the Rate Provider contract.
-    address public immutable provider;
+    address public immutable rateProvider;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
 
     /// @notice Deploy a RateProviderOracle.
-    /// @param _base The address of the base asset corresponding to the provider.
-    /// @param _quote The address of the quote asset corresponding to the provider.
-    /// @param _provider The address of the Balancer Rate Provider contract.
-    constructor(address _base, address _quote, address _provider) {
+    /// @param _base The address of the base asset corresponding to the Rate Provider.
+    /// @param _quote The address of the quote asset corresponding to the Rate Provider.
+    /// @param _rateProvider The address of the Balancer Rate Provider contract.
+    constructor(address _base, address _quote, address _rateProvider) {
         base = _base;
         quote = _quote;
-        provider = _provider;
-        uint8 baseDecimals = _getDecimals(base);
+        rateProvider = _rateProvider;
         uint8 quoteDecimals = _getDecimals(quote);
-        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, quoteDecimals);
+        // Since Balancer uses 18 decimals for internal accounting we override base decimals to 18.
+        scale = ScaleUtils.calcScale(18, quoteDecimals, quoteDecimals);
     }
 
     /// @notice Get the quote from the Rate Provider feed.
@@ -42,7 +42,8 @@ contract RateProviderOracle is BaseAdapter {
     /// @return The converted amount using the Rate Provider.
     function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
-        uint256 rate = IRateProvider(provider).getRate();
+        uint256 rate = IRateProvider(rateProvider).getRate();
+        if (rate == 0) revert Errors.PriceOracle_InvalidAnswer();
         return ScaleUtils.calcOutAmount(inAmount, rate, scale, inverse);
     }
 }
