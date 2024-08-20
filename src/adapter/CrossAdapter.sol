@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {BaseAdapter} from "src/adapter/BaseAdapter.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {ScaleUtils} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter} from "./BaseAdapter.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
+import {ScaleUtils} from "../lib/ScaleUtils.sol";
 
 /// @title CrossAdapter
 /// @custom:security-contact security@euler.xyz

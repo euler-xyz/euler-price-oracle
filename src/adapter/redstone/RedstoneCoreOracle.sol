@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
-import {BaseAdapter, Errors, IPriceOracle} from "src/adapter/BaseAdapter.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title RedstoneCoreOracle
 /// @custom:security-contact security@euler.xyz

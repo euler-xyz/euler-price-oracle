@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
+import {Errors} from "../lib/Errors.sol";
 
 /// @title BaseAdapter
 /// @custom:security-contact security@euler.xyz

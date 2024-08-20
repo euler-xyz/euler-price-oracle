@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {Errors} from "./Errors.sol";
 
 /// @title Governable
 /// @custom:security-contact security@euler.xyz
