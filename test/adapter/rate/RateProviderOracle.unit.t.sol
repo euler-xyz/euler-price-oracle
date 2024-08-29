@@ -8,7 +8,7 @@ import {RateProviderOracle} from "src/adapter/rate/RateProviderOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract RateProviderOracleTest is RateProviderOracleHelper {
-    function test_Constructor_Integrity_Pendle(FuzzableState memory s) public {
+    function test_Constructor_Integrity(FuzzableState memory s) public {
         setUpState(s);
         assertEq(RateProviderOracle(oracle).name(), "RateProviderOracle");
         assertEq(RateProviderOracle(oracle).base(), s.base);
