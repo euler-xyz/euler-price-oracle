@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracleHelper.sol";
+import {RedstoneCoreArbitrumOracleHelper} from
+    "test/adapter/redstone/RedstoneCoreArbitrumOracle/RedstoneCoreArbitrumOracleHelper.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
-import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
+import {RedstoneCoreArbitrumOracle} from "src/adapter/redstone/RedstoneCoreArbitrumOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
-contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
+contract RedstoneCoreArbitrumOracleTest is RedstoneCoreArbitrumOracleHelper {
     function test_Constructor_Integrity(FuzzableState memory s) public {
         setUpState(s);
 
-        assertEq(RedstoneCoreOracle(oracle).base(), s.base);
-        assertEq(RedstoneCoreOracle(oracle).quote(), s.quote);
-        assertEq(RedstoneCoreOracle(oracle).feedId(), s.feedId);
-        assertEq(RedstoneCoreOracle(oracle).feedDecimals(), s.feedDecimals);
-        assertEq(RedstoneCoreOracle(oracle).maxStaleness(), s.maxStaleness);
+        assertEq(RedstoneCoreArbitrumOracle(oracle).base(), s.base);
+        assertEq(RedstoneCoreArbitrumOracle(oracle).quote(), s.quote);
+        assertEq(RedstoneCoreArbitrumOracle(oracle).feedId(), s.feedId);
+        assertEq(RedstoneCoreArbitrumOracle(oracle).feedDecimals(), s.feedDecimals);
+        assertEq(RedstoneCoreArbitrumOracle(oracle).maxStaleness(), s.maxStaleness);
 
-        (uint208 price, uint48 priceTimestamp) = RedstoneCoreOracle(oracle).cache();
+        (uint208 price, uint48 priceTimestamp) = RedstoneCoreArbitrumOracle(oracle).cache();
         assertEq(price, 0);
         assertEq(priceTimestamp, 0);
     }
@@ -31,10 +32,10 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
         setUpState(s);
         mockPrice(s);
         vm.expectEmit();
-        emit RedstoneCoreOracle.CacheUpdated(s.price, s.tsDataPackage);
+        emit RedstoneCoreArbitrumOracle.CacheUpdated(s.price, s.tsDataPackage);
         setPrice(s);
 
-        (uint208 price, uint48 priceTimestamp) = RedstoneCoreOracle(oracle).cache();
+        (uint208 price, uint48 priceTimestamp) = RedstoneCoreArbitrumOracle(oracle).cache();
         assertEq(price, s.price);
         assertEq(priceTimestamp, s.tsDataPackage);
     }
@@ -102,10 +103,11 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
         uint256 expectedOutAmount = calcOutAmount(s);
 
-        uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
+        uint256 outAmount = RedstoneCoreArbitrumOracle(oracle).getQuote(s.inAmount, s.base, s.quote);
         assertEq(outAmount, expectedOutAmount);
 
-        (uint256 bidOutAmount, uint256 askOutAmount) = RedstoneCoreOracle(oracle).getQuotes(s.inAmount, s.base, s.quote);
+        (uint256 bidOutAmount, uint256 askOutAmount) =
+            RedstoneCoreArbitrumOracle(oracle).getQuotes(s.inAmount, s.base, s.quote);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }
@@ -117,10 +119,11 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
 
         uint256 expectedOutAmount = calcOutAmountInverse(s);
 
-        uint256 outAmount = RedstoneCoreOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
+        uint256 outAmount = RedstoneCoreArbitrumOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
         assertEq(outAmount, expectedOutAmount);
 
-        (uint256 bidOutAmount, uint256 askOutAmount) = RedstoneCoreOracle(oracle).getQuotes(s.inAmount, s.quote, s.base);
+        (uint256 bidOutAmount, uint256 askOutAmount) =
+            RedstoneCoreArbitrumOracle(oracle).getQuotes(s.inAmount, s.quote, s.base);
         assertEq(bidOutAmount, expectedOutAmount);
         assertEq(askOutAmount, expectedOutAmount);
     }

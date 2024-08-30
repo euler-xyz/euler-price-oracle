@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
-import {RedstoneCoreOracleHarness} from "test/adapter/redstone/RedstoneCoreOracleHarness.sol";
+import {RedstoneCoreArbitrumOracleHarness} from
+    "test/adapter/redstone/RedstoneCoreArbitrumOracle/RedstoneCoreArbitrumOracleHarness.sol";
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
-import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
+import {RedstoneCoreArbitrumOracle} from "src/adapter/redstone/RedstoneCoreArbitrumOracle.sol";
 
-contract RedstoneCoreOracleHelper is AdapterHelper {
+contract RedstoneCoreArbitrumOracleHelper is AdapterHelper {
     uint256 internal constant MAX_STALENESS_UPPER_BOUND = 5 minutes;
     uint256 internal constant MAX_CACHE_STALENESS_UPPER_BOUND = 5 minutes;
 
@@ -83,7 +84,8 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
 
         s.tsDeploy = bound(s.tsDeploy, 2 ** 30, 2 ** 36 - 1);
         vm.warp(s.tsDeploy);
-        oracle = address(new RedstoneCoreOracleHarness(s.base, s.quote, s.feedId, s.feedDecimals, s.maxStaleness));
+        oracle =
+            address(new RedstoneCoreArbitrumOracleHarness(s.base, s.quote, s.feedId, s.feedDecimals, s.maxStaleness));
 
         if (behaviors[Behavior.FeedReturnsZeroPrice]) {
             s.price = 0;
@@ -112,12 +114,12 @@ contract RedstoneCoreOracleHelper is AdapterHelper {
     }
 
     function mockPrice(FuzzableState memory s) internal {
-        RedstoneCoreOracleHarness(oracle).setPrice(s.price, s.tsDataPackage * 1000);
+        RedstoneCoreArbitrumOracleHarness(oracle).setPrice(s.price, s.tsDataPackage * 1000);
     }
 
     function setPrice(FuzzableState memory s) internal {
         vm.warp(s.tsUpdatePrice);
-        RedstoneCoreOracleHarness(oracle).updatePrice(uint48(s.tsDataPackage));
+        RedstoneCoreArbitrumOracleHarness(oracle).updatePrice(uint48(s.tsDataPackage));
         vm.warp(s.tsGetQuote);
     }
 

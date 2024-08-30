@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
-import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracleHelper.sol";
+import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracle/RedstoneCoreOracleHelper.sol";
 
 contract RedstoneCoreOraclePropTest is RedstoneCoreOracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, Prop_Bidirectional memory p) public {
