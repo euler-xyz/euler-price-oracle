@@ -8,6 +8,7 @@ import {IStEth} from "./IStEth.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
+/// @dev This is an exchange rate/fundamental oracle that assumes stEth and weth are 1:1.
 contract LidoFundamentalOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
     string public constant name = "LidoFundamentalOracle";
@@ -22,10 +23,10 @@ contract LidoFundamentalOracle is BaseAdapter {
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     /// @notice Get a quote by querying the exchange rate from the stEth contract.
-    /// @dev Calls `getSharesByPooledEth` for stEth/wstEth and `getPooledEthByShares` for wstEth/stEth.
+    /// @dev Calls `getSharesByPooledEth` for weth/wstEth and `getPooledEthByShares` for wstEth/weth.
     /// @param inAmount The amount of `base` to convert.
-    /// @param base The token that is being priced. Either `stEth` or `wstEth`.
-    /// @param quote The token that is the unit of account. Either `wstEth` or `stEth`.
+    /// @param base The token that is being priced. Either `weth` or `wstEth`.
+    /// @param quote The token that is the unit of account. Either `wstEth` or `weth`.
     /// @return The converted amount.
     function _getQuote(uint256 inAmount, address base, address quote) internal view override returns (uint256) {
         if (base == WETH && quote == WSTETH) {
