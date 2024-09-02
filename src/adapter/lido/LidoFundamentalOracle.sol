@@ -7,7 +7,7 @@ import {IStEth} from "./IStEth.sol";
 /// @title LidoFundamentalOracle
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
+/// @notice Adapter for pricing weth <-> wstEth via the Lido stEth contract.
 /// @dev This is an exchange rate/fundamental oracle that assumes stEth and weth are 1:1.
 contract LidoFundamentalOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
