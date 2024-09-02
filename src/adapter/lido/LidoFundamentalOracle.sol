@@ -10,7 +10,7 @@ import {IStEth} from "./IStEth.sol";
 /// @notice Adapter for pricing Lido stEth <-> wstEth via the stEth contract.
 contract LidoFundamentalOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
-    string public constant name = "LidoOracle";
+    string public constant name = "LidoFundamentalOracle";
     /// @notice The address of Lido staked Ether.
     /// @dev This address will not change.
     address public constant STETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
