@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracle/RedstoneCoreOracleHelper.sol";
+import {RedstoneCoreOracleHelper} from "test/adapter/redstone/RedstoneCoreOracleHelper.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
 import {Errors} from "src/lib/Errors.sol";

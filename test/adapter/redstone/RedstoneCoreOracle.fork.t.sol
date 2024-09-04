@@ -50,7 +50,7 @@ contract RedstoneCoreOracleForkTest is ForkTest {
     {
         string[] memory cmds = new string[](3);
         cmds[0] = "node";
-        cmds[1] = "test/adapter/redstone/RedstoneCoreOracle/get_redstone_payload.js";
+        cmds[1] = "test/adapter/redstone/get_redstone_payload.js";
         cmds[2] = feedSymbol;
         payload = vm.ffi(cmds);
         assembly {

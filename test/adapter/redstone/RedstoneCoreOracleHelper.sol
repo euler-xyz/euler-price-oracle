@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
-import {RedstoneCoreOracleHarness} from "test/adapter/redstone/RedstoneCoreOracle/RedstoneCoreOracleHarness.sol";
+import {RedstoneCoreOracleHarness} from "test/adapter/redstone/RedstoneCoreOracleHarness.sol";
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr} from "test/utils/TestUtils.sol";
 import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
