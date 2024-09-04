@@ -4,7 +4,6 @@ out = "out"
 test = "test"
 libs = ["lib"]
 solc = "0.8.23"
-evm_version = "cancun"
 optimizer = true
 optimizer_runs = 100_000
 ffi = false
