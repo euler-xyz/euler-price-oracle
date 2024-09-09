@@ -184,14 +184,14 @@ contract RateProviderOracleForkTest is ForkTest {
         RateProviderOracle oracle = new RateProviderOracle(XAUT, USD, BALANCER_XAUT_RATE_PROVIDER);
         uint256 rate = 2522e18;
 
-        uint256 outAmount = oracle.getQuote(1e18, XAUT, USD);
-        uint256 outAmount1000 = oracle.getQuote(1000e18, XAUT, USD);
+        uint256 outAmount = oracle.getQuote(1e6, XAUT, USD);
+        uint256 outAmount1000 = oracle.getQuote(1000e6, XAUT, USD);
         assertApproxEqRel(outAmount, rate, REL_PRECISION);
         assertEq(outAmount1000, outAmount * 1000);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, USD, XAUT);
-        assertEq(outAmountInv, 1e18);
+        assertEq(outAmountInv, 1e6);
         uint256 outAmountInv1000 = oracle.getQuote(outAmount1000, USD, XAUT);
-        assertEq(outAmountInv1000, 1000e18);
+        assertEq(outAmountInv1000, 1000e6);
     }
 }
