@@ -10,12 +10,13 @@ import {IRateProvider} from "./IRateProvider.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Balancer Rate Providers.
 /// @dev See https://docs.balancer.fi/reference/contracts/rate-providers.html
+/// Note: Every Rate Provider has unique security properties. Always perform due dilligence before deploying.
 contract RateProviderOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
     string public constant name = "RateProviderOracle";
-    /// @notice The address of the base asset corresponding to the feed.
+    /// @notice The address of the base asset corresponding to the rate provider.
     address public immutable base;
-    /// @notice The address of the quote asset corresponding to the feed.
+    /// @notice The address of the quote asset corresponding to the rate provider.
     address public immutable quote;
     /// @notice The address of the Rate Provider contract.
     address public immutable rateProvider;
@@ -30,12 +31,13 @@ contract RateProviderOracle is BaseAdapter {
         base = _base;
         quote = _quote;
         rateProvider = _rateProvider;
+        uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
-        // Since Balancer uses 18 decimals for internal accounting we override base decimals to 18.
-        scale = ScaleUtils.calcScale(18, quoteDecimals, quoteDecimals);
+        // Balancer Rate Providers return an 18-decimal fixed-point value.
+        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, 18);
     }
 
-    /// @notice Get the quote from the Rate Provider feed.
+    /// @notice Get the quote from the Rate Provider.
     /// @param inAmount The amount of `base` to convert.
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.
