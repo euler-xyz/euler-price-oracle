@@ -63,8 +63,10 @@ contract PendleOracleHelper is AdapterHelper {
 
         if (behaviors[Behavior.Constructor_TwapWindowTooShort]) {
             s.twapWindow = uint32(bound(s.twapWindow, 1, 5 minutes - 1));
+        } else if (behaviors[Behavior.Constructor_TwapWindowTooLong]) {
+            s.twapWindow = uint32(bound(s.twapWindow, 60 minutes + 1, type(uint32).max));
         } else {
-            s.twapWindow = uint32(bound(s.twapWindow, 5 minutes, type(uint32).max));
+            s.twapWindow = uint32(bound(s.twapWindow, 5 minutes + 1, 60 minutes));
         }
 
         if (behaviors[Behavior.Constructor_CardinalityTooSmall]) {

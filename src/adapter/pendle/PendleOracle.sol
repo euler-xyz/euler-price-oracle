@@ -18,6 +18,8 @@ contract PendleOracle is BaseAdapter {
     string public constant name = "PendleOracle";
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
+    /// @dev The maximum length of the TWAP window.
+    uint32 internal constant MAX_TWAP_WINDOW = 60 minutes;
     /// @notice The decimals of the Pendle Oracle. Fixed to 18.
     uint8 internal constant FEED_DECIMALS = 18;
     /// @notice The address of the Pendle market.
@@ -44,7 +46,9 @@ contract PendleOracle is BaseAdapter {
     /// @param _twapWindow The desired length of the twap window.
     constructor(address _pendleOracle, address _pendleMarket, address _base, address _quote, uint32 _twapWindow) {
         // Verify that the TWAP window is sufficiently long.
-        if (_twapWindow < MIN_TWAP_WINDOW) revert Errors.PriceOracle_InvalidConfiguration();
+        if (_twapWindow < MIN_TWAP_WINDOW || _twapWindow > MAX_TWAP_WINDOW) {
+            revert Errors.PriceOracle_InvalidConfiguration();
+        }
 
         // Verify that the observations buffer is adequately sized and populated.
         (bool increaseCardinalityRequired,, bool oldestObservationSatisfied) =
