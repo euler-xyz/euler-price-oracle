@@ -34,6 +34,12 @@ contract PendleOracleTest is PendleOracleHelper {
         setUpState(s);
     }
 
+    function test_Constructor_RevertsWhen_Constructor_TwapWindowTooLong(FuzzableState memory s) public {
+        setBehavior(Behavior.Constructor_TwapWindowTooLong, true);
+        vm.expectRevert();
+        setUpState(s);
+    }
+
     function test_Constructor_RevertsWhen_Constructor_CardinalityTooSmall(FuzzableState memory s) public {
         setBehavior(Behavior.Constructor_CardinalityTooSmall, true);
         vm.expectRevert();
