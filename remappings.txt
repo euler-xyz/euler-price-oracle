@@ -7,3 +7,4 @@
 @openzeppelin/contracts=lib/openzeppelin-contracts/contracts/
 @pyth/=lib/pyth-sdk-solidity/
 ethereum-vault-connector/=lib/ethereum-vault-connector/src/
+@pendle/core-v2/=lib/pendle-core-v2-public/contracts/

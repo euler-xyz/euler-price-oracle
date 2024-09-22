@@ -23,3 +23,13 @@ function distinct(address a, address b, address c, address d) pure returns (bool
 function distinct(address a, address b, address c, address d, address e) pure returns (bool) {
     return a != b && a != c && a != d && a != e && b != c && b != d && b != e && c != d && c != e && d != e;
 }
+
+function distinct(address a, address b, address c, address d, address e, address f) pure returns (bool) {
+    return a != b && a != c && a != d && a != e && a != f && b != c && b != d && b != e && b != f && c != d && c != e
+        && c != f && d != e && d != f && e != f;
+}
+
+function distinct(address a, address b, address c, address d, address e, address f, address g) pure returns (bool) {
+    return a != b && a != c && a != d && a != e && a != f && a != g && b != c && b != d && b != e && b != f && b != g
+        && c != d && c != e && c != f && c != g && d != e && d != f && d != g && e != f && e != g && f != g;
+}
