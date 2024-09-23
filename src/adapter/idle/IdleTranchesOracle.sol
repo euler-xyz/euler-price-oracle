@@ -34,6 +34,11 @@ contract IdleTranchesOracle is BaseAdapter {
     scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, quoteDecimals);
   }
 
+  /// @notice Get the quote from the IdleCDO contract.
+  /// @param inAmount The amount of `base` to convert.
+  /// @param _base The token that is being priced.
+  /// @param _quote The token that is the unit of account.
+  /// @return The converted amount.
   function _getQuote(uint256 inAmount, address _base, address _quote) internal view override returns (uint256) {
     bool inverse = ScaleUtils.getDirectionOrRevert(_base, tranche, _quote, underlying);
     uint256 rate = IIdleCDO(cdo).virtualPrice(tranche);
