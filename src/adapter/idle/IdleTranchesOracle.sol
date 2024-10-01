@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
-import {IIdleCDO} from "./IIdleCDO.sol";
+import {IIdleCDO, IIdleTranche} from "./IIdleCDO.sol";
 
 /// @title IdleTranchesOracle
 /// @custom:security-contact security@euler.xyz
@@ -24,6 +24,8 @@ contract IdleTranchesOracle is BaseAdapter {
     /// @param _cdo The address of the CDO contract.
     /// @param _tranche The address of the tranche contract.
     constructor(address _cdo, address _tranche) {
+        require(IIdleTranche(_tranche).minter() == _cdo, "IdleTranchesOracle: Invalid tranche");
+
         cdo = _cdo;
         tranche = _tranche;
         underlying = IIdleCDO(_cdo).token();

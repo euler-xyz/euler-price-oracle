@@ -13,3 +13,8 @@ interface IIdleCDO {
     /// @return The price of 1 tranche in underlying.
     function virtualPrice(address _tranche) external view returns (uint256);
 }
+
+interface IIdleTranche {
+    /// @notice The address of the IIdleCDO.
+    function minter() external view returns (address);
+}
