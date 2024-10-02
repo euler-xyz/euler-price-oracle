@@ -21,10 +21,11 @@ contract IdleTranchesOracle is BaseAdapter {
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
 
-    /// @param _cdo The address of the CDO contract.
-    /// @param _tranche The address of the tranche contract.
+    /// @notice Deploy an IdleTranchesOracle.
+    /// @param _cdo The address of the Idle CDO contract.
+    /// @param _tranche The address of a tranche corresponding to the CDO.
     constructor(address _cdo, address _tranche) {
-        require(IIdleTranche(_tranche).minter() == _cdo, "IdleTranchesOracle: Invalid tranche");
+        if (IIdleTranche(_tranche).minter() != _cdo) revert Errors.PriceOracle_InvalidConfiguration();
 
         cdo = _cdo;
         tranche = _tranche;

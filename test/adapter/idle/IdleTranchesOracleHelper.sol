@@ -5,6 +5,7 @@ import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {IdleTranchesOracle} from "src/adapter/idle/IdleTranchesOracle.sol";
 import {IIdleCDO} from "src/adapter/idle/IIdleCDO.sol";
+import {IIdleTranche} from "src/adapter/idle/IIdleTranche.sol";
 
 contract IdleTranchesOracleHelper is AdapterHelper {
     struct FuzzableState {
@@ -38,6 +39,7 @@ contract IdleTranchesOracleHelper is AdapterHelper {
         }
 
         vm.mockCall(s.cdo, abi.encodeCall(IIdleCDO.token, ()), abi.encode(s.underlying));
+        vm.mockCall(s.tranche, abi.encodeCall(IIdleTranche.minter, ()), abi.encode(s.cdo));
 
         oracle = address(new IdleTranchesOracle(s.cdo, s.tranche));
         s.inAmount = bound(s.inAmount, 0, type(uint128).max);
