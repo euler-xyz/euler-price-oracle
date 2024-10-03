@@ -207,8 +207,6 @@ This software is **experimental** and is provided "as is" and "as available".
 
 Always include thorough tests when using Euler Price Oracles to ensure it interacts correctly with your code.
 
-Euler Price Oracles is currently undergoing security audits and should not be used in production.
-
 ## License
 
 (c) 2024 Euler Labs Ltd.
