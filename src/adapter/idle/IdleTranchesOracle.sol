@@ -3,12 +3,14 @@ pragma solidity ^0.8.0;
 
 import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
-import {IIdleCDO, IIdleTranche} from "./IIdleCDO.sol";
+import {IIdleCDO} from "./IIdleCDO.sol";
+import {IIdleTranche} from "./IIdleTranche.sol";
 
 /// @title IdleTranchesOracle
 /// @custom:security-contact security@euler.xyz
 /// @author Idle DAO (https://idle.finance)
 /// @notice Adapter for pricing Idle tranches to their respective underlying.
+/// @dev Do not use this oracle for pricing a borrowable Idle tranche.
 contract IdleTranchesOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
     string public constant name = "IdleTranchesOracle";
