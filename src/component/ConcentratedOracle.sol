@@ -24,7 +24,7 @@ contract ConcentratedOracle is BaseAdapter {
     /// @notice Exponential decay constant.
     uint256 public immutable lambda;
 
-    /// @notice Deploy a BlendedOracle.
+    /// @notice Deploy a ConcentratedOracle.
     /// @param _base The address of the base asset corresponding to the oracle.
     /// @param _quote The address of the quote asset corresponding to the oracle.
     constructor(address _base, address _quote, address _fundamentalOracle, address _marketOracle, uint256 _lambda) {
