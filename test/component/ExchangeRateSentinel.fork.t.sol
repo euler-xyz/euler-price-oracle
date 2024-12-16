@@ -6,9 +6,9 @@ import {RETH, WEETH, WETH, WSTETH} from "test/utils/EthereumAddresses.sol";
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {LidoFundamentalOracle} from "src/adapter/lido/LidoFundamentalOracle.sol";
 import {RateProviderOracle} from "src/adapter/rate/RateProviderOracle.sol";
-import {GrowthSentinel} from "src/wrapper/GrowthSentinel.sol";
+import {ExchangeRateSentinel} from "src/component/ExchangeRateSentinel.sol";
 
-contract GrowthSentinelForkTest is ForkTest {
+contract ExchangeRateSentinelForkTest is ForkTest {
     function setUp() public {
         _setUpFork(20893573);
     }
@@ -17,7 +17,8 @@ contract GrowthSentinelForkTest is ForkTest {
         vm.rollFork(12000000);
         LidoFundamentalOracle adapter = new LidoFundamentalOracle();
         uint256 maxRateGrowth = uint256(0.08e18) / 365 days;
-        GrowthSentinel sentinel = new GrowthSentinel(address(adapter), WSTETH, WETH, maxRateGrowth);
+        ExchangeRateSentinel sentinel =
+            new ExchangeRateSentinel(address(adapter), WSTETH, WETH, 0.9e18, 1.5e18, maxRateGrowth);
 
         vm.rollFork(20893573);
         uint256 adapterOutAmount = adapter.getQuote(1e18, WSTETH, WETH);
@@ -29,7 +30,8 @@ contract GrowthSentinelForkTest is ForkTest {
         vm.rollFork(13846103);
         RateProviderOracle adapter = new RateProviderOracle(RETH, WETH, BALANCER_RETH_RATE_PROVIDER);
         uint256 maxRateGrowth = uint256(0.08e18) / 365 days;
-        GrowthSentinel sentinel = new GrowthSentinel(address(adapter), RETH, WETH, maxRateGrowth);
+        ExchangeRateSentinel sentinel =
+            new ExchangeRateSentinel(address(adapter), RETH, WETH, 0.9e18, 1.5e18, maxRateGrowth);
 
         vm.rollFork(20893573);
         uint256 adapterOutAmount = adapter.getQuote(1e18, RETH, WETH);
@@ -41,7 +43,8 @@ contract GrowthSentinelForkTest is ForkTest {
         vm.rollFork(18550000);
         RateProviderOracle adapter = new RateProviderOracle(WEETH, WETH, BALANCER_WEETH_RATE_PROVIDER);
         uint256 maxRateGrowth = uint256(0.08e18) / 365 days;
-        GrowthSentinel sentinel = new GrowthSentinel(address(adapter), WEETH, WETH, maxRateGrowth);
+        ExchangeRateSentinel sentinel =
+            new ExchangeRateSentinel(address(adapter), WEETH, WETH, 0.9e18, 1.5e18, maxRateGrowth);
 
         vm.rollFork(20893573);
         uint256 adapterOutAmount = adapter.getQuote(1e18, WEETH, WETH);
