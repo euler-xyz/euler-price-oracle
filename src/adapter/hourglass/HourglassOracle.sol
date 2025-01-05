@@ -6,6 +6,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 import {IHourglassDepositor} from "./IHourglassDepositor.sol";
 import {IHourglassERC20TBT} from "./IHourglassERC20TBT.sol";
+import "forge-std/console.sol";
 
 contract HourglassOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
@@ -16,7 +17,7 @@ contract HourglassOracle is BaseAdapter {
     /// @notice The address of the quote asset (e.g., underlying asset).
     address public immutable quote;
 
-    /// @notice Per second discount rate (scaled by baseAssetDecimals).
+    /// @notice Per second discount rate (scaled by 1e18).
     uint256 public immutable discountRate;
 
     /// @notice Address of the Hourglass system.
@@ -82,23 +83,39 @@ contract HourglassOracle is BaseAdapter {
         uint256 solvencyRatio = _getSolvencyRatio();
 
         // Calculate present value using linear discounting, baseTokenDecimals precision
-        uint256 presentValue = _getPresentValue(inAmount, solvencyRatio);
-
+        uint256 presentValue = _getUnitPresentValue(solvencyRatio);
+        
         // Return scaled output amount
         return ScaleUtils.calcOutAmount(inAmount, presentValue, scale, inverse);
     }
 
     /// @notice Calculate the present value using linear discounting.
-    /// @param inAmount The input amount of base tokens (scaled by baseTokenDecimals).
     /// @param solvencyRatio Solvency ratio of the Hourglass system (scaled by baseTokenDecimals).
     /// @return presentValue The present value of the input amount (scaled by baseTokenDecimals).
-    function _getPresentValue(uint256 inAmount, uint256 solvencyRatio) internal view returns (uint256 presentValue) {
+    function _getUnitPresentValue(uint256 solvencyRatio)
+        internal
+        view
+        returns (uint256)
+    {
+        // Both inAmount and solvencyRatio have baseTokenDecimals precision
         uint256 baseTokenScale = 10 ** baseTokenDecimals;
-        uint256 timeToMaturity = _getTimeToMaturity();
-        uint256 discountFactor =
-            (baseTokenScale * baseTokenScale) / (baseTokenScale + ((discountRate * timeToMaturity)));
 
-        presentValue = (inAmount * solvencyRatio * discountFactor) / (baseTokenScale * baseTokenScale);
+        uint256 timeToMaturity = _getTimeToMaturity();
+
+        // The expression (1e18 + discountRate * timeToMaturity) is ~1e18 scale
+        // We want the denominator to be scaled to baseTokenDecimals so that when
+        // we divide the (inAmount * solvencyRatio) [which is 2 * baseTokenDecimals in scale],
+        // we end up back with baseTokenDecimals in scale.
+
+        uint256 scaledDenominator = (
+            (1e18 + (discountRate * timeToMaturity))     // ~1e18 scale
+            * baseTokenScale                             // multiply by 1e(baseTokenDecimals)
+        ) / 1e18;                                        // now scaledDenominator has baseTokenDecimals precision
+
+        // (inAmount * solvencyRatio) is scale = 2 * baseTokenDecimals
+        // dividing by scaledDenominator (scale = baseTokenDecimals)
+        // => result has scale = baseTokenDecimals
+        return (baseTokenScale * solvencyRatio) / scaledDenominator;
     }
 
     /// @notice Fetch the time-to-maturity.
