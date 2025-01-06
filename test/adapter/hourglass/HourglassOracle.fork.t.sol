@@ -14,12 +14,12 @@ import {Errors} from "src/lib/Errors.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 import {
-    HOURGLASS_LBTCV_01MAR2025_DEPOSITOR, 
-    HOURGLASS_LBTCV_01MAR2025_PT, 
-    HOURGLASS_LBTCV_01MAR2025_CT, 
-    HOURGLASS_LBTCV_01MAR2025_UNDERLYING, 
-    HOURGLASS_LBTCV_01DEC2024_DEPOSITOR, 
-    HOURGLASS_LBTCV_01DEC2024_PT, 
+    HOURGLASS_LBTCV_01MAR2025_DEPOSITOR,
+    HOURGLASS_LBTCV_01MAR2025_PT,
+    HOURGLASS_LBTCV_01MAR2025_CT,
+    HOURGLASS_LBTCV_01MAR2025_UNDERLYING,
+    HOURGLASS_LBTCV_01DEC2024_DEPOSITOR,
+    HOURGLASS_LBTCV_01DEC2024_PT,
     HOURGLASS_LBTCV_01DEC2024_UNDERLYING
 } from "test/adapter/hourglass/HourglassAddresses.sol";
 
@@ -49,16 +49,16 @@ contract HourglassOracleForkTest is ForkTest {
      */
     function test_Constructor_Integrity_Hourglass() public {
         HourglassOracle oracle = new HourglassOracle(
-            HOURGLASS_LBTCV_01MAR2025_PT,         // base
+            HOURGLASS_LBTCV_01MAR2025_PT, // base
             HOURGLASS_LBTCV_01MAR2025_UNDERLYING, // quote
-            DISCOUNT_RATE_PER_SECOND              // discount rate
+            DISCOUNT_RATE_PER_SECOND // discount rate
         );
 
         // The contract returns "HourglassOracle"
         assertEq(oracle.name(), "HourglassOracle");
 
         // The base/quote we passed in
-        assertEq(oracle.base(),  HOURGLASS_LBTCV_01MAR2025_PT);
+        assertEq(oracle.base(), HOURGLASS_LBTCV_01MAR2025_PT);
         assertEq(oracle.quote(), HOURGLASS_LBTCV_01MAR2025_UNDERLYING);
 
         // The discountRate we provided
@@ -79,7 +79,7 @@ contract HourglassOracleForkTest is ForkTest {
     function test_GetQuote_ActiveMarket_LBTCV_01MAR2025_PT() public {
         // Deploy the oracle
         HourglassOracle oracle = new HourglassOracle(
-            HOURGLASS_LBTCV_01MAR2025_PT,         // base
+            HOURGLASS_LBTCV_01MAR2025_PT, // base
             HOURGLASS_LBTCV_01MAR2025_UNDERLYING, // quote
             DISCOUNT_RATE_PER_SECOND
         );
@@ -89,11 +89,12 @@ contract HourglassOracleForkTest is ForkTest {
         assertApproxEqRel(outAmount, 0.99707e8, REL_PRECISION);
 
         // Underlying -> PT
-        uint256 outAmountInv = oracle.getQuote(outAmount, HOURGLASS_LBTCV_01MAR2025_UNDERLYING, HOURGLASS_LBTCV_01MAR2025_PT);
+        uint256 outAmountInv =
+            oracle.getQuote(outAmount, HOURGLASS_LBTCV_01MAR2025_UNDERLYING, HOURGLASS_LBTCV_01MAR2025_PT);
         assertApproxEqRel(outAmountInv, 1e8, REL_PRECISION);
     }
 
-        /**
+    /**
      * @dev Example "active market" test - calls getQuote() both ways (CT -> underlying, and underlying -> CT).
      * This is analogous to your Pendle tests where you check the rate with no slippage,
      * but you need to know what 1 CT is expected to be in "underlying" at this block.
@@ -101,7 +102,7 @@ contract HourglassOracleForkTest is ForkTest {
     function test_GetQuote_ActiveMarket_LBTCV_01MAR2025_CT() public {
         // Deploy the oracle
         HourglassOracle oracle = new HourglassOracle(
-            HOURGLASS_LBTCV_01MAR2025_CT,         // base
+            HOURGLASS_LBTCV_01MAR2025_CT, // base
             HOURGLASS_LBTCV_01MAR2025_UNDERLYING, // quote
             DISCOUNT_RATE_PER_SECOND
         );
@@ -111,7 +112,8 @@ contract HourglassOracleForkTest is ForkTest {
         assertApproxEqRel(outAmount, 0.99707e8, REL_PRECISION);
 
         // Underlying -> PT
-        uint256 outAmountInv = oracle.getQuote(outAmount, HOURGLASS_LBTCV_01MAR2025_UNDERLYING, HOURGLASS_LBTCV_01MAR2025_CT);
+        uint256 outAmountInv =
+            oracle.getQuote(outAmount, HOURGLASS_LBTCV_01MAR2025_UNDERLYING, HOURGLASS_LBTCV_01MAR2025_CT);
         assertApproxEqRel(outAmountInv, 1e8, REL_PRECISION);
     }
 
@@ -123,9 +125,7 @@ contract HourglassOracleForkTest is ForkTest {
         // If the market for LBTCV_01MAR2025 is expired at the chosen block, you can test that 1 PT = 1 underlying
         // or whatever the final settlement is.
         HourglassOracle oracle = new HourglassOracle(
-            HOURGLASS_LBTCV_01DEC2024_PT,
-            HOURGLASS_LBTCV_01DEC2024_UNDERLYING,
-            DISCOUNT_RATE_PER_SECOND
+            HOURGLASS_LBTCV_01DEC2024_PT, HOURGLASS_LBTCV_01DEC2024_UNDERLYING, DISCOUNT_RATE_PER_SECOND
         );
 
         uint256 outAmount = oracle.getQuote(1e8, HOURGLASS_LBTCV_01DEC2024_PT, HOURGLASS_LBTCV_01DEC2024_UNDERLYING);

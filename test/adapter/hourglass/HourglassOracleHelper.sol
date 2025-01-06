@@ -6,8 +6,7 @@ import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {HourglassOracle} from "src/adapter/hourglass/HourglassOracle.sol";
 import {IHourglassDepositor} from "src/adapter/hourglass/IHourglassDepositor.sol";
-    import "forge-std/console.sol";
-
+import "forge-std/console.sol";
 
 contract HourglassOracleHelper is AdapterHelper {
     struct FuzzableState {
@@ -28,6 +27,7 @@ contract HourglassOracleHelper is AdapterHelper {
         uint256 ctSupply;
         // Environment
         uint256 inAmount;
+        bool baseIsPt;
     }
 
     function setUpState(FuzzableState memory s) internal {
@@ -48,8 +48,8 @@ contract HourglassOracleHelper is AdapterHelper {
 
         // Ensure ptSupply and ctSupply add up to underlyingTokenBalance
         uint256 maxSupply = s.underlyingTokenBalance;
-        s.ptSupply = bound(s.ptSupply, 0, maxSupply);
-        s.ctSupply = maxSupply - s.ptSupply;
+        s.ptSupply = bound(s.ptSupply, 0, s.underlyingTokenBalance);
+        s.ctSupply = s.underlyingTokenBalance - s.ptSupply;
 
         s.expiry = bound(s.expiry, block.timestamp, block.timestamp + 365 days);
         s.inAmount = bound(s.inAmount, 0, 1e18);
@@ -68,10 +68,9 @@ contract HourglassOracleHelper is AdapterHelper {
         console.log("s.expiry: %s", s.expiry);
         console.log("s.inAmount: %s", s.inAmount);
 
-
         // Assume distinct addresses
-        vm.assume(distinct(s.base, s.quote, s.depositor, s.pt, s.ct, s.pyt, s.underlyingToken));
-        vm.assume(s.base != s.quote);
+        vm.assume(distinct(s.quote, s.depositor, s.pt, s.ct, s.pyt, s.underlyingToken));
+        s.base = s.baseIsPt ? s.pt : s.ct;
 
         // Prepare the dynamic array
         address[] memory tokens = new address[](3);
@@ -92,25 +91,13 @@ contract HourglassOracleHelper is AdapterHelper {
             abi.encode(s.underlyingToken)
         );
 
-        vm.mockCall(
-            s.depositor,
-            abi.encodeWithSelector(IHourglassDepositor.maturity.selector),
-            abi.encode(s.expiry)
-        );
+        vm.mockCall(s.depositor, abi.encodeWithSelector(IHourglassDepositor.maturity.selector), abi.encode(s.expiry));
 
         // Mock the Principal Token
-        vm.mockCall(
-            s.pt,
-            abi.encodeWithSelector(IERC20.totalSupply.selector),
-            abi.encode(s.ptSupply)
-        );
+        vm.mockCall(s.pt, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(s.ptSupply));
 
         // Mock the Combined Token
-        vm.mockCall(
-            s.ct,
-            abi.encodeWithSelector(IERC20.totalSupply.selector),
-            abi.encode(s.ctSupply)
-        );
+        vm.mockCall(s.ct, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(s.ctSupply));
 
         // Mock the Underlying Token
         vm.mockCall(
@@ -148,7 +135,7 @@ contract HourglassOracleHelper is AdapterHelper {
         oracle = address(new HourglassOracle(s.base, s.quote, s.discountRate));
 
         HourglassOracle hourglassOracle = HourglassOracle(oracle);
-        console.log("oracle dr: %s", hourglassOracle.discountRate());        // Re-bound s.inAmount to some smaller range if needed
+        console.log("oracle dr: %s", hourglassOracle.discountRate()); // Re-bound s.inAmount to some smaller range if needed
         s.inAmount = bound(s.inAmount, 0, type(uint128).max);
     }
 }

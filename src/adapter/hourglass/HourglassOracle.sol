@@ -6,11 +6,15 @@ import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 import {IHourglassDepositor} from "./IHourglassDepositor.sol";
 import {IHourglassERC20TBT} from "./IHourglassERC20TBT.sol";
-import "forge-std/console.sol";
 
 contract HourglassOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
     string public constant name = "HourglassOracle";
+
+    /// @notice The number of decimals for the base token.
+    uint256 internal immutable baseTokenScale;
+    /// @notice The scale factors used for decimal conversions.
+    Scale internal immutable scale;
 
     /// @notice The address of the base asset (e.g., PT or CT).
     address public immutable base;
@@ -20,11 +24,8 @@ contract HourglassOracle is BaseAdapter {
     /// @notice Per second discount rate (scaled by 1e18).
     uint256 public immutable discountRate;
 
-    /// @notice Address of the Hourglass system.
+    /// @notice Address of the Hourglass depositor contract (pool-specific).
     IHourglassDepositor public immutable hourglassDepositor;
-
-    /// @notice The scale factors used for decimal conversions.
-    Scale internal immutable scale;
 
     /// @notice The address of the combined token.
     address public immutable combinedToken;
@@ -33,15 +34,10 @@ contract HourglassOracle is BaseAdapter {
     /// @notice The address of the underlying token.
     address public immutable underlyingToken;
 
-    /// @notice The number of decimals for the base token.
-    uint8 public immutable baseTokenDecimals;
-    /// @notice The number of decimals for the quote token.
-    uint8 public immutable quoteTokenDecimals;
-
     /// @notice Deploy the HourglassLinearDiscountOracle.
     /// @param _base The address of the base asset (PT or CT).
     /// @param _quote The address of the quote asset (underlying token).
-    /// @param _discountRate Discount rate (secondly, scaled by baseAssetDecimals).
+    /// @param _discountRate Discount rate (secondly, scaled by 1e18).
     constructor(address _base, address _quote, uint256 _discountRate) {
         if (_discountRate == 0) revert Errors.PriceOracle_InvalidConfiguration();
 
@@ -49,13 +45,7 @@ contract HourglassOracle is BaseAdapter {
         base = _base;
         quote = _quote;
         discountRate = _discountRate;
-
-        // Fetch and store Hourglass depositor
         hourglassDepositor = IHourglassDepositor(IHourglassERC20TBT(_base).depositor());
-
-        // Fetch token decimals
-        uint8 baseDecimals = _getDecimals(_base);
-        uint8 quoteDecimals = _getDecimals(_quote);
 
         // Fetch token addresses
         address[] memory tokens = hourglassDepositor.getTokens();
@@ -63,12 +53,14 @@ contract HourglassOracle is BaseAdapter {
         principalToken = tokens[1];
         underlyingToken = hourglassDepositor.getUnderlying();
 
-        // Calculate scale factors for decimal conversions
-        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, quoteDecimals);
+        // Only allow PT or CT as base token
+        if (_base != combinedToken && _base != principalToken) revert Errors.PriceOracle_InvalidConfiguration();
 
-        // Store decimals for normalization
-        baseTokenDecimals = baseDecimals;
-        quoteTokenDecimals = quoteDecimals;
+        // Calculate scale factors for decimal conversions
+        uint8 baseDecimals = _getDecimals(_base);
+        uint8 quoteDecimals = _getDecimals(_quote);
+        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, quoteDecimals);
+        baseTokenScale = 10 ** baseDecimals;
     }
 
     /// @notice Get a dynamic quote using linear discounting and solvency adjustment.
@@ -84,7 +76,7 @@ contract HourglassOracle is BaseAdapter {
 
         // Calculate present value using linear discounting, baseTokenDecimals precision
         uint256 presentValue = _getUnitPresentValue(solvencyRatio);
-        
+
         // Return scaled output amount
         return ScaleUtils.calcOutAmount(inAmount, presentValue, scale, inverse);
     }
@@ -92,15 +84,13 @@ contract HourglassOracle is BaseAdapter {
     /// @notice Calculate the present value using linear discounting.
     /// @param solvencyRatio Solvency ratio of the Hourglass system (scaled by baseTokenDecimals).
     /// @return presentValue The present value of the input amount (scaled by baseTokenDecimals).
-    function _getUnitPresentValue(uint256 solvencyRatio)
-        internal
-        view
-        returns (uint256)
-    {
-        // Both inAmount and solvencyRatio have baseTokenDecimals precision
-        uint256 baseTokenScale = 10 ** baseTokenDecimals;
+    function _getUnitPresentValue(uint256 solvencyRatio) internal view returns (uint256) {
+        uint256 maturityTime = hourglassDepositor.maturity();
 
-        uint256 timeToMaturity = _getTimeToMaturity();
+        // Already matured, so PV = solvencyRatio.
+        if (maturityTime <= block.timestamp) return solvencyRatio;
+
+        uint256 timeToMaturity = maturityTime - block.timestamp;
 
         // The expression (1e18 + discountRate * timeToMaturity) is ~1e18 scale
         // We want the denominator to be scaled to baseTokenDecimals so that when
@@ -108,9 +98,10 @@ contract HourglassOracle is BaseAdapter {
         // we end up back with baseTokenDecimals in scale.
 
         uint256 scaledDenominator = (
-            (1e18 + (discountRate * timeToMaturity))     // ~1e18 scale
-            * baseTokenScale                             // multiply by 1e(baseTokenDecimals)
-        ) / 1e18;                                        // now scaledDenominator has baseTokenDecimals precision
+            (1e18 + (discountRate * timeToMaturity)) // ~1e18 scale
+                * baseTokenScale
+        ) // multiply by 1e(baseTokenDecimals)
+            / 1e18; // now scaledDenominator has baseTokenDecimals precision
 
         // (inAmount * solvencyRatio) is scale = 2 * baseTokenDecimals
         // dividing by scaledDenominator (scale = baseTokenDecimals)
@@ -118,23 +109,22 @@ contract HourglassOracle is BaseAdapter {
         return (baseTokenScale * solvencyRatio) / scaledDenominator;
     }
 
-    /// @notice Fetch the time-to-maturity.
-    /// @return timeToMaturity Time-to-maturity in seconds.
-    function _getTimeToMaturity() internal view returns (uint256) {
-        uint256 maturityTime = hourglassDepositor.maturity();
-        return maturityTime > block.timestamp ? maturityTime - block.timestamp : 0;
-    }
-
     /// @notice Fetch the solvency ratio of the Hourglass system.
-    /// @return solvencyRatio Solvency ratio of the Hourglass system (scaled by _base token decimals).
-    function _getSolvencyRatio() internal view returns (uint256 solvencyRatio) {
-        uint256 baseTokenScale = 10 ** baseTokenDecimals;
-        uint256 underlyingTokenBalance = IERC20(underlyingToken).balanceOf(address(hourglassDepositor));
+    /// @dev The ratio is capped to 1. The returned value is scaled by baseTokenDecimals.
+    /// @return solvencyRatio Solvency ratio of the Hourglass system (scaled by baseTokenDecimals).
+    function _getSolvencyRatio() internal view returns (uint256) {
         uint256 ptSupply = IERC20(principalToken).totalSupply();
         uint256 ctSupply = IERC20(combinedToken).totalSupply();
-
         uint256 totalClaims = ptSupply + ctSupply;
+        if (totalClaims == 0) return baseTokenScale;
 
-        return (totalClaims > 0) ? (underlyingTokenBalance * baseTokenScale) / totalClaims : baseTokenScale;
+        uint256 underlyingTokenBalance = IERC20(underlyingToken).balanceOf(address(hourglassDepositor));
+
+        // Return the solvency as a ratio capped to 1.
+        if (underlyingTokenBalance < totalClaims) {
+            return underlyingTokenBalance * baseTokenScale / totalClaims;
+        } else {
+            return baseTokenScale;
+        }
     }
 }
