@@ -44,7 +44,8 @@ contract HourglassOracleTest is HourglassOracleHelper {
         assertEq(bidOutAmount, outAmount);
         assertEq(askOutAmount, outAmount);
         uint256 outAmountInv = HourglassOracle(oracle).getQuote(s.inAmount, s.quote, s.base);
-        (uint256 bidOutAmountInv, uint256 askOutAmountInv) = HourglassOracle(oracle).getQuotes(s.inAmount, s.quote, s.base);
+        (uint256 bidOutAmountInv, uint256 askOutAmountInv) =
+            HourglassOracle(oracle).getQuotes(s.inAmount, s.quote, s.base);
         assertEq(bidOutAmountInv, outAmountInv);
         assertEq(askOutAmountInv, outAmountInv);
     }
