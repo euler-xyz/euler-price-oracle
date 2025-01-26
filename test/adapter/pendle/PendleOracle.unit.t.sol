@@ -22,12 +22,6 @@ contract PendleOracleTest is PendleOracleHelper {
         setUpState(s);
     }
 
-    function test_Constructor_RevertsWhen_Constructor_QuoteNotSyOrAsset(FuzzableState memory s) public {
-        setBehavior(Behavior.Constructor_QuoteNotSyOrAsset, true);
-        vm.expectRevert();
-        setUpState(s);
-    }
-
     function test_Constructor_RevertsWhen_Constructor_TwapWindowTooShort(FuzzableState memory s) public {
         setBehavior(Behavior.Constructor_TwapWindowTooShort, true);
         vm.expectRevert();

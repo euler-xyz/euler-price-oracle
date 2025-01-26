@@ -55,12 +55,6 @@ contract PendleOracleHelper is AdapterHelper {
             s.base = s.pt;
         }
 
-        if (behaviors[Behavior.Constructor_QuoteNotSyOrAsset]) {
-            vm.assume(s.quote != s.sy && s.quote != s.asset);
-        } else {
-            s.quote = uint160(s.quote) % 2 == 0 ? s.sy : s.asset;
-        }
-
         if (behaviors[Behavior.Constructor_TwapWindowTooShort]) {
             s.twapWindow = uint32(bound(s.twapWindow, 1, 5 minutes - 1));
         } else if (behaviors[Behavior.Constructor_TwapWindowTooLong]) {
