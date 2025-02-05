@@ -6,16 +6,17 @@ import {IPPrincipalToken} from "@pendle/core-v2/interfaces/IPPrincipalToken.sol"
 import {IPPYLpOracle} from "@pendle/core-v2/interfaces/IPPYLpOracle.sol";
 import {IStandardizedYield} from "@pendle/core-v2/interfaces/IStandardizedYield.sol";
 import {PendlePYOracleLib} from "@pendle/core-v2/oracles/PendlePYOracleLib.sol";
+import {PendleLpOracleLib} from "@pendle/core-v2/oracles/PendleLpOracleLib.sol";
 import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
-/// @title PendleOracle
+/// @title PendleUniversalOracle
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Adapter for Pendle PT Oracle.
-contract PendleOracle is BaseAdapter {
+/// @notice Adapter for Pendle PT and LP Oracle.
+contract PendleUniversalOracle is BaseAdapter {
     /// @inheritdoc IPriceOracle
-    string public constant name = "PendleOracle";
+    string public constant name = "PendleUniversalOracle";
     /// @dev The minimum length of the TWAP window.
     uint32 internal constant MIN_TWAP_WINDOW = 5 minutes;
     /// @dev The maximum length of the TWAP window.
@@ -35,13 +36,14 @@ contract PendleOracle is BaseAdapter {
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
 
-    /// @notice Deploy a PendleOracle.
-    /// @dev The oracle can price PT/SY and PT/Asset. Whether to use SY or Asset depends on the underlying.
+    /// @notice Deploy a PendleUniversalOracle.
+    /// @dev The oracle can price Pendle PT,LP to SY,Asset. Whether to use SY or Asset depends on the underlying.
     /// Consult https://docs.pendle.finance/Developers/Contracts/StandardizedYield#standard-sys for more information.
     /// Before deploying this adapter ensure that the oracle is initialized and the observation buffer is filled.
+    /// Note that this adapter allows specifing any `quote` as the underlying asset.
     /// @param _pendleOracle The address of the PendlePYLpOracle contract. Used only in the constructor.
     /// @param _pendleMarket The address of the Pendle market.
-    /// @param _base The address of the PT.
+    /// @param _base The address of the PT or LP token.
     /// @param _quote The address of the SY token or the underlying asset.
     /// @param _twapWindow The desired length of the twap window.
     constructor(address _pendleOracle, address _pendleMarket, address _base, address _quote, uint32 _twapWindow) {
@@ -59,19 +61,21 @@ contract PendleOracle is BaseAdapter {
 
         (IStandardizedYield sy, IPPrincipalToken pt,) = IPMarket(_pendleMarket).readTokens();
 
-        // Base must be PT
-        if (_base != address(pt)) revert Errors.PriceOracle_InvalidConfiguration();
-
-        // Quote must be SY or Asset.
-        if (_quote == address(sy)) {
-            getRate = PendlePYOracleLib.getPtToSyRate;
-        } else {
-            (, address asset,) = sy.assetInfo();
-            if (_quote == asset) {
-                getRate = PendlePYOracleLib.getPtToAssetRate;
+        // Note: we allow using any asset pricing to any token.
+        if (_base == address(pt)) {
+            if (_quote == address(sy)) {
+                getRate = PendlePYOracleLib.getPtToSyRate;
             } else {
-                revert Errors.PriceOracle_InvalidConfiguration();
+                getRate = PendlePYOracleLib.getPtToAssetRate;
             }
+        } else if (_base == _pendleMarket) {
+            if (_quote == address(sy)) {
+                getRate = PendleLpOracleLib.getLpToSyRate;
+            } else {
+                getRate = PendleLpOracleLib.getLpToAssetRate;
+            }
+        } else {
+            revert Errors.PriceOracle_InvalidConfiguration();
         }
 
         pendleMarket = _pendleMarket;
