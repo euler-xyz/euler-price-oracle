@@ -12,7 +12,7 @@ contract CurveEMAOracleTest is CurveEMAOracleHelper {
         assertEq(CurveEMAOracle(oracle).pool(), s.pool);
         assertEq(CurveEMAOracle(oracle).base(), s.base);
         assertEq(CurveEMAOracle(oracle).quote(), s.coins_0);
-        assertEq(CurveEMAOracle(oracle).baseIndex(), s.baseIndex);
+        assertEq(CurveEMAOracle(oracle).priceOracleIndex(), s.priceOracleIndex);
     }
 
     function test_Constructor_Integrity_LPMode(FuzzableState memory s) public {

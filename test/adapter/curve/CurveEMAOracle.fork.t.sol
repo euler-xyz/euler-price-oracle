@@ -28,7 +28,7 @@ contract CurveEMAOracleForkTest is ForkTest {
         assertEq(oracle.pool(), CURVE_TRICRYPTOV2_POOL);
         assertEq(oracle.base(), WBTC);
         assertEq(oracle.quote(), USDT);
-        assertEq(oracle.baseIndex(), 0);
+        assertEq(oracle.priceOracleIndex(), 0);
 
         uint256 outAmount = oracle.getQuote(1e8, WBTC, USDT);
         assertApproxEqRel(outAmount, 104574e6, REL_PRECISION);
@@ -42,7 +42,7 @@ contract CurveEMAOracleForkTest is ForkTest {
         assertEq(oracle.pool(), CURVE_TRICRYPTOV2_POOL);
         assertEq(oracle.base(), WETH);
         assertEq(oracle.quote(), USDT);
-        assertEq(oracle.baseIndex(), 1);
+        assertEq(oracle.priceOracleIndex(), 1);
 
         uint256 outAmount = oracle.getQuote(1e18, WETH, USDT);
         assertApproxEqRel(outAmount, 3300e6, REL_PRECISION);
@@ -56,7 +56,7 @@ contract CurveEMAOracleForkTest is ForkTest {
         assertEq(oracle.pool(), CURVE_CRVUSD_USDC_POOL);
         assertEq(oracle.base(), CRVUSD);
         assertEq(oracle.quote(), USDC);
-        assertEq(oracle.baseIndex(), type(uint256).max);
+        assertEq(oracle.priceOracleIndex(), type(uint256).max);
 
         uint256 outAmount = oracle.getQuote(1e18, CRVUSD, USDC);
         assertApproxEqRel(outAmount, 1e6, REL_PRECISION);
@@ -70,7 +70,7 @@ contract CurveEMAOracleForkTest is ForkTest {
         assertEq(oracle.pool(), CURVE_PT_WSTUSR_WSTUSR_POOL);
         assertEq(oracle.base(), SPECTRA_PT_WSTUSR);
         assertEq(oracle.quote(), WSTUSR);
-        assertEq(oracle.baseIndex(), type(uint256).max);
+        assertEq(oracle.priceOracleIndex(), type(uint256).max);
 
         uint256 outAmount = oracle.getQuote(1e18, SPECTRA_PT_WSTUSR, WSTUSR);
         assertApproxEqRel(outAmount, 0.92201e18, REL_PRECISION);
@@ -84,7 +84,7 @@ contract CurveEMAOracleForkTest is ForkTest {
         assertEq(oracle.pool(), CURVE_STABLENG_USD0_POOL);
         assertEq(oracle.base(), USD0PP);
         assertEq(oracle.quote(), USD0);
-        assertEq(oracle.baseIndex(), 0);
+        assertEq(oracle.priceOracleIndex(), 0);
 
         uint256 outAmount = oracle.getQuote(1e18, USD0PP, USD0);
         assertApproxEqRel(outAmount, 0.9237e18, REL_PRECISION);
