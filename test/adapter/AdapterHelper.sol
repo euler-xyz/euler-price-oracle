@@ -20,6 +20,7 @@ contract AdapterHelper is Test {
         FeedReturnsExpoTooLow,
         FeedReturnsExpoTooHigh,
         Constructor_BaseNotPt,
+        Constructor_QuoteNotSyOrAsset,
         Constructor_CardinalityTooSmall,
         Constructor_TooFewObservations,
         Constructor_NoPool,
