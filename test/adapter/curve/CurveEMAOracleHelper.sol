@@ -14,7 +14,7 @@ contract CurveEMAOracleHelper is AdapterHelper {
         address coins_0;
         address pool;
         address base;
-        uint256 baseIndex;
+        uint256 priceOracleIndex;
         uint8 baseDecimals;
         uint8 quoteDecimals;
         // Pool Oracle
@@ -31,9 +31,9 @@ contract CurveEMAOracleHelper is AdapterHelper {
         vm.assume(distinct(s.base, s.coins_0, s.pool));
 
         if (behaviors[Behavior.Constructor_LpMode]) {
-            s.baseIndex = type(uint256).max;
+            s.priceOracleIndex = type(uint256).max;
         } else {
-            vm.assume(s.baseIndex != type(uint256).max);
+            vm.assume(s.priceOracleIndex != type(uint256).max);
         }
 
         vm.mockCall(s.pool, abi.encodeWithSelector(ICurvePool.coins.selector, 0), abi.encode(s.coins_0));
@@ -44,17 +44,17 @@ contract CurveEMAOracleHelper is AdapterHelper {
         vm.mockCall(s.base, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.baseDecimals));
         vm.mockCall(s.coins_0, abi.encodeWithSelector(IERC20.decimals.selector), abi.encode(s.quoteDecimals));
 
-        oracle = address(new CurveEMAOracle(s.pool, s.base, s.baseIndex));
+        oracle = address(new CurveEMAOracle(s.pool, s.base, s.priceOracleIndex));
 
         s.price = bound(s.price, 1, 1e27);
         s.inAmount = bound(s.inAmount, 0, type(uint128).max);
 
-        if (s.baseIndex == type(uint256).max) {
+        if (s.priceOracleIndex == type(uint256).max) {
             vm.mockCall(s.pool, abi.encodeWithSelector(bytes4(keccak256("price_oracle()"))), abi.encode(s.price));
         } else {
             vm.mockCall(
                 s.pool,
-                abi.encodeWithSelector(bytes4(keccak256("price_oracle(uint256)")), s.baseIndex),
+                abi.encodeWithSelector(bytes4(keccak256("price_oracle(uint256)")), s.priceOracleIndex),
                 abi.encode(s.price)
             );
         }

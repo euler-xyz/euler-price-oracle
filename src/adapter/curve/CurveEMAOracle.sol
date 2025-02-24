@@ -18,28 +18,29 @@ contract CurveEMAOracle is BaseAdapter {
     address public immutable base;
     /// @notice The address of the quote asset, must be `pool.coins[0]`.
     address public immutable quote;
-    /// @notice The index of the base asset in the Curve pool.
+    /// @notice The index in `price_oracle` corresponding to the base asset. 
+    /// @dev Note that indices in `price_oracle` are shifted by 1, i.e. `0` corresponds to `coins[1]`.
     /// @dev If type(uint256).max, then the adapter will call `price_oracle()`.
-    /// @dev Else the adapter will call the indexed price method `price_oracle(baseIndex)`.
-    uint256 public immutable baseIndex;
+    /// @dev Else the adapter will call the indexed price method `price_oracle(priceOracleIndex)`.
+    uint256 public immutable priceOracleIndex;
     /// @notice The scale factors used for decimal conversions.
     Scale internal immutable scale;
 
     /// @notice Deploy a CurveEMAOracle.
     /// @param _pool The address of the Curve pool.
     /// @param _base The address of the base asset.
-    /// @param _baseIndex The index of the base asset in the Curve pool.
+    /// @param _priceOracleIndex The index in `price_oracle` corresponding to the base asset. 
     /// @dev The quote is always `pool.coins[0]`.
-    /// If `baseIndex` is `type(uint256).max`, then the adapter will call the non-indexed price method `price_oracle()`
+    /// If `priceOracleIndex` is `type(uint256).max`, then the adapter will call the non-indexed price method `price_oracle()`
     /// WARNING: Some StableSwap-NG pools deployed before Dec-12-2023 have a known oracle vulerability.
     /// See (https://docs.curve.fi/stableswap-exchange/stableswap-ng/pools/oracles/#price-oracles) for more details.
     /// Additionally, verify that the pool has enough liquidity before deploying this adapter.
-    constructor(address _pool, address _base, uint256 _baseIndex) {
+    constructor(address _pool, address _base, uint256 _priceOracleIndex) {
         pool = _pool;
         base = _base;
         // The EMA oracle returns a price quoted in `coins[0]`.
         quote = ICurvePool(_pool).coins(0);
-        baseIndex = _baseIndex;
+        priceOracleIndex = _priceOracleIndex;
         uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
         scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, 18);
@@ -54,10 +55,10 @@ contract CurveEMAOracle is BaseAdapter {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
         uint256 unitPrice;
-        if (baseIndex == type(uint256).max) {
+        if (priceOracleIndex == type(uint256).max) {
             unitPrice = ICurvePool(pool).price_oracle();
         } else {
-            unitPrice = ICurvePool(pool).price_oracle(baseIndex);
+            unitPrice = ICurvePool(pool).price_oracle(priceOracleIndex);
         }
 
         return ScaleUtils.calcOutAmount(inAmount, unitPrice, scale, inverse);
