@@ -18,7 +18,7 @@ contract CurveEMAOracle is BaseAdapter {
     address public immutable base;
     /// @notice The address of the quote asset, must be `pool.coins[0]`.
     address public immutable quote;
-    /// @notice The index in `price_oracle` corresponding to the base asset. 
+    /// @notice The index in `price_oracle` corresponding to the base asset.
     /// @dev Note that indices in `price_oracle` are shifted by 1, i.e. `0` corresponds to `coins[1]`.
     /// @dev If type(uint256).max, then the adapter will call `price_oracle()`.
     /// @dev Else the adapter will call the indexed price method `price_oracle(priceOracleIndex)`.
@@ -29,7 +29,7 @@ contract CurveEMAOracle is BaseAdapter {
     /// @notice Deploy a CurveEMAOracle.
     /// @param _pool The address of the Curve pool.
     /// @param _base The address of the base asset.
-    /// @param _priceOracleIndex The index in `price_oracle` corresponding to the base asset. 
+    /// @param _priceOracleIndex The index in `price_oracle` corresponding to the base asset.
     /// @dev The quote is always `pool.coins[0]`.
     /// If `priceOracleIndex` is `type(uint256).max`, then the adapter will call the non-indexed price method `price_oracle()`
     /// WARNING: Some StableSwap-NG pools deployed before Dec-12-2023 have a known oracle vulerability.

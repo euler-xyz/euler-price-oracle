@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {AdapterPropTest} from "test/adapter/AdapterPropTest.sol";
-import {PendleOracleHelper} from "test/adapter/pendle/PendleOracleHelper.sol";
+import {PendleUniversalOracleHelper} from "test/adapter/pendle/PendleUniversalOracle/PendleUniversalOracleHelper.sol";
 
-contract PendleOraclePropTest is PendleOracleHelper, AdapterPropTest {
+contract PendleUniversalOraclePropTest is PendleUniversalOracleHelper, AdapterPropTest {
     function testProp_Bidirectional(FuzzableState memory s, Prop_Bidirectional memory p) public {
         setUpPropTest(s);
         checkProp(p);
