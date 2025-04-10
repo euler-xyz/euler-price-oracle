@@ -99,7 +99,6 @@ contract StorkOracle is BaseAdapter {
             if (aheadness > MAX_AHEADNESS) revert Errors.PriceOracle_InvalidAnswer();
         }
 
-        // Verify that the price is positive and within the confidence width.
         if (v.quantizedValue <= 0) {
             revert Errors.PriceOracle_InvalidAnswer();
         }
