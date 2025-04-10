@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {ForkTest} from "test/utils/ForkTest.sol";
 import {StorkOracle} from "../../../src/adapter/stork/StorkOracle.sol";
 import {StorkStructs, IStorkTemporalNumericValueUnsafeGetter} from "../../../src/adapter/stork/IStork.sol";
-import {USD} from "test/utils/EthereumAddresses.sol";
+import {BTC, USD} from "test/utils/EthereumAddresses.sol";
 import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 
@@ -14,12 +14,12 @@ contract StorkOracleForkTest is ForkTest {
 
     StorkOracle oracle;
 
-    address storkContractAddress = 0xacC0a0cF13571d30B4b8637996F5D6D774d4fd62;
-    bytes32 feedId = 0x9c7a8f90aa21b1e368d1a5f7b4d75aa03fec9abb903d84946ef76fd6fd79b312; // BERAUSD
-    address base = 0x6969696969696969696969696969696969696969; // BERA
+    address storkContractAddress = 0x035B5438444f26e6Aab81E91d475b7B1Ac4Fb22b;
+    bytes32 feedId = 0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de; // BTCUSD
+    address base = BTC;
     address quote = USD;
-    uint256 blockNumber = 3527772;
-    uint256 expectedValue = 3.82e18;
+    uint256 blockNumber = 22241301;
+    uint256 expectedValue = 79749.8e18;
 
     function setUp() public {
         _setUpFork(blockNumber);
@@ -27,7 +27,6 @@ contract StorkOracleForkTest is ForkTest {
 
     function test_GetQuote_Integrity() public {
         oracle = new StorkOracle(storkContractAddress, base, quote, feedId, 15 minutes);
-        StorkStructs.TemporalNumericValue memory v = IStorkTemporalNumericValueUnsafeGetter(storkContractAddress).getTemporalNumericValueUnsafeV1(feedId);
 
         uint256 outAmount = oracle.getQuote(1e18, base, quote);
         assertApproxEqRel(outAmount, expectedValue, 0.1e18);
