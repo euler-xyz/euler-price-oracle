@@ -6,6 +6,7 @@
   "author": "Euler Labs",
   "license": "GPL-2.0-or-later",
   "dependencies": {
-    "@redstone-finance/evm-connector": "^0.4.0"
+    "@redstone-finance/evm-connector": "^0.4.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.1.0"
   }
 }
