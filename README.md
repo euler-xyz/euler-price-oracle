@@ -102,6 +102,7 @@ An adapter's parameters and acceptance logic are easily observed on-chain.
 | [PendleOracle](src/adapter/pendle/PendleOracle.sol)                 | Onchain  | TWAP   | Pendle markets          | pendle market, twap window                   |
 | [RateProviderOracle](src/adapter/rate/RateProviderOracle.sol)       | Onchain  | Rate   | Balancer rate providers | rate provider                                |
 | [FixedRateOracle](src/adapter/fixed/FixedRateOracle.sol)            | Onchain  | Rate   | Any                     | rate                                         |
+| [RigoblockOracle](src/adapter/rigoblock/RigoblockOracle.sol)        | Onchain  | TWAP   | UniV4 pools             | twap window                                  |
 
 ## Usage
 
