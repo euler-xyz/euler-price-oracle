@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {IOracle} from "./IOracle.sol";
 
@@ -28,9 +30,8 @@ contract RigoblockOracle is BaseAdapter {
     address public immutable tokenB;
     /// @notice The desired length of the twap window.
     uint32 public immutable twapWindow;
-
-    /// @notice The pool key of the uniswap v4 pool.
-    PoolKey public immutable key;
+    /// @notice The address of the BackGeoOracle hook.
+    address public immutable backGeoOracle;
 
     /// @notice Deploy a UniswapV3Oracle.
     /// @dev The oracle will support tokenA/tokenB and tokenB/tokenA pricing.
@@ -45,14 +46,15 @@ contract RigoblockOracle is BaseAdapter {
         tokenA = _tokenA;
         tokenB = _tokenB;
         twapWindow = _twapWindow;
-        key = PoolKey({
+        backGeoOracle = _backGeoOracle;
+        PoolKey memory key = PoolKey({
             currency0: Currency.wrap(tokenA),
             currency1: Currency.wrap(tokenB),
             fee: 0,
             tickSpacing: TickMath.MAX_TICK_SPACING,
-            hooks: IHooks(_backGeoOracle)
+            hooks: IHooks(backGeoOracle)
         });
-        IOracle.ObservationState memory state = oracle.getState(key);
+        IOracle.ObservationState memory state = IOracle(backGeoOracle).getState(key);
         if (state.cardinality == 0) revert Errors.PriceOracle_InvalidConfiguration();
     }
 
@@ -71,8 +73,16 @@ contract RigoblockOracle is BaseAdapter {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = twapWindow;
 
+        PoolKey memory key = PoolKey({
+            currency0: Currency.wrap(tokenA),
+            currency1: Currency.wrap(tokenB),
+            fee: 0,
+            tickSpacing: TickMath.MAX_TICK_SPACING,
+            hooks: IHooks(backGeoOracle)
+        });
+
         // Calculate the mean tick over the twap window.
-        (int48[] memory tickCumulatives,) = IOracle(key.hooks).observe(secondsAgos);
+        (int48[] memory tickCumulatives,) = IOracle(backGeoOracle).observe(key, secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         int24 tick = int24(tickCumulativesDelta / int56(uint56(twapWindow)));
         if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(twapWindow)) != 0)) tick--;
