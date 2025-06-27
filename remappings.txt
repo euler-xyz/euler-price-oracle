@@ -6,3 +6,4 @@
 @pyth/=lib/pyth-sdk-solidity/
 ethereum-vault-connector/=lib/ethereum-vault-connector/src/
 @pendle/core-v2/=lib/pendle-core-v2-public/contracts/
+@uniswap/v4-core/=lib/v4-core/

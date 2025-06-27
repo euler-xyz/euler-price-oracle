@@ -19,7 +19,6 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
     branch = release-v4.9
-	
 [submodule "lib/pyth-sdk-solidity"]
 	path = lib/pyth-sdk-solidity
 	url = https://github.com/pyth-network/pyth-sdk-solidity
@@ -29,3 +28,6 @@
 [submodule "lib/pendle-core-v2-public"]
 	path = lib/pendle-core-v2-public
 	url = https://github.com/pendle-finance/pendle-core-v2-public
+[submodule "lib/v4-core"]
+	path = lib/v4-core
+	url = https://github.com/Uniswap/v4-core.git
