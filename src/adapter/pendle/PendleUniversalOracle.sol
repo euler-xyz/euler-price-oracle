@@ -60,19 +60,26 @@ contract PendleUniversalOracle is BaseAdapter {
         }
 
         (IStandardizedYield sy, IPPrincipalToken pt,) = IPMarket(_pendleMarket).readTokens();
+        (, address asset,) = sy.assetInfo();
 
         // Note: we allow using any asset pricing to any token.
         if (_base == address(pt)) {
             if (_quote == address(sy)) {
                 getRate = PendlePYOracleLib.getPtToSyRate;
-            } else {
+            } else if (asset == _quote) {
+                // Pendle do not recommend to use this type of price
+                // https://docs.pendle.finance/Developers/Oracles/HowToIntegratePtAndLpOracle
                 getRate = PendlePYOracleLib.getPtToAssetRate;
+            } else {
+                revert Errors.PriceOracle_InvalidConfiguration();
             }
         } else if (_base == _pendleMarket) {
             if (_quote == address(sy)) {
                 getRate = PendleLpOracleLib.getLpToSyRate;
-            } else {
+            } else if (asset == _quote) {
                 getRate = PendleLpOracleLib.getLpToAssetRate;
+            } else {
+                revert Errors.PriceOracle_InvalidConfiguration();
             }
         } else {
             revert Errors.PriceOracle_InvalidConfiguration();
@@ -82,9 +89,13 @@ contract PendleUniversalOracle is BaseAdapter {
         base = _base;
         quote = _quote;
         twapWindow = _twapWindow;
-        uint8 baseDecimals = _getDecimals(base);
-        uint8 quoteDecimals = _getDecimals(quote);
-        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, FEED_DECIMALS);
+
+        // We don't need to worry about decimals base and quote decimals scaling,
+        // Pendle formula to access LP (rawX) in SY (rawY)
+        // rawY= rawX × lpToSyRate / 10^18
+        //
+        // https://docs.pendle.finance/Developers/Oracles/HowToIntegratePtAndLpOracle
+        scale = ScaleUtils.calcScale(0, 0, FEED_DECIMALS);
     }
 
     /// @notice Get a quote by calling the Pendle oracle.
