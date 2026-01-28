@@ -64,11 +64,15 @@ contract StubCorkOracle {
     uint constant REF_PRICE_WAD = 1e18;
     address immutable refToken;
 
+    constructor(address _refToken) {
+        refToken = _refToken;
+    }
+
     function isActiveSwapToken(address asset) external view returns (bool) {
         return asset != refToken;
     }
 
-    function getQuote(address /* base */, address /* quote */, uint256 refAmount, uint256 swapTokensTotal) external view returns (uint256) {
+    function getQuote(address /* base */, address /* quote */, uint256 refAmount, uint256 swapTokensTotal) external pure returns (uint256) {
         return swapTokensTotal >= refAmount ? refAmount * REF_PRICE_WAD / 1e18 : 0;
     }
 }
