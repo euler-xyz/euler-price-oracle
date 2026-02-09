@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {PendleUniversalOracleHelper} from "test/adapter/pendle/PendleUniversalOracle/PendleUniversalOracleHelper.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PendleUniversalOracle} from "src/adapter/pendle/PendleUniversalOracle.sol";
 
 contract PendleUniversalOracleTest is PendleUniversalOracleHelper {
@@ -16,31 +16,58 @@ contract PendleUniversalOracleTest is PendleUniversalOracleHelper {
         assertEq(PendleUniversalOracle(oracle).quote(), s.quote);
     }
 
+    function _boundPendleAddrs(FuzzableState memory s) internal pure {
+        s.pendleOracle = boundAddr(s.pendleOracle);
+        s.pendleMarket = boundAddr(s.pendleMarket);
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        s.sy = boundAddr(s.sy);
+        s.pt = boundAddr(s.pt);
+        s.yt = boundAddr(s.yt);
+        s.asset = boundAddr(s.asset);
+    }
+
     function test_Constructor_RevertsWhen_Constructor_BaseNotPt(FuzzableState memory s) public {
+        _boundPendleAddrs(s);
+        vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
+        vm.assume(s.base != s.pt && s.base != s.pendleMarket);
+        vm.assume(s.base != s.quote);
         setBehavior(Behavior.Constructor_BaseNotPt, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_Constructor_TwapWindowTooShort(FuzzableState memory s) public {
+        _boundPendleAddrs(s);
+        vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
+        vm.assume(s.pt != s.quote);
         setBehavior(Behavior.Constructor_TwapWindowTooShort, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_Constructor_TwapWindowTooLong(FuzzableState memory s) public {
+        _boundPendleAddrs(s);
+        vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
+        vm.assume(s.pt != s.quote);
         setBehavior(Behavior.Constructor_TwapWindowTooLong, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_Constructor_CardinalityTooSmall(FuzzableState memory s) public {
+        _boundPendleAddrs(s);
+        vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
+        vm.assume(s.pt != s.quote);
         setBehavior(Behavior.Constructor_CardinalityTooSmall, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_Constructor_TooFewObservations(FuzzableState memory s) public {
+        _boundPendleAddrs(s);
+        vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
+        vm.assume(s.pt != s.quote);
         setBehavior(Behavior.Constructor_CardinalityTooSmall, true);
         vm.expectRevert();
         setUpState(s);

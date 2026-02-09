@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {PythOracleHelper} from "test/adapter/pyth/PythOracleHelper.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -19,18 +19,30 @@ contract PythOracleTest is PythOracleHelper {
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        vm.assume(distinct(s.base, s.quote, PYTH));
+        vm.assume(s.feedId != 0);
         setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_MaxConfWidthTooLow(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        vm.assume(distinct(s.base, s.quote, PYTH));
+        vm.assume(s.feedId != 0);
         setBehavior(Behavior.Constructor_MaxConfWidthTooLow, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_MaxConfWidthTooHigh(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        vm.assume(distinct(s.base, s.quote, PYTH));
+        vm.assume(s.feedId != 0);
         setBehavior(Behavior.Constructor_MaxConfWidthTooHigh, true);
         vm.expectRevert();
         setUpState(s);

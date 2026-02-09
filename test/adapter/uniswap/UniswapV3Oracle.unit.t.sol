@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {Test} from "forge-std/Test.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import {UniswapV3OracleHelper} from "test/adapter/uniswap/UniswapV3OracleHelper.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -18,18 +18,32 @@ contract UniswapV3OracleTest is UniswapV3OracleHelper {
     }
 
     function test_Constructor_RevertsWhen_Constructor_TwapWindowTooShort(FuzzableState memory s) public {
+        s.tokenA = boundAddr(s.tokenA);
+        s.tokenB = boundAddr(s.tokenB);
+        s.uniswapV3Factory = boundAddr(s.uniswapV3Factory);
+        s.pool = boundAddr(s.pool);
+        vm.assume(distinct(s.tokenA, s.tokenB, s.uniswapV3Factory, s.pool));
         setBehavior(Behavior.Constructor_TwapWindowTooShort, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_Constructor_TwapWindowTooLong(FuzzableState memory s) public {
+        s.tokenA = boundAddr(s.tokenA);
+        s.tokenB = boundAddr(s.tokenB);
+        s.uniswapV3Factory = boundAddr(s.uniswapV3Factory);
+        s.pool = boundAddr(s.pool);
+        vm.assume(distinct(s.tokenA, s.tokenB, s.uniswapV3Factory, s.pool));
         setBehavior(Behavior.Constructor_TwapWindowTooLong, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_PoolAddressZero(FuzzableState memory s) public {
+        s.tokenA = boundAddr(s.tokenA);
+        s.tokenB = boundAddr(s.tokenB);
+        s.uniswapV3Factory = boundAddr(s.uniswapV3Factory);
+        vm.assume(distinct(s.tokenA, s.tokenB, s.uniswapV3Factory, address(0)));
         setBehavior(Behavior.Constructor_NoPool, true);
         vm.expectRevert();
         setUpState(s);

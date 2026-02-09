@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {ChainlinkOracleHelper} from "test/adapter/chainlink/ChainlinkOracleHelper.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -16,12 +16,20 @@ contract ChainlinkOracleTest is ChainlinkOracleHelper {
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessTooLow(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        s.feed = boundAddr(s.feed);
+        vm.assume(distinct(s.base, s.quote, s.feed));
         setBehavior(Behavior.Constructor_MaxStalenessTooLow, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        s.feed = boundAddr(s.feed);
+        vm.assume(distinct(s.base, s.quote, s.feed));
         setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
         vm.expectRevert();
         setUpState(s);
