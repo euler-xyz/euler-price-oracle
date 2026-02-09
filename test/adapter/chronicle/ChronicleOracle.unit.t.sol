@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {ChronicleOracleHelper} from "test/adapter/chronicle/ChronicleOracleHelper.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
+import {boundAddr, distinct} from "test/utils/TestUtils.sol";
 import {ChronicleOracle} from "src/adapter/chronicle/ChronicleOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
@@ -17,12 +17,20 @@ contract ChronicleOracleTest is ChronicleOracleHelper {
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessTooLow(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        s.feed = boundAddr(s.feed);
+        vm.assume(distinct(s.base, s.quote, s.feed));
         setBehavior(Behavior.Constructor_MaxStalenessTooLow, true);
         vm.expectRevert();
         setUpState(s);
     }
 
     function test_Constructor_RevertsWhen_MaxStalenessTooHigh(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        s.feed = boundAddr(s.feed);
+        vm.assume(distinct(s.base, s.quote, s.feed));
         setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
         vm.expectRevert();
         setUpState(s);

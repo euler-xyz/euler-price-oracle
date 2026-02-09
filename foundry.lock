@@ -1,0 +1,35 @@
+{
+  "lib/ethereum-vault-connector": {
+    "rev": "084b32284ba643921f8d21bff3ddaf0c4e08d754"
+  },
+  "lib/forge-std": {
+    "rev": "bf6606142994b1e47e2882ce0cd477c020d77623"
+  },
+  "lib/openzeppelin-contracts": {
+    "branch": {
+      "name": "release-v4.9",
+      "rev": "dc44c9f1a4c3b10af99492eed84f83ed244203f6"
+    }
+  },
+  "lib/pendle-core-v2-public": {
+    "rev": "a904c7d98ae3e41980de475fa7ba196ddb0008e9"
+  },
+  "lib/pyth-sdk-solidity": {
+    "rev": "c24b3e0173a5715c875ae035c20e063cb900f481"
+  },
+  "lib/solady": {
+    "rev": "0123b4c0509ce253e41e5abd2c75a64c06389640"
+  },
+  "lib/v3-core": {
+    "branch": {
+      "name": "0.8",
+      "rev": "6562c52e8f75f0c10f9deaf44861847585fc8129"
+    }
+  },
+  "lib/v3-periphery": {
+    "branch": {
+      "name": "0.8",
+      "rev": "b325bb0905d922ae61fcc7df85ee802e8df5e96c"
+    }
+  }
+}

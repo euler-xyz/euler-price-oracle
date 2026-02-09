@@ -22,6 +22,9 @@ contract RedstoneCoreOracleTest is RedstoneCoreOracleHelper {
     }
 
     function test_Constructor_RevertsWhen_MaxPriceStalenessTooHigh(FuzzableState memory s) public {
+        s.base = boundAddr(s.base);
+        s.quote = boundAddr(s.quote);
+        vm.assume(s.base != s.quote);
         setBehavior(Behavior.Constructor_MaxStalenessTooHigh, true);
         vm.expectRevert();
         setUpState(s);

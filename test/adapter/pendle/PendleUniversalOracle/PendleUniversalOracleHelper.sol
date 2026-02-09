@@ -50,10 +50,12 @@ contract PendleUniversalOracleHelper is AdapterHelper {
         vm.assume(distinct(s.pendleMarket, s.pendleOracle, s.sy, s.pt, s.yt, s.asset));
 
         if (behaviors[Behavior.Constructor_BaseNotPt]) {
-            vm.assume(s.base != s.pt);
+            vm.assume(s.base != s.pt && s.base != s.pendleMarket);
         } else {
             s.base = s.pt;
         }
+
+        vm.assume(s.base != s.quote);
 
         if (behaviors[Behavior.Constructor_TwapWindowTooShort]) {
             s.twapWindow = uint32(bound(s.twapWindow, 1, 5 minutes - 1));
