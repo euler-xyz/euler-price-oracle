@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract StubERC4626 {
-    address public asset;
+    address public immutable asset;
     uint256 private rate;
     string revertMsg = "oops";
     bool doRevert;
