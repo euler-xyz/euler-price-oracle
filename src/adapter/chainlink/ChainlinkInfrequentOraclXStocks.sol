@@ -12,7 +12,7 @@ interface IBackedAutoFeeToken {
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds and xStocks rebasing tokens.
-/// @dev The oracle reverts when a multiplier update with a change >= pauseMinChange
+/// @dev The oracle reverts when a multiplier update with a relative change >= maxAllowedMultiplierChange
 /// is within [activationTime - pauseTimeBefore, activationTime + pauseTimeAfter].
 contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @notice The oracle is paused due to a multiplier change.
@@ -22,15 +22,15 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     uint256 immutable public pauseTimeBefore;
     /// @notice Time bracket to pause after the multiplier update in seconds.
     uint256 immutable public pauseTimeAfter;
-    /// @notice Max multiplier change allowed without pausing.
-    uint256 immutable public maxAllowedMultiplierDiff;
+    /// @notice Max relative multiplier change allowed without pausing (WAD).
+    uint256 immutable public maxAllowedMultiplierChange;
     /// @notice Address of the xStocks rebasing token
     address immutable public xStocksToken;
 
     /// @notice Deploy a ChainlinkOracle.
     /// @param _pauseTimeBefore Time bracket to pause before the multiplier update in seconds.
     /// @param _pauseTimeAfter Time bracket to pause after the multiplier update in seconds.
-    /// @param _maxAllowedMultiplierDiff Min multiplier change to trigger the pause in wad.
+    /// @param _maxAllowedMultiplierChange Max relative multiplier change allowed without pausing (WAD).
     /// @param _xStocksToken Address of the xStocks rebasing token.
     /// @param _base The address of the xStocks base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
@@ -38,7 +38,7 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @param _maxStaleness The maximum allowed age of the price.
     /// @dev Consider setting `_maxStaleness` to slightly more than the feed's heartbeat
     /// to account for possible network delays when the heartbeat is triggered.
-    constructor(uint256 _pauseTimeBefore, uint256 _pauseTimeAfter, uint256 _maxAllowedMultiplierDiff, address _xStocksToken, address _base, address _quote, address _feed, uint256 _maxStaleness)
+    constructor(uint256 _pauseTimeBefore, uint256 _pauseTimeAfter, uint256 _maxAllowedMultiplierChange, address _xStocksToken, address _base, address _quote, address _feed, uint256 _maxStaleness)
         ChainlinkInfrequentOracle(_base, _quote, _feed, _maxStaleness)
     {
         if (_xStocksToken != _base && _xStocksToken != _quote) {
@@ -47,7 +47,7 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
 
         pauseTimeBefore = _pauseTimeBefore;
         pauseTimeAfter = _pauseTimeAfter;
-        maxAllowedMultiplierDiff = _maxAllowedMultiplierDiff;
+        maxAllowedMultiplierChange = _maxAllowedMultiplierChange;
         xStocksToken = _xStocksToken;
     }
 
@@ -76,13 +76,13 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
             if (activationTime > block.timestamp) {
                 // Future update: check if within the before-bracket.
                 if (block.timestamp + pauseTimeBefore >= activationTime) {
-                    _checkMultiplierDiff(previousMultiplier, newMultiplier);
+                    _checkMultiplierChange(previousMultiplier, newMultiplier);
                 }
                 // Continue to previous updates.
             } else {
                 // Past/current update: check if within the after-bracket.
                 if (activationTime + pauseTimeAfter >= block.timestamp) {
-                    _checkMultiplierDiff(previousMultiplier, newMultiplier);
+                    _checkMultiplierChange(previousMultiplier, newMultiplier);
                 }
                 // Older updates are further in the past; no need to check.
                 break;
@@ -90,11 +90,11 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
         }
     }
 
-    /// @notice Revert if the absolute multiplier change is >= maxAllowedMultiplierDiff.
-    function _checkMultiplierDiff(uint256 previousMultiplier, uint256 newMultiplier) internal view {
+    /// @notice Revert if the relative multiplier change is >= maxAllowedMultiplierChange.
+    function _checkMultiplierChange(uint256 previousMultiplier, uint256 newMultiplier) internal view {
         uint256 diff =
             newMultiplier > previousMultiplier ? newMultiplier - previousMultiplier : previousMultiplier - newMultiplier;
-        if (diff >= maxAllowedMultiplierDiff) {
+        if (diff * 1e18 / previousMultiplier >= maxAllowedMultiplierChange) {
             revert PriceOracle_MultiplierUpdatePause();
         }
     }

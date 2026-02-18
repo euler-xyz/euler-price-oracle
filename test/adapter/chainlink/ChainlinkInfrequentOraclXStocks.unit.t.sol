@@ -19,7 +19,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
     uint256 internal constant PAUSE_TIME_BEFORE = 1 hours;
     uint256 internal constant PAUSE_TIME_AFTER = 1 hours;
-    uint256 internal constant MAX_ALLOWED_MULTIPLIER_DIFF = 0.01e18;
+    uint256 internal constant MAX_ALLOWED_MULTIPLIER_CHANGE = 0.01e18;
     uint256 internal constant MAX_STALENESS = 24 hours;
 
     function setUp() public {
@@ -34,13 +34,13 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
     }
 
     function _deployOracle() internal {
-        _deployOracle(PAUSE_TIME_BEFORE, PAUSE_TIME_AFTER, MAX_ALLOWED_MULTIPLIER_DIFF);
+        _deployOracle(PAUSE_TIME_BEFORE, PAUSE_TIME_AFTER, MAX_ALLOWED_MULTIPLIER_CHANGE);
     }
 
-    function _deployOracle(uint256 pauseBefore, uint256 pauseAfter, uint256 minChange) internal {
+    function _deployOracle(uint256 pauseBefore, uint256 pauseAfter, uint256 maxChange) internal {
         oracle = address(
             new ChainlinkInfrequentOracleXStocks(
-                pauseBefore, pauseAfter, minChange, xStocksToken, base, quote, feed, MAX_STALENESS
+                pauseBefore, pauseAfter, maxChange, xStocksToken, base, quote, feed, MAX_STALENESS
             )
         );
     }
@@ -78,7 +78,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         ChainlinkInfrequentOracleXStocks o = ChainlinkInfrequentOracleXStocks(oracle);
         assertEq(o.pauseTimeBefore(), PAUSE_TIME_BEFORE);
         assertEq(o.pauseTimeAfter(), PAUSE_TIME_AFTER);
-        assertEq(o.maxAllowedMultiplierDiff(), MAX_ALLOWED_MULTIPLIER_DIFF);
+        assertEq(o.maxAllowedMultiplierChange(), MAX_ALLOWED_MULTIPLIER_CHANGE);
         assertEq(o.xStocksToken(), xStocksToken);
     }
 
@@ -86,7 +86,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         address badToken = makeAddr("badToken");
         vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_InvalidConfiguration.selector));
         new ChainlinkInfrequentOracleXStocks(
-            PAUSE_TIME_BEFORE, PAUSE_TIME_AFTER, MAX_ALLOWED_MULTIPLIER_DIFF, badToken, base, quote, feed, MAX_STALENESS
+            PAUSE_TIME_BEFORE, PAUSE_TIME_AFTER, MAX_ALLOWED_MULTIPLIER_CHANGE, badToken, base, quote, feed, MAX_STALENESS
         );
     }
 
@@ -142,7 +142,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         uint256 activationTime = ts + PAUSE_TIME_BEFORE / 2;
 
         _mockMultiplierUpdatesLength(1);
-        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_DIFF - 1, activationTime);
+        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_CHANGE - 1, activationTime);
         _mockFeed(ts);
         vm.warp(ts);
 
@@ -253,7 +253,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         uint256 activationTime = ts + PAUSE_TIME_BEFORE / 2;
 
         _mockMultiplierUpdatesLength(1);
-        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_DIFF, activationTime);
+        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_CHANGE, activationTime);
         _mockFeed(ts);
         vm.warp(ts);
 
@@ -356,8 +356,8 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         uint256 act1 = ts + PAUSE_TIME_BEFORE / 2;
 
         _mockMultiplierUpdatesLength(2);
-        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_DIFF - 1, act0);
-        _mockMultiplierUpdate(1, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_DIFF - 1, act1);
+        _mockMultiplierUpdate(0, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_CHANGE - 1, act0);
+        _mockMultiplierUpdate(1, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_CHANGE - 1, act1);
         _mockFeed(ts);
         vm.warp(ts);
 
@@ -471,7 +471,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
     function test_Fuzz_NoPauseChangeBelowThreshold(uint256 ts, uint256 change) public {
         _deployOracle();
         ts = bound(ts, 1, type(uint128).max);
-        change = bound(change, 0, MAX_ALLOWED_MULTIPLIER_DIFF - 1);
+        change = bound(change, 0, MAX_ALLOWED_MULTIPLIER_CHANGE - 1);
         uint256 activationTime = ts + PAUSE_TIME_BEFORE / 2;
 
         _mockMultiplierUpdatesLength(1);
