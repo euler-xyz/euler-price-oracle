@@ -34,6 +34,7 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @param _pauseTimeBefore Time bracket to pause before the multiplier update in seconds.
     /// @param _pauseTimeAfter Time bracket to pause after the multiplier update in seconds.
     /// @param _maxAllowedMultiplierChange Max relative multiplier change allowed without pausing (WAD).
+    /// Note that if set to >= 1 WAD, the decrease of modifier will never trigger a pause (can't reduce more than 100%)
     /// @param _xStocksToken Address of the xStocks rebasing token.
     /// @param _base The address of the xStocks base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
