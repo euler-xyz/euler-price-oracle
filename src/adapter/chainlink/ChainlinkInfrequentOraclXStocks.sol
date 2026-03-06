@@ -14,6 +14,9 @@ interface IBackedAutoFeeToken {
 /// @notice PriceOracle adapter for Chainlink push-based price feeds and xStocks rebasing tokens.
 /// @dev The oracle reverts when a multiplier update with a relative change >= maxAllowedMultiplierChange
 /// is within [activationTime - pauseTimeBefore, activationTime + pauseTimeAfter].
+/// If there are multiple updates within the time window, each of them are checked separately, they are
+/// not analyzed cumulatively. Updates scheduled in short intervals, each below the allowed max multiplier change
+/// could cumulatively exceed the limit without triggering a pause.
 contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @notice The oracle is paused due to a multiplier change.
     error PriceOracle_MultiplierUpdatePause();
@@ -83,9 +86,11 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
                 // Past/current update: check if within the after-bracket.
                 if (activationTime + pauseTimeAfter >= block.timestamp) {
                     _checkMultiplierChange(previousMultiplier, newMultiplier);
+                } else {
+                    // the update is beyond the after-bracket
+                    break;
                 }
-                // Older updates are further in the past; no need to check.
-                break;
+                // Continue to previous updates.
             }
         }
     }

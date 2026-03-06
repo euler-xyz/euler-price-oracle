@@ -364,6 +364,30 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
     }
 
+    function test_Pause_WalksThroughMultiplePastUpdatesInsideAfterBracket() public {
+        _deployOracle();
+        uint256 ts = 1_000_000;
+
+        // index 0: oldest past update, outside after-bracket, should terminate scan once reached
+        uint256 act0 = ts - PAUSE_TIME_AFTER - 100;
+        // index 1: past, inside after-bracket, large change -> should pause
+        uint256 act1 = ts - (PAUSE_TIME_AFTER / 2) - 10;
+        // index 2: latest past, inside after-bracket, small change -> should not pause
+        uint256 act2 = ts - 10;
+
+        _mockMultiplierUpdatesLength(3);
+        _mockMultiplierUpdate(0, 1e18, 1.02e18, act0);
+        _mockMultiplierUpdate(1, 1e18, 1.05e18, act1);
+        _mockMultiplierUpdate(2, 1e18, 1e18 + MAX_ALLOWED_MULTIPLIER_CHANGE - 1, act2);
+        _mockFeed(ts);
+        vm.warp(ts);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+        );
+        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+    }
+
     // -----------------------------------------------------------------------
     // getQuotes and inverse direction also pause
     // -----------------------------------------------------------------------
