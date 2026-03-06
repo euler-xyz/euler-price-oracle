@@ -8,7 +8,7 @@ import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface
 import {
     ChainlinkInfrequentOracleXStocks,
     IBackedAutoFeeToken
-} from "src/adapter/chainlink/ChainlinkInfrequentOraclXStocks.sol";
+} from "src/adapter/chainlink/ChainlinkInfrequentOracleXStocks.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
