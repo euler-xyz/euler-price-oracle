@@ -14,6 +14,9 @@ interface IBackedAutoFeeToken {
 /// @notice PriceOracle adapter for Chainlink push-based price feeds and xStocks rebasing tokens.
 /// @dev The oracle reverts when a multiplier update with a relative change >= maxAllowedMultiplierChange
 /// is within [activationTime - pauseTimeBefore, activationTime + pauseTimeAfter].
+/// If there are multiple updates within the time window, each of them are checked separately, they are
+/// not analyzed cumulatively. Updates scheduled in short intervals, each below the allowed max multiplier change
+/// could cumulatively exceed the limit without triggering a pause.
 contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @notice The oracle is paused due to a multiplier change.
     error PriceOracle_MultiplierUpdatePause();
@@ -31,6 +34,7 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @param _pauseTimeBefore Time bracket to pause before the multiplier update in seconds.
     /// @param _pauseTimeAfter Time bracket to pause after the multiplier update in seconds.
     /// @param _maxAllowedMultiplierChange Max relative multiplier change allowed without pausing (WAD).
+    /// Note that if set to >= 1 WAD, the decrease of modifier will never trigger a pause (can't reduce more than 100%)
     /// @param _xStocksToken Address of the xStocks rebasing token.
     /// @param _base The address of the xStocks base asset corresponding to the feed.
     /// @param _quote The address of the quote asset corresponding to the feed.
@@ -83,9 +87,11 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
                 // Past/current update: check if within the after-bracket.
                 if (activationTime + pauseTimeAfter >= block.timestamp) {
                     _checkMultiplierChange(previousMultiplier, newMultiplier);
+                } else {
+                    // the update is beyond the after-bracket
+                    break;
                 }
-                // Older updates are further in the past; no need to check.
-                break;
+                // Continue to previous updates.
             }
         }
     }
