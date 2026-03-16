@@ -5,10 +5,13 @@ import {ChainlinkInfrequentOracle, IPriceOracle, Errors} from "./ChainlinkInfreq
 
 interface IBackedAutoFeeToken {
     function multiplierUpdatesLength() external view returns (uint256);
-    function multiplierUpdates(uint256 index) external view returns (uint256 previousMultiplier, uint256 newMultiplier, uint256 activationTime);
+    function multiplierUpdates(uint256 index)
+        external
+        view
+        returns (uint256 previousMultiplier, uint256 newMultiplier, uint256 activationTime);
 }
 
-/// @title ChainlinkInfrequentOracleXStocks
+/// @title ChainlinkInfrequentXStocksOracle
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds and xStocks rebasing tokens.
@@ -17,18 +20,18 @@ interface IBackedAutoFeeToken {
 /// If there are multiple updates within the time window, each of them are checked separately, they are
 /// not analyzed cumulatively. Updates scheduled in short intervals, each below the allowed max multiplier change
 /// could cumulatively exceed the limit without triggering a pause.
-contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
+contract ChainlinkInfrequentXStocksOracle is ChainlinkInfrequentOracle {
     /// @notice The oracle is paused due to a multiplier change.
     error PriceOracle_MultiplierUpdatePause();
 
     /// @notice Time bracket to pause before the multiplier update in seconds.
-    uint256 immutable public pauseTimeBefore;
+    uint256 public immutable pauseTimeBefore;
     /// @notice Time bracket to pause after the multiplier update in seconds.
-    uint256 immutable public pauseTimeAfter;
+    uint256 public immutable pauseTimeAfter;
     /// @notice Max relative multiplier change allowed without pausing (WAD).
-    uint256 immutable public maxAllowedMultiplierChange;
+    uint256 public immutable maxAllowedMultiplierChange;
     /// @notice Address of the xStocks rebasing token
-    address immutable public xStocksToken;
+    address public immutable xStocksToken;
 
     /// @notice Deploy a ChainlinkOracle.
     /// @param _pauseTimeBefore Time bracket to pause before the multiplier update in seconds.
@@ -42,9 +45,16 @@ contract ChainlinkInfrequentOracleXStocks is ChainlinkInfrequentOracle {
     /// @param _maxStaleness The maximum allowed age of the price.
     /// @dev Consider setting `_maxStaleness` to slightly more than the feed's heartbeat
     /// to account for possible network delays when the heartbeat is triggered.
-    constructor(uint256 _pauseTimeBefore, uint256 _pauseTimeAfter, uint256 _maxAllowedMultiplierChange, address _xStocksToken, address _base, address _quote, address _feed, uint256 _maxStaleness)
-        ChainlinkInfrequentOracle(_base, _quote, _feed, _maxStaleness)
-    {
+    constructor(
+        uint256 _pauseTimeBefore,
+        uint256 _pauseTimeAfter,
+        uint256 _maxAllowedMultiplierChange,
+        address _xStocksToken,
+        address _base,
+        address _quote,
+        address _feed,
+        uint256 _maxStaleness
+    ) ChainlinkInfrequentOracle(_base, _quote, _feed, _maxStaleness) {
         if (_xStocksToken != _base && _xStocksToken != _quote) {
             revert Errors.PriceOracle_InvalidConfiguration();
         }

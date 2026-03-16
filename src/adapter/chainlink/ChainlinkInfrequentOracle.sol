@@ -61,7 +61,13 @@ contract ChainlinkInfrequentOracle is BaseAdapter {
     /// @param _base The token that is being priced.
     /// @param _quote The token that is the unit of account.
     /// @return The converted amount using the Chainlink feed.
-    function _getQuote(uint256 inAmount, address _base, address _quote) internal view virtual override returns (uint256) {
+    function _getQuote(uint256 inAmount, address _base, address _quote)
+        internal
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         bool inverse = ScaleUtils.getDirectionOrRevert(_base, base, _quote, quote);
 
         (, int256 answer,, uint256 updatedAt,) = AggregatorV3Interface(feed).latestRoundData();
