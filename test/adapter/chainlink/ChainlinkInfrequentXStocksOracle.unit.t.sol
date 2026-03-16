@@ -6,9 +6,9 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {AdapterHelper} from "test/adapter/AdapterHelper.sol";
 import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
 import {
-    ChainlinkInfrequentOracleXStocks,
+    ChainlinkInfrequentXStocksOracle,
     IBackedAutoFeeToken
-} from "src/adapter/chainlink/ChainlinkInfrequentOracleXStocks.sol";
+} from "src/adapter/chainlink/ChainlinkInfrequentXStocksOracle.sol";
 import {Errors} from "src/lib/Errors.sol";
 
 contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
@@ -39,7 +39,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
     function _deployOracle(uint256 pauseBefore, uint256 pauseAfter, uint256 maxChange) internal {
         oracle = address(
-            new ChainlinkInfrequentOracleXStocks(
+            new ChainlinkInfrequentXStocksOracle(
                 pauseBefore, pauseAfter, maxChange, xStocksToken, base, quote, feed, MAX_STALENESS
             )
         );
@@ -75,7 +75,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
     function test_Constructor_Integrity() public {
         _deployOracle();
-        ChainlinkInfrequentOracleXStocks o = ChainlinkInfrequentOracleXStocks(oracle);
+        ChainlinkInfrequentXStocksOracle o = ChainlinkInfrequentXStocksOracle(oracle);
         assertEq(o.pauseTimeBefore(), PAUSE_TIME_BEFORE);
         assertEq(o.pauseTimeAfter(), PAUSE_TIME_AFTER);
         assertEq(o.maxAllowedMultiplierChange(), MAX_ALLOWED_MULTIPLIER_CHANGE);
@@ -85,15 +85,22 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
     function test_Constructor_RevertsWhen_XStocksTokenInvalid() public {
         address badToken = makeAddr("badToken");
         vm.expectRevert(abi.encodeWithSelector(Errors.PriceOracle_InvalidConfiguration.selector));
-        new ChainlinkInfrequentOracleXStocks(
-            PAUSE_TIME_BEFORE, PAUSE_TIME_AFTER, MAX_ALLOWED_MULTIPLIER_CHANGE, badToken, base, quote, feed, MAX_STALENESS
+        new ChainlinkInfrequentXStocksOracle(
+            PAUSE_TIME_BEFORE,
+            PAUSE_TIME_AFTER,
+            MAX_ALLOWED_MULTIPLIER_CHANGE,
+            badToken,
+            base,
+            quote,
+            feed,
+            MAX_STALENESS
         );
     }
 
     function test_Constructor_XStocksTokenCanBeQuote() public {
         xStocksToken = quote;
         _deployOracle();
-        assertEq(ChainlinkInfrequentOracleXStocks(oracle).xStocksToken(), quote);
+        assertEq(ChainlinkInfrequentXStocksOracle(oracle).xStocksToken(), quote);
     }
 
     // -----------------------------------------------------------------------
@@ -107,7 +114,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_WhenFutureUpdateOutsideBeforeBracket() public {
@@ -120,7 +127,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_WhenPastUpdateOutsideAfterBracket() public {
@@ -133,7 +140,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_WhenChangeBelowThreshold() public {
@@ -146,7 +153,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_WhenAllUpdatesOutsideBrackets() public {
@@ -157,11 +164,11 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
         _mockMultiplierUpdatesLength(2);
         _mockMultiplierUpdate(0, 1e18, 1.05e18, activationTime0);
-        _mockMultiplierUpdate(1, 1.05e18, 1.10e18, activationTime1);
+        _mockMultiplierUpdate(1, 1.05e18, 1.1e18, activationTime1);
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     // -----------------------------------------------------------------------
@@ -179,9 +186,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_FutureUpdateExactlyAtBeforeBracketBoundary() public {
@@ -195,9 +202,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_PastUpdateInAfterBracket() public {
@@ -211,9 +218,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_PastUpdateExactlyAtAfterBracketBoundary() public {
@@ -227,9 +234,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_UpdateExactlyAtActivationTime() public {
@@ -242,9 +249,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_ExactlyAtMinChange() public {
@@ -258,9 +265,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_MultiplierDecrease() public {
@@ -274,9 +281,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     // -----------------------------------------------------------------------
@@ -296,15 +303,15 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
         _mockMultiplierUpdatesLength(3);
         _mockMultiplierUpdate(0, 1e18, 1.05e18, act0);
-        _mockMultiplierUpdate(1, 1.05e18, 1.10e18, act1);
-        _mockMultiplierUpdate(2, 1.10e18, 1.15e18, act2);
+        _mockMultiplierUpdate(1, 1.05e18, 1.1e18, act1);
+        _mockMultiplierUpdate(2, 1.1e18, 1.15e18, act2);
         _mockFeed(ts);
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_FutureUpdateInBracketAmongMultiple() public {
@@ -323,9 +330,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_WalksFutureUpdatesToFindPastOutsideBracket() public {
@@ -339,11 +346,11 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
 
         _mockMultiplierUpdatesLength(2);
         _mockMultiplierUpdate(0, 1e18, 1.05e18, act0);
-        _mockMultiplierUpdate(1, 1.05e18, 1.10e18, act1);
+        _mockMultiplierUpdate(1, 1.05e18, 1.1e18, act1);
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_NoPause_MultipleFutureSmallChangesInBracket() public {
@@ -361,7 +368,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Pause_WalksThroughMultiplePastUpdatesInsideAfterBracket() public {
@@ -383,9 +390,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     // -----------------------------------------------------------------------
@@ -403,9 +410,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuotes(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuotes(1e18, base, quote);
     }
 
     function test_Pause_RevertsOnInverseDirection() public {
@@ -419,9 +426,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, quote, base);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, quote, base);
     }
 
     // -----------------------------------------------------------------------
@@ -440,9 +447,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Fuzz_PauseInAfterBracket(uint256 ts, uint256 offset) public {
@@ -457,9 +464,9 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         vm.warp(ts);
 
         vm.expectRevert(
-            abi.encodeWithSelector(ChainlinkInfrequentOracleXStocks.PriceOracle_MultiplierUpdatePause.selector)
+            abi.encodeWithSelector(ChainlinkInfrequentXStocksOracle.PriceOracle_MultiplierUpdatePause.selector)
         );
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Fuzz_NoPauseOutsideAfterBracket(uint256 ts, uint256 extra) public {
@@ -473,7 +480,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Fuzz_NoPauseOutsideBeforeBracket(uint256 ts, uint256 extra) public {
@@ -489,7 +496,7 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 
     function test_Fuzz_NoPauseChangeBelowThreshold(uint256 ts, uint256 change) public {
@@ -503,6 +510,6 @@ contract ChainlinkInfrequentOraclXStocksTest is AdapterHelper {
         _mockFeed(ts);
         vm.warp(ts);
 
-        ChainlinkInfrequentOracleXStocks(oracle).getQuote(1e18, base, quote);
+        ChainlinkInfrequentXStocksOracle(oracle).getQuote(1e18, base, quote);
     }
 }
