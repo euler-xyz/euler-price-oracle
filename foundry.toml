@@ -2,7 +2,7 @@
 src = "src"
 out = "out"
 test = "test"
-libs = ["lib"]
+libs = ["lib", "node_modules"]
 solc = "0.8.23"
 evm_version = "cancun"
 optimizer = true
