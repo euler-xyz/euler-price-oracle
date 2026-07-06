@@ -5,7 +5,7 @@ import {BaseAdapter, Errors, IPriceOracle} from "../BaseAdapter.sol";
 import {AggregatorV3Interface} from "./AggregatorV3Interface.sol";
 import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
-/// @title ChainlinkInfrequentOracle
+/// @title ChainlinkInfrequentNanosecondOracle
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice PriceOracle adapter for Chainlink push-based price feeds.
