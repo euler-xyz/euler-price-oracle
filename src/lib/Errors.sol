@@ -6,6 +6,7 @@ pragma solidity ^0.8.0;
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Collects common errors in PriceOracles.
 library Errors {
+    error ZeroAddress();
     /// @notice The external feed returned an invalid answer.
     error PriceOracle_InvalidAnswer();
     /// @notice The configuration parameters for the PriceOracle are invalid.
@@ -22,4 +23,6 @@ library Errors {
     error PriceOracle_TooStale(uint256 staleness, uint256 maxStaleness);
     /// @notice The method can only be called by the governor.
     error Governance_CallerNotGovernor();
+    /// @notice The price oracle has already been initialized.
+    error PriceOracle_AlreadyInitialized();
 }
