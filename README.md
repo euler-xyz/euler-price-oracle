@@ -94,6 +94,7 @@ An adapter's parameters and acceptance logic are easily observed on-chain.
 | ------------------------------------------------------------------- | -------- | ------ | ----------------------- | -------------------------------------------- |
 | [ChainlinkOracle](src/adapter/chainlink/ChainlinkOracle.sol)        | External | Push   | Provider feeds          | feed, max staleness                          |
 | [ChronicleOracle](src/adapter/chainlink/ChronicleOracle.sol)        | External | Push   | Provider feeds          | feed, max staleness                          |
+| [StorkOracle](src/adapter/stork/StorkOracle.sol)             | External | Pull   | Provider feeds          | feed, max staleness |
 | [PythOracle](src/adapter/pyth/PythOracle.sol)                       | External | Pull   | Provider feeds          | feed, max staleness, max confidence interval |
 | [RedstoneCoreOracle](src/adapter/redstone/RedstoneCoreOracle.sol)   | External | Pull   | Provider feeds          | feed, max staleness, cache ttl               |
 | [LidoOracle](src/adapter/lido/LidoOracle.sol)                       | Onchain  | Rate   | wstETH/stETH            | -                                            |
