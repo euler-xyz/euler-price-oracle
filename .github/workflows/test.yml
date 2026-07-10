@@ -28,6 +28,9 @@ jobs:
           forge build --sizes
         id: build
 
+      - name: Gas Report
+        uses: saifyoussuf/foundry-gas-reporter-action@v1
+        if: always()
       - name: Run Forge tests
         run: |
           forge test -vvv
