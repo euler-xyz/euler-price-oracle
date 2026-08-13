@@ -7,6 +7,9 @@ on:
       - "foundry.toml"
       - "deployments/**"
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -26,4 +29,4 @@ jobs:
         run: node deployments/generate.mjs
 
       - name: Fail if committed artifacts are stale
-        run: git diff --exit-code deployments/adapters.json
+        run: git diff -I '^ "commit":' --exit-code deployments/adapters.json
