@@ -26,4 +26,4 @@ forge-pruned-lcov.info
 
 .DS_Store
 
-node_modules
+node_modulesout-paris/
