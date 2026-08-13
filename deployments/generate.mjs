@@ -14,22 +14,23 @@ import { join } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
-/** Deployable adapter classes. Deprecated adapters are deliberately absent. */
-const CLASSES = [
-  'ChainlinkOracle',
-  'ChainlinkInfrequentOracle',
-  'ChainlinkInfrequentNanosecondOracle',
-  'ChainlinkInfrequentXStocksOracle',
-  'ChronicleOracle',
-  'CrossAdapter',
-  'FixedRateOracle',
-  'LidoOracle',
-  'LidoFundamentalOracle',
-  'PendleOracle',
-  'PendleUniversalOracle',
-  'PythOracle',
-  'RateProviderOracle',
-];
+// Every concrete contract under src/adapter is emitted; consumers select
+// their own subset (euler-data-v3 recognizes only supported classes, the
+// toolbox lists only what it deploys). Abstract bases and libraries have no
+// deployable bytecode and are skipped automatically.
+import { readdirSync } from 'node:fs';
+function discoverClasses() {
+  const names = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) walk(join(dir, entry.name));
+      else if (entry.name.endsWith('.sol')) names.push(entry.name.replace(/\.sol$/, ''));
+    }
+  };
+  walk(join(ROOT, 'src/adapter'));
+  return names.sort();
+}
+const CLASSES = discoverClasses();
 
 /** evm_version variants: cancun for Shanghai-capable chains, paris otherwise. */
 const VARIANTS = { cancun: 'out', paris: 'out-paris' };
@@ -41,9 +42,14 @@ for (const className of CLASSES) {
   for (const [variant, outDir] of Object.entries(VARIANTS)) {
     const path = join(ROOT, outDir, `${className}.sol`, `${className}.json`);
     if (!existsSync(path)) {
-      throw new Error(`missing artifact ${path} — run both forge builds first`);
+      delete adapters[className];
+      break;
     }
     const artifact = JSON.parse(readFileSync(path, 'utf8'));
+    if (!artifact.deployedBytecode?.object || artifact.deployedBytecode.object === '0x') {
+      delete adapters[className];
+      break;
+    }
     adapters[className][variant] = {
       abi: artifact.abi,
       creationBytecode: artifact.bytecode.object,
