@@ -1,0 +1,29 @@
+name: Deployment artifacts up to date
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "foundry.toml"
+      - "deployments/**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build both evm_version variants
+        run: |
+          forge build
+          FOUNDRY_OUT=out-paris forge build --evm-version paris
+
+      - name: Regenerate adapters.json
+        run: node deployments/generate.mjs
+
+      - name: Fail if committed artifacts are stale
+        run: git diff --exit-code deployments/adapters.json
