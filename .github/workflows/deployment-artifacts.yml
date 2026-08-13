@@ -28,5 +28,5 @@ jobs:
       - name: Regenerate adapters.json
         run: node deployments/generate.mjs
 
-      - name: Fail if committed artifacts are stale
-        run: git diff -I '^ "commit":' --exit-code deployments/adapters.json
+      - name: Fail if committed artifacts are stale (fingerprint-level)
+        run: node deployments/check.mjs
