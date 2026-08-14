@@ -1,51 +1,72 @@
-// CI staleness check at fingerprint level: metadata trailers and immutable
-// slots are masked (deployment- and environment-dependent), so only real
-// codegen changes fail the check. Run after both forge builds.
-import { createHash } from 'node:crypto';
+// CI guard: verifies the committed adapters.json against fresh compiler
+// output. Nothing is regenerated and nothing from the committed file is
+// trusted for its own verification: discovery, immutable ranges, and
+// normalization all come from the build. Only environment-dependent metadata
+// digests are masked, so any real change to ABI, creation bytecode, deployed
+// bytecode, immutable ranges, or the adapter inventory fails.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  discoverAdapters,
+  maskEmbeddedMetadataDigests,
+  strictHexToBytes,
+  stripTrailingMetadata,
+  VARIANTS,
+} from './artifact-utils.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const committed = JSON.parse(readFileSync(join(ROOT, 'deployments/adapters.json'), 'utf8'));
-const VARIANTS = { cancun: 'out', paris: 'out-paris' };
+const built = discoverAdapters(ROOT);
 
-function stripMetadata(code) {
-  if (code.length < 2) return code;
-  const len = (code[code.length - 2] << 8) | code[code.length - 1];
-  if (len === 0 || len + 2 > code.length) return code;
-  return code.subarray(0, code.length - (len + 2));
-}
-function fingerprint(deployedBytecodeHex, immutableReferences) {
-  const code = Uint8Array.from(Buffer.from(deployedBytecodeHex.slice(2), 'hex'));
-  const runtime = stripMetadata(code);
-  const masked = new Uint8Array(runtime);
-  for (const ranges of Object.values(immutableReferences ?? {})) {
-    for (const { start, length } of ranges) {
-      if (start + length <= masked.length) masked.fill(0, start, start + length);
-    }
-  }
-  return createHash('sha256').update(masked).digest('hex');
+const problems = [];
+const committedNames = Object.keys(committed.adapters ?? {}).sort();
+const builtNames = [...built.keys()];
+if (JSON.stringify(committedNames) !== JSON.stringify(builtNames)) {
+  problems.push(
+    `inventory mismatch:\n  committed: ${committedNames.join(', ')}\n  built:     ${builtNames.join(', ')}`,
+  );
 }
 
-let failed = false;
-for (const [className, variants] of Object.entries(committed.adapters)) {
-  for (const [variant, entry] of Object.entries(variants)) {
-    const artifact = JSON.parse(
-      readFileSync(join(ROOT, VARIANTS[variant], `${className}.sol`, `${className}.json`), 'utf8'),
-    );
-    const fresh = fingerprint(
-      artifact.deployedBytecode.object,
-      artifact.deployedBytecode.immutableReferences,
-    );
-    const stored = fingerprint(entry.deployedBytecode, entry.immutableReferences);
-    if (fresh !== stored) {
-      failed = true;
-      console.error(`STALE ${className}/${variant}: committed ${stored.slice(0, 16)}… vs built ${fresh.slice(0, 16)}…`);
-    }
+function normalizedEqual(committedHex, builtHex, label, strip) {
+  let committedBytes;
+  try {
+    committedBytes = strictHexToBytes(committedHex, label);
+  } catch (error) {
+    problems.push(String(error.message ?? error));
+    return;
+  }
+  const builtBytes = strictHexToBytes(builtHex, `${label} (built)`);
+  const a = maskEmbeddedMetadataDigests(strip ? stripTrailingMetadata(committedBytes) : committedBytes);
+  const b = maskEmbeddedMetadataDigests(strip ? stripTrailingMetadata(builtBytes) : builtBytes);
+  if (Buffer.compare(Buffer.from(a), Buffer.from(b)) !== 0) {
+    problems.push(`${label}: differs from the current build`);
   }
 }
-if (failed) {
-  console.error('\nadapters.json is stale — regenerate with deployments/generate.mjs and commit.');
+
+for (const name of builtNames) {
+  const entry = committed.adapters?.[name];
+  if (!entry) continue; // already reported by the inventory check
+  for (const variant of Object.keys(VARIANTS)) {
+    const artifact = built.get(name)[variant];
+    const stored = entry[variant];
+    if (!stored) {
+      problems.push(`${name}/${variant}: missing from committed file`);
+      continue;
+    }
+    if (JSON.stringify(stored.abi) !== JSON.stringify(artifact.abi)) {
+      problems.push(`${name}/${variant}: ABI differs from the current build`);
+    }
+    if (JSON.stringify(stored.immutableReferences ?? {}) !== JSON.stringify(artifact.deployedBytecode.immutableReferences ?? {})) {
+      problems.push(`${name}/${variant}: immutableReferences differ from the current build`);
+    }
+    normalizedEqual(stored.creationBytecode, artifact.bytecode.object, `${name}/${variant} creationBytecode`, false);
+    normalizedEqual(stored.deployedBytecode, artifact.deployedBytecode.object, `${name}/${variant} deployedBytecode`, true);
+  }
+}
+
+if (problems.length > 0) {
+  for (const problem of problems) console.error(`STALE ${problem}`);
+  console.error('\nadapters.json does not match the build — regenerate with deployments/generate.mjs and commit.');
   process.exit(1);
 }
-console.log('adapters.json fingerprints match the current build');
+console.log(`adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants`);

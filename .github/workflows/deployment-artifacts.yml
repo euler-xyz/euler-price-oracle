@@ -4,8 +4,13 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "lib/**"
       - "foundry.toml"
+      - "foundry.lock"
+      - "remappings.txt"
+      - ".gitmodules"
       - "deployments/**"
+      - ".github/workflows/deployment-artifacts.yml"
 
 permissions:
   contents: read
@@ -25,8 +30,7 @@ jobs:
           forge build
           FOUNDRY_OUT=out-paris forge build --evm-version paris
 
-      - name: Regenerate adapters.json
-        run: node deployments/generate.mjs
-
-      - name: Fail if committed artifacts are stale (fingerprint-level)
+      # The committed file is never regenerated here: check.mjs verifies it
+      # against the fresh compiler output, trusting nothing in the file itself.
+      - name: Verify committed artifacts against the build
         run: node deployments/check.mjs

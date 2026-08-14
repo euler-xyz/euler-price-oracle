@@ -1,5 +1,5 @@
 {
- "commit": "b9a8088",
+ "commit": "b20f44f",
  "generatedWith": "deployments/generate.mjs",
  "adapters": {
   "ChainlinkInfrequentNanosecondOracle": {

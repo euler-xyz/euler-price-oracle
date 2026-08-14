@@ -7,50 +7,23 @@
 //   FOUNDRY_OUT=out-paris forge build --evm-version paris
 //   node deployments/generate.mjs
 //
-// and commit the refreshed adapters.json alongside the change.
+// and commit the refreshed adapters.json alongside the change. Every
+// deployable contract under src/adapter is emitted (compiler-derived, not
+// filename-derived); consumers select their own subset.
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { discoverAdapters, VARIANTS } from './artifact-utils.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-
-// Every concrete contract under src/adapter is emitted; consumers select
-// their own subset (euler-data-v3 recognizes only supported classes, the
-// toolbox lists only what it deploys). Abstract bases and libraries have no
-// deployable bytecode and are skipped automatically.
-import { readdirSync } from 'node:fs';
-function discoverClasses() {
-  const names = [];
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) walk(join(dir, entry.name));
-      else if (entry.name.endsWith('.sol')) names.push(entry.name.replace(/\.sol$/, ''));
-    }
-  };
-  walk(join(ROOT, 'src/adapter'));
-  return names.sort();
-}
-const CLASSES = discoverClasses();
-
-/** evm_version variants: cancun for Shanghai-capable chains, paris otherwise. */
-const VARIANTS = { cancun: 'out', paris: 'out-paris' };
-
 const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
+
 const adapters = {};
-for (const className of CLASSES) {
-  adapters[className] = {};
-  for (const [variant, outDir] of Object.entries(VARIANTS)) {
-    const path = join(ROOT, outDir, `${className}.sol`, `${className}.json`);
-    if (!existsSync(path)) {
-      delete adapters[className];
-      break;
-    }
-    const artifact = JSON.parse(readFileSync(path, 'utf8'));
-    if (!artifact.deployedBytecode?.object || artifact.deployedBytecode.object === '0x') {
-      delete adapters[className];
-      break;
-    }
-    adapters[className][variant] = {
+for (const [name, slot] of discoverAdapters(ROOT)) {
+  adapters[name] = {};
+  for (const variant of Object.keys(VARIANTS)) {
+    const artifact = slot[variant];
+    adapters[name][variant] = {
       abi: artifact.abi,
       creationBytecode: artifact.bytecode.object,
       deployedBytecode: artifact.deployedBytecode.object,
@@ -60,4 +33,4 @@ for (const className of CLASSES) {
 }
 const out = { commit, generatedWith: 'deployments/generate.mjs', adapters };
 writeFileSync(join(ROOT, 'deployments/adapters.json'), `${JSON.stringify(out, null, 1)}\n`);
-console.log(`adapters.json: ${CLASSES.length} classes x ${Object.keys(VARIANTS).length} variants @ ${commit}`);
+console.log(`adapters.json: ${Object.keys(adapters).length} adapters x ${Object.keys(VARIANTS).length} variants @ ${commit}`);
