@@ -99,7 +99,12 @@ export function discoverAdapters(root) {
         if (!source || !source.startsWith('src/adapter/')) continue;
         if (!artifact.deployedBytecode?.object || artifact.deployedBytecode.object === '0x') continue;
         const name = target[source];
-        const slot = found.get(name) ?? {};
+        const slot = found.get(name) ?? { source };
+        if (slot.source !== source) {
+          throw new Error(
+            `${name}: defined in both ${slot.source} and ${source} — same-named deployable contracts are ambiguous`,
+          );
+        }
         slot[variant] = artifact;
         found.set(name, slot);
       }

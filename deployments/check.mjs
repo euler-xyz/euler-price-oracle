@@ -4,6 +4,7 @@
 // normalization all come from the build. Only environment-dependent metadata
 // digests are masked, so any real change to ABI, creation bytecode, deployed
 // bytecode, immutable ranges, or the adapter inventory fails.
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -19,6 +20,39 @@ const committed = JSON.parse(readFileSync(join(ROOT, 'deployments/adapters.json'
 const built = discoverAdapters(ROOT);
 
 const problems = [];
+
+// Envelope schema: nothing in the file is decorative. Unknown fields fail,
+// the generator identity is pinned, and the provenance stamp must resolve to
+// a real commit in this repository (CI checks out full history for this).
+const TOP_LEVEL_KEYS = ['adapters', 'commit', 'generatedWith'];
+const extraTop = Object.keys(committed).filter((key) => !TOP_LEVEL_KEYS.includes(key));
+if (extraTop.length > 0) problems.push(`unexpected top-level fields: ${extraTop.join(', ')}`);
+if (committed.generatedWith !== 'deployments/generate.mjs') {
+  problems.push(`generatedWith is '${committed.generatedWith}', expected 'deployments/generate.mjs'`);
+}
+if (typeof committed.commit !== 'string' || !/^[0-9a-f]{7,40}$/.test(committed.commit)) {
+  problems.push(`commit stamp '${committed.commit}' is not a commit hash`);
+} else {
+  try {
+    execSync(`git cat-file -e ${committed.commit}^{commit}`, { cwd: ROOT, stdio: 'pipe' });
+  } catch {
+    problems.push(`commit stamp '${committed.commit}' does not resolve to a commit in this repository`);
+  }
+}
+
+const VARIANT_KEYS = Object.keys(VARIANTS).sort();
+const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences'];
+for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
+  const variantNames = Object.keys(variants).sort();
+  if (JSON.stringify(variantNames) !== JSON.stringify(VARIANT_KEYS)) {
+    problems.push(`${name}: variants [${variantNames.join(', ')}], expected [${VARIANT_KEYS.join(', ')}]`);
+    continue;
+  }
+  for (const [variant, entry] of Object.entries(variants)) {
+    const extra = Object.keys(entry).filter((key) => !ENTRY_KEYS.includes(key));
+    if (extra.length > 0) problems.push(`${name}/${variant}: unexpected fields: ${extra.join(', ')}`);
+  }
+}
 const committedNames = Object.keys(committed.adapters ?? {}).sort();
 const builtNames = [...built.keys()];
 if (JSON.stringify(committedNames) !== JSON.stringify(builtNames)) {
