@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
 
       - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          # Pin the toolchain: solc AST-node ids (and therefore the
+          # immutableReferences in deployments/adapters.json) are forge-version
+          # specific. Bump this in lockstep when regenerating adapters.json.
+          version: "1.8.1"
 
       - name: Build both evm_version variants
         run: |
