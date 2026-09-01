@@ -156,7 +156,8 @@ contract PendleUniversalOracleForkTest is ForkTest {
 
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_EBTC_1224_MARKET, PENDLE_EBTC_1224_SY);
         uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_EBTC_1224_MARKET, PENDLE_EBTC_1224_SY);
-        assertApproxEqRel(outAmount, 1.9698e8, REL_PRECISION);
+        // @dev pre-#605-fix this encoded the 10^(18-8) LP scaling bug; corrected to raw-per-raw
+        assertApproxEqRel(outAmount, 1.9698e18, REL_PRECISION);
         assertApproxEqRel(outAmount1000, outAmount * 1000, REL_PRECISION);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_EBTC_1224_SY, PENDLE_EBTC_1224_MARKET);
@@ -172,7 +173,8 @@ contract PendleUniversalOracleForkTest is ForkTest {
 
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_EBTC_1224_MARKET, EBTC);
         uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_EBTC_1224_MARKET, EBTC);
-        assertApproxEqRel(outAmount, 1.9836e8, REL_PRECISION);
+        // @dev pre-#605-fix this encoded the 10^(18-8) LP scaling bug; corrected to raw-per-raw
+        assertApproxEqRel(outAmount, 1.9836e18, REL_PRECISION);
         assertApproxEqRel(outAmount1000, outAmount * 1000, REL_PRECISION);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, EBTC, PENDLE_EBTC_1224_MARKET);
@@ -227,7 +229,8 @@ contract PendleUniversalOracleForkTest is ForkTest {
 
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_CORN_LBTC_1224_MARKET, PENDLE_CORN_LBTC_1224_SY);
         uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_CORN_LBTC_1224_MARKET, PENDLE_CORN_LBTC_1224_SY);
-        assertApproxEqRel(outAmount, 2.0775e8, REL_PRECISION);
+        // @dev pre-#605-fix this encoded the 10^(18-8) LP scaling bug; corrected to raw-per-raw
+        assertApproxEqRel(outAmount, 2.0775e18, REL_PRECISION);
         assertApproxEqRel(outAmount1000, outAmount * 1000, REL_PRECISION);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, PENDLE_CORN_LBTC_1224_SY, PENDLE_CORN_LBTC_1224_MARKET);
@@ -245,7 +248,8 @@ contract PendleUniversalOracleForkTest is ForkTest {
 
         uint256 outAmount = oracle.getQuote(1e18, PENDLE_CORN_LBTC_1224_MARKET, WBTC);
         uint256 outAmount1000 = oracle.getQuote(1000e18, PENDLE_CORN_LBTC_1224_MARKET, WBTC);
-        assertApproxEqRel(outAmount, 2.0775e8, REL_PRECISION);
+        // @dev pre-#605-fix this encoded the 10^(18-8) LP scaling bug; corrected to raw-per-raw
+        assertApproxEqRel(outAmount, 2.0775e18, REL_PRECISION);
         assertApproxEqRel(outAmount1000, outAmount * 1000, REL_PRECISION);
 
         uint256 outAmountInv = oracle.getQuote(outAmount, WBTC, PENDLE_CORN_LBTC_1224_MARKET);
