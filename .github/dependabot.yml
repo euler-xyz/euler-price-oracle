@@ -1,16 +1,31 @@
 version: 2
 updates:
+  # Only the single direct npm dependency (@redstone-finance/evm-connector,
+  # used by the Redstone FFI test) gets scheduled version updates. Transitive
+  # packages are still covered by Dependabot security updates, which do not
+  # depend on this allowlist.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    allow:
+      - dependency-type: "direct"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+  # gitsubmodule is deliberately not enabled: Solidity dependencies are
+  # pinned submodules whose bumps change deployed bytecode and must be
+  # reviewed/audited intentionally, not proposed automatically.
