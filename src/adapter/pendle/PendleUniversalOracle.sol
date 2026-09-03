@@ -38,7 +38,7 @@ contract PendleUniversalOracle is BaseAdapter {
 
     /// @notice Deploy a PendleUniversalOracle.
     /// @dev The oracle can price Pendle PT,LP to SY,Asset. Whether to use SY or Asset depends on the underlying.
-    /// Consult https://docs.pendle.finance/Developers/Contracts/StandardizedYield#standard-sys for more information.
+    /// Consult https://docs.pendle.finance/pendle-v2-dev/Contracts/StandardizedYield#standard-sys for more information.
     /// Before deploying this adapter ensure that the oracle is initialized and the observation buffer is filled.
     /// Note that this adapter allows specifing any `quote` as the underlying asset.
     /// @param _pendleOracle The address of the PendlePYLpOracle contract. Used only in the constructor.
