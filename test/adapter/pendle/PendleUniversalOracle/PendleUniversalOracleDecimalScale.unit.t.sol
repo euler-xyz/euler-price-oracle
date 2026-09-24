@@ -62,7 +62,9 @@ contract PendleUniversalOracleDecimalScaleTest is Test {
         vm.mockCall(market, abi.encodeWithSelector(IPMarket.readTokens.selector), abi.encode(sy, pt, yt));
         vm.mockCall(market, abi.encodeWithSelector(IPMarket.expiry.selector), abi.encode(block.timestamp - 1));
         vm.mockCall(
-            sy, abi.encodeWithSelector(IStandardizedYield.assetInfo.selector), abi.encode(uint8(0), asset, s.assetDecimals)
+            sy,
+            abi.encodeWithSelector(IStandardizedYield.assetInfo.selector),
+            abi.encode(uint8(0), asset, s.assetDecimals)
         );
         vm.mockCall(sy, abi.encodeWithSelector(IStandardizedYield.exchangeRate.selector), abi.encode(rate));
         vm.mockCall(yt, abi.encodeWithSelector(IPYieldToken.pyIndexStored.selector), abi.encode(rate));
@@ -97,8 +99,15 @@ contract PendleUniversalOracleDecimalScaleTest is Test {
         s = setUpState(s);
         PendleUniversalOracle oracle = new PendleUniversalOracle(pendleOracle, market, pt, sy, TWAP_WINDOW);
         uint256 outAmount = oracle.getQuote(10 ** s.assetDecimals, pt, sy);
-        uint256 expected = FixedPointMathLib.fullMulDiv(10 ** s.syDecimals, 1e18, s.priceRatio);
+        // One whole PT redeems for 10 ** assetDecimals raw asset units. Convert these to raw SY
+        // using the actual mocked rate: priceRatio loses precision when SY has more decimals.
+        uint256 expected = FixedPointMathLib.fullMulDiv(10 ** s.assetDecimals, 1e18, _exchangeRate(s));
         assertApproxEqRel(outAmount, expected, REL_PRECISION);
+    }
+
+    /// @dev Regression: the mocked raw exchange rate floors to 9999, not 10000.
+    function test_Quote_PtToSy_QuantizedExchangeRate() public {
+        test_Quote_PtToSy_ScalesWithSyDecimals(FuzzableState(18, 4, 18, 999999999999333334, 1e18, 1e18, 1e18));
     }
 
     /// @dev The whole LP supply prices to the pool's reserves (PT at par plus SY at the exchange rate),
