@@ -27,9 +27,9 @@ contract PendleUniversalOracle is BaseAdapter {
     address public immutable pendleMarket;
     /// @notice The desired length of the twap window.
     uint32 public immutable twapWindow;
-    /// @notice The address of the base asset, the PT address.
+    /// @notice The address of the base asset, the PT or LP (Pendle market) token.
     address public immutable base;
-    /// @notice The address of the quote asset, the SY or underlying address.
+    /// @notice The address of the quote asset, the SY or the underlying asset address.
     address public immutable quote;
     /// @notice The PendlePYOracleLib function to call.
     function (IPMarket, uint32) view returns (uint256) internal immutable getRate;
@@ -38,7 +38,7 @@ contract PendleUniversalOracle is BaseAdapter {
 
     /// @notice Deploy a PendleUniversalOracle.
     /// @dev The oracle can price Pendle PT,LP to SY,Asset. Whether to use SY or Asset depends on the underlying.
-    /// Consult https://docs.pendle.finance/Developers/Contracts/StandardizedYield#standard-sys for more information.
+    /// Consult https://docs.pendle.finance/pendle-v2-dev/Contracts/StandardizedYield#standard-sys for more information.
     /// Before deploying this adapter ensure that the oracle is initialized and the observation buffer is filled.
     /// Note that this adapter allows specifing any `quote` as the underlying asset.
     /// @param _pendleOracle The address of the PendlePYLpOracle contract. Used only in the constructor.
@@ -61,18 +61,30 @@ contract PendleUniversalOracle is BaseAdapter {
 
         (IStandardizedYield sy, IPPrincipalToken pt,) = IPMarket(_pendleMarket).readTokens();
 
+        // The Pendle rate is denominated in the RAW units of the token it resolves to (the SY or
+        // the SY's underlying asset), scaled by 1e18 - i.e. it is a raw-quote-per-raw-base ratio,
+        // not a whole-unit price. The base scale must therefore be the decimals of the unit the
+        // rate resolves to, NOT the decimals of the `base` token. For a PT these coincide (a PT
+        // shares its SY's/asset's decimals), but the Pendle market (LP) token always reports 18
+        // decimals while the LP rate still resolves to SY/asset units - so reading the base token's
+        // decimals would mis-scale an LP quote by 10^(18 - assetDecimals) for a sub-18-decimal asset.
         // Note: we allow using any asset pricing to any token.
+        uint8 rateDecimals;
         if (_base == address(pt)) {
             if (_quote == address(sy)) {
                 getRate = PendlePYOracleLib.getPtToSyRate;
+                rateDecimals = _getDecimals(address(sy));
             } else {
                 getRate = PendlePYOracleLib.getPtToAssetRate;
+                (,, rateDecimals) = sy.assetInfo();
             }
         } else if (_base == _pendleMarket) {
             if (_quote == address(sy)) {
                 getRate = PendleLpOracleLib.getLpToSyRate;
+                rateDecimals = _getDecimals(address(sy));
             } else {
                 getRate = PendleLpOracleLib.getLpToAssetRate;
+                (,, rateDecimals) = sy.assetInfo();
             }
         } else {
             revert Errors.PriceOracle_InvalidConfiguration();
@@ -82,9 +94,8 @@ contract PendleUniversalOracle is BaseAdapter {
         base = _base;
         quote = _quote;
         twapWindow = _twapWindow;
-        uint8 baseDecimals = _getDecimals(base);
         uint8 quoteDecimals = _getDecimals(quote);
-        scale = ScaleUtils.calcScale(baseDecimals, quoteDecimals, FEED_DECIMALS);
+        scale = ScaleUtils.calcScale(rateDecimals, quoteDecimals, FEED_DECIMALS);
     }
 
     /// @notice Get a quote by calling the Pendle oracle.
