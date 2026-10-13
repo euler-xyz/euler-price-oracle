@@ -10,7 +10,7 @@ Euler Price Oracles is a library of modular oracle adapters and components that 
 
 - To find out ways to contribute to Euler Price Oracles, check out the [Contributing](#contributing) section.
 
-- To observe 200+ live deployments of these oracle adapters check out the dedicated [Oracle Dashboard](https://oracles.euler.finance/).
+- To deploy and inspect adapters, use the [Euler Toolbox](https://toolbox.euler.finance/tools/adapters) (Tools → Oracle adapters).
 
 Euler Price Oracles has been [audited](audits/) by Spearbit, OpenZeppelin, ChainSecurity, Omniscia, yAudit, and Cantina.
 
@@ -93,7 +93,7 @@ An adapter's parameters and acceptance logic are easily observed on-chain.
 | Adapter                                                             | Type     | Method | Supported Pairs         | Parameters                                   |
 | ------------------------------------------------------------------- | -------- | ------ | ----------------------- | -------------------------------------------- |
 | [ChainlinkOracle](src/adapter/chainlink/ChainlinkOracle.sol)        | External | Push   | Provider feeds          | feed, max staleness                          |
-| [ChronicleOracle](src/adapter/chainlink/ChronicleOracle.sol)        | External | Push   | Provider feeds          | feed, max staleness                          |
+| [ChronicleOracle](src/adapter/chronicle/ChronicleOracle.sol)        | External | Push   | Provider feeds          | feed, max staleness                          |
 | [PythOracle](src/adapter/pyth/PythOracle.sol)                       | External | Pull   | Provider feeds          | feed, max staleness, max confidence interval |
 | [RedstoneCoreOracle](src/adapter/redstone/RedstoneCoreOracle.sol)   | External | Pull   | Provider feeds          | feed, max staleness, cache ttl               |
 | [LidoOracle](src/adapter/lido/LidoOracle.sol)                       | Onchain  | Rate   | wstETH/stETH            | -                                            |
@@ -102,6 +102,13 @@ An adapter's parameters and acceptance logic are easily observed on-chain.
 | [PendleOracle](src/adapter/pendle/PendleOracle.sol)                 | Onchain  | TWAP   | Pendle markets          | pendle market, twap window                   |
 | [RateProviderOracle](src/adapter/rate/RateProviderOracle.sol)       | Onchain  | Rate   | Balancer rate providers | rate provider                                |
 | [FixedRateOracle](src/adapter/fixed/FixedRateOracle.sol)            | Onchain  | Rate   | Any                     | rate                                         |
+
+#### Chain availability
+
+- `LidoOracle` and `LidoFundamentalOracle` hard-code the Ethereum mainnet stETH, wstETH and WETH addresses, so they only work on Ethereum.
+- `ChronicleOracle`: Chronicle feeds have a caller whitelist. Chronicle must whitelist the adapter before it can read the feed.
+- `PythOracle` takes the chain's Pyth contract in its constructor, so Pyth must be deployed on the chain.
+- Push-based adapters (`ChainlinkOracle`, `ChronicleOracle`, and RedStone push feeds through `ChainlinkOracle`) only exist where the provider publishes a feed for the asset on that chain.
 
 ## Usage
 
