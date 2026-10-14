@@ -1,6 +1,7 @@
 // Shared by generate.mjs (writes adapters.json) and check.mjs (verifies it in
 // CI). Discovery and normalization derive from compiler output, never from
 // the committed file, so a tampered artifact cannot vouch for itself.
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -38,6 +39,52 @@ function isSolidityMetadataCbor(cbor) {
     else return false;
   }
   return i === cbor.length;
+}
+
+/** The `ipfs` value of the bytecode's solc CBOR trailer (a 34-byte multihash), or null when there is none. */
+export function trailerIpfsMultihash(code) {
+  if (code.length < 2) return null;
+  const len = (code[code.length - 2] << 8) | code[code.length - 1];
+  if (len === 0 || len + 2 > code.length) return null;
+  const cbor = code.subarray(code.length - (len + 2), code.length - 2);
+  if (!isSolidityMetadataCbor(cbor)) return null;
+  let i = 1;
+  for (let e = 0; e < cbor[0] - 0xa0; e++) {
+    const keyLen = cbor[i] - 0x60;
+    const key = Buffer.from(cbor.subarray(i + 1, i + 1 + keyLen)).toString('utf8');
+    i += 1 + keyLen;
+    const v = cbor[i];
+    const valueLen = v === 0x58 ? cbor[i + 1] : v >= 0x40 && v <= 0x57 ? v - 0x40 : 0;
+    const start = v === 0x58 ? i + 2 : i + 1;
+    if (key === 'ipfs') return Buffer.from(cbor.subarray(start, start + valueLen));
+    i = v === 0xf4 || v === 0xf5 ? i + 1 : start + valueLen;
+  }
+  return null;
+}
+
+function varint(n) {
+  const out = [];
+  let value = n;
+  while (value >= 0x80) {
+    out.push((value & 0x7f) | 0x80);
+    value = Math.floor(value / 0x80);
+  }
+  out.push(value);
+  return Buffer.from(out);
+}
+
+// solc's IpfsHash for one chunk: a UnixFS file node in a dag-pb block, hashed with sha2-256.
+const IPFS_CHUNK = 256 * 1024;
+export function ipfsMultihash(content) {
+  const data = Buffer.from(content, 'utf8');
+  if (data.length > IPFS_CHUNK) throw new Error('metadata larger than one IPFS chunk');
+  const unixfs = Buffer.concat([
+    Buffer.from([0x08, 0x02]),
+    data.length > 0 ? Buffer.concat([Buffer.from([0x12]), varint(data.length), data]) : Buffer.alloc(0),
+    Buffer.from([0x18]), varint(data.length),
+  ]);
+  const block = Buffer.concat([Buffer.from([0x0a]), varint(unixfs.length), unixfs]);
+  return Buffer.concat([Buffer.from([0x12, 0x20]), createHash('sha256').update(block).digest()]);
 }
 
 /** Fail-closed: the trailer is only stripped when it validates as solc CBOR. */

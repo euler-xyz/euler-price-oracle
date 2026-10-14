@@ -9,9 +9,11 @@
 //
 // and commit the refreshed adapters.json alongside the change. Every
 // deployable contract under src/adapter is emitted (compiler-derived, not
-// filename-derived); consumers select their own subset.
+// filename-derived); consumers select their own subset. Each build carries its
+// exact solc metadata and the file holds every source it names, so a consumer
+// can verify a deployment on a block explorer without compiling this repo.
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { discoverAdapters, VARIANTS } from './artifact-utils.mjs';
 
@@ -19,18 +21,22 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
 
 const adapters = {};
+const sourcePaths = new Set();
 for (const [name, slot] of discoverAdapters(ROOT)) {
   adapters[name] = {};
   for (const variant of Object.keys(VARIANTS)) {
     const artifact = slot[variant];
+    for (const path of Object.keys(JSON.parse(artifact.rawMetadata).sources)) sourcePaths.add(path);
     adapters[name][variant] = {
       abi: artifact.abi,
       creationBytecode: artifact.bytecode.object,
       deployedBytecode: artifact.deployedBytecode.object,
       immutableReferences: artifact.deployedBytecode.immutableReferences ?? {},
+      metadata: artifact.rawMetadata,
     };
   }
 }
-const out = { commit, generatedWith: 'deployments/generate.mjs', adapters };
+const sources = Object.fromEntries([...sourcePaths].sort().map(path => [path, readFileSync(join(ROOT, path), 'utf8')]));
+const out = { commit, generatedWith: 'deployments/generate.mjs', adapters, sources };
 writeFileSync(join(ROOT, 'deployments/adapters.json'), `${JSON.stringify(out, null, 1)}\n`);
-console.log(`adapters.json: ${Object.keys(adapters).length} adapters x ${Object.keys(VARIANTS).length} variants @ ${commit}`);
+console.log(`adapters.json: ${Object.keys(adapters).length} adapters x ${Object.keys(VARIANTS).length} variants, ${sourcePaths.size} sources @ ${commit}`);
