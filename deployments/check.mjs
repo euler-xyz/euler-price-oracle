@@ -9,9 +9,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   discoverAdapters,
+  ipfsMultihash,
   maskEmbeddedMetadataDigests,
   strictHexToBytes,
   stripTrailingMetadata,
+  trailerIpfsMultihash,
   VARIANTS,
 } from './artifact-utils.mjs';
 
@@ -24,7 +26,7 @@ const problems = [];
 // Envelope schema: nothing in the file is decorative. Unknown fields fail,
 // the generator identity is pinned, and the provenance stamp must resolve to
 // a real commit in this repository (CI checks out full history for this).
-const TOP_LEVEL_KEYS = ['adapters', 'commit', 'generatedWith'];
+const TOP_LEVEL_KEYS = ['adapters', 'commit', 'generatedWith', 'sources'];
 const extraTop = Object.keys(committed).filter((key) => !TOP_LEVEL_KEYS.includes(key));
 if (extraTop.length > 0) problems.push(`unexpected top-level fields: ${extraTop.join(', ')}`);
 if (committed.generatedWith !== 'deployments/generate.mjs') {
@@ -41,7 +43,7 @@ if (typeof committed.commit !== 'string' || !/^[0-9a-f]{7,40}$/.test(committed.c
 }
 
 const VARIANT_KEYS = Object.keys(VARIANTS).sort();
-const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences'];
+const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences', 'metadata'];
 for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
   const variantNames = Object.keys(variants).sort();
   if (JSON.stringify(variantNames) !== JSON.stringify(VARIANT_KEYS)) {
@@ -77,6 +79,62 @@ function normalizedEqual(committedHex, builtHex, label, strip) {
   }
 }
 
+// The metadata is the one the committed bytecode was built with: its IPFS hash
+// is the one in the bytecode's trailer. Remappings carry the build machine's
+// absolute paths, so they are the one setting not compared with this build;
+// every other setting, the compiler and the source hashes must match it.
+// Forge's parsed metadata and the raw metadata can list the same keys in a different order.
+const canonical = (value) => (Array.isArray(value)
+  ? `[${value.map(canonical).join(',')}]`
+  : value && typeof value === 'object'
+    ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`
+    : JSON.stringify(value));
+const settingsWithoutRemappings = (metadata) => {
+  const { remappings: _remappings, ...settings } = metadata.settings ?? {};
+  return settings;
+};
+const namedSources = new Set();
+function checkMetadata(label, stored, artifact) {
+  if (typeof stored.metadata !== 'string') {
+    problems.push(`${label}: metadata missing`);
+    return;
+  }
+  let metadata;
+  try {
+    metadata = JSON.parse(stored.metadata);
+  } catch {
+    problems.push(`${label}: metadata is not JSON`);
+    return;
+  }
+  for (const path of Object.keys(metadata.sources ?? {})) namedSources.add(path);
+  let deployed;
+  let creation;
+  try {
+    deployed = strictHexToBytes(stored.deployedBytecode, `${label} deployedBytecode`);
+    creation = strictHexToBytes(stored.creationBytecode, `${label} creationBytecode`);
+  } catch {
+    return;
+  }
+  const digest = trailerIpfsMultihash(deployed);
+  let expected;
+  try {
+    expected = ipfsMultihash(stored.metadata);
+  } catch (error) {
+    problems.push(`${label}: ${error.message ?? error}`);
+    return;
+  }
+  if (!digest || !digest.equals(expected)) problems.push(`${label}: metadata is not the one the deployed bytecode names`);
+  if (digest && !Buffer.from(creation).includes(digest)) problems.push(`${label}: creation bytecode does not embed the deployed bytecode's metadata`);
+  const built = artifact.metadata;
+  if (metadata.compiler?.version !== built.compiler?.version) problems.push(`${label}: compiler differs from the current build`);
+  if (canonical(settingsWithoutRemappings(metadata)) !== canonical(settingsWithoutRemappings(built))) {
+    problems.push(`${label}: compiler settings differ from the current build`);
+  }
+  if (canonical(metadata.sources) !== canonical(built.sources)) {
+    problems.push(`${label}: sources or their hashes differ from the current build`);
+  }
+}
+
 for (const name of builtNames) {
   const entry = committed.adapters?.[name];
   if (!entry) continue; // already reported by the inventory check
@@ -95,7 +153,26 @@ for (const name of builtNames) {
     }
     normalizedEqual(stored.creationBytecode, artifact.bytecode.object, `${name}/${variant} creationBytecode`, false);
     normalizedEqual(stored.deployedBytecode, artifact.deployedBytecode.object, `${name}/${variant} deployedBytecode`, true);
+    checkMetadata(`${name}/${variant}`, stored, artifact);
   }
+}
+
+// Every source a build names is in the file, exactly as this repository has it, and nothing else is.
+const committedSources = committed.sources ?? {};
+const committedSourcePaths = Object.keys(committedSources).sort();
+const namedSourcePaths = [...namedSources].sort();
+if (JSON.stringify(committedSourcePaths) !== JSON.stringify(namedSourcePaths)) {
+  problems.push(`sources: the file holds [${committedSourcePaths.length}] paths, the builds name [${namedSourcePaths.length}]`);
+}
+for (const path of namedSourcePaths) {
+  let onDisk;
+  try {
+    onDisk = readFileSync(join(ROOT, path), 'utf8');
+  } catch {
+    problems.push(`sources: ${path} is not in this repository`);
+    continue;
+  }
+  if (committedSources[path] !== onDisk) problems.push(`sources: ${path} differs from this repository`);
 }
 
 if (problems.length > 0) {
@@ -103,4 +180,4 @@ if (problems.length > 0) {
   console.error('\nadapters.json does not match the build — regenerate with deployments/generate.mjs and commit.');
   process.exit(1);
 }
-console.log(`adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants`);
+console.log(`adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants, ${namedSourcePaths.length} sources`);
