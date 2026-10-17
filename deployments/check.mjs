@@ -6,7 +6,7 @@
 // bytecode, immutable ranges, or the adapter inventory fails.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import {
   discoverAdapters,
   ipfsMultihash,
@@ -16,9 +16,11 @@ import {
   trailerIpfsMultihash,
   VARIANTS,
 } from './artifact-utils.mjs';
+import { projectSolc, recompile } from './reproduce.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const committed = JSON.parse(readFileSync(join(ROOT, 'deployments/adapters.json'), 'utf8'));
+const bundlePath = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, 'deployments/adapters.json');
+const committed = JSON.parse(readFileSync(bundlePath, 'utf8'));
 const built = discoverAdapters(ROOT);
 
 const problems = [];
@@ -81,8 +83,9 @@ function normalizedEqual(committedHex, builtHex, label, strip) {
 
 // The metadata is the one the committed bytecode was built with: its IPFS hash
 // is the one in the bytecode's trailer. Remappings carry the build machine's
-// absolute paths, so they are the one setting not compared with this build;
-// every other setting, the compiler and the source hashes must match it.
+// absolute paths, so they are the one setting not compared with this build
+// (checkReproduction proves they resolve); every other setting, the compiler
+// and the source hashes must match it.
 // Forge's parsed metadata and the raw metadata can list the same keys in a different order.
 const canonical = (value) => (Array.isArray(value)
   ? `[${value.map(canonical).join(',')}]`
@@ -133,6 +136,42 @@ function checkMetadata(label, stored, artifact) {
   if (canonical(metadata.sources) !== canonical(built.sources)) {
     problems.push(`${label}: sources or their hashes differ from the current build`);
   }
+  checkReproduction(label, stored, metadata);
+}
+
+function resolveSolc() {
+  try {
+    return projectSolc(ROOT);
+  } catch (error) {
+    problems.push(`cannot run the project's solc to recompile the bundled inputs: ${error.message ?? error}`);
+    return null;
+  }
+}
+const solc = resolveSolc();
+const reproduced = [];
+// The digest only ties the metadata to the trailer; recompiling the bundled
+// inputs proves solc produces exactly this metadata and bytecode from them.
+function checkReproduction(label, stored, metadata) {
+  if (!solc) return;
+  if (metadata.compiler?.version !== solc.version) {
+    problems.push(`${label}: metadata names solc ${metadata.compiler?.version}, the project compiles with ${solc.version}`);
+    return;
+  }
+  let rebuilt;
+  try {
+    rebuilt = recompile(solc.path, metadata, committed.sources ?? {});
+  } catch (error) {
+    problems.push(`${label}: bundled inputs do not compile: ${error.message ?? error}`);
+    return;
+  }
+  if (rebuilt.metadata !== stored.metadata) problems.push(`${label}: metadata is not what solc produces from the bundled inputs`);
+  if (rebuilt.creationBytecode !== stored.creationBytecode) {
+    problems.push(`${label}: creation bytecode is not what solc produces from the bundled inputs`);
+  }
+  if (rebuilt.deployedBytecode !== stored.deployedBytecode) {
+    problems.push(`${label}: deployed bytecode is not what solc produces from the bundled inputs`);
+  }
+  reproduced.push(label);
 }
 
 for (const name of builtNames) {
@@ -180,4 +219,6 @@ if (problems.length > 0) {
   console.error('\nadapters.json does not match the build — regenerate with deployments/generate.mjs and commit.');
   process.exit(1);
 }
-console.log(`adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants, ${namedSourcePaths.length} sources`);
+console.log(
+  `adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants, ${namedSourcePaths.length} sources, recompiled ${reproduced.length} builds with solc ${solc.version}`,
+);
