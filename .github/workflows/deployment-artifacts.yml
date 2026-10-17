@@ -41,3 +41,6 @@ jobs:
       # against the fresh compiler output, trusting nothing in the file itself.
       - name: Verify committed artifacts against the build
         run: node deployments/check.mjs
+
+      - name: Check rejects tampered artifacts
+        run: node --test deployments/check.test.mjs deployments/reproduce.test.mjs
