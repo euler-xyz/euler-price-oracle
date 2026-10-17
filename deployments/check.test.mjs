@@ -131,6 +131,23 @@ describe('deployments/check.mjs', { concurrency: true }, () => {
     });
   });
 
+  describe('every object must carry exactly the expected keys', { concurrency: true }, () => {
+    it('fails on a build entry without its empty immutableReferences', async () => {
+      const { immutableReferences, ...rest } = BUNDLE.adapters.LidoOracle.cancun;
+      assert.deepEqual(immutableReferences, {});
+      const result = await check(withBuild(BUNDLE, 'LidoOracle', 'cancun', rest));
+      assert.equal(result.code, 1);
+      assert.deepEqual(result.stale, ['LidoOracle/cancun: missing fields: immutableReferences']);
+    });
+
+    it('fails on a bundle without its generatedWith field', async () => {
+      const { generatedWith: _dropped, ...rest } = BUNDLE;
+      const result = await check(rest);
+      assert.equal(result.code, 1);
+      assert.ok(result.stale.includes('missing top-level fields: generatedWith'), result.stale.join('\n'));
+    });
+  });
+
   describe('tampering the digest and source checks catch', { concurrency: true }, () => {
     it('fails on a changed source', async () => {
       const path = 'src/adapter/chainlink/ChainlinkOracle.sol';

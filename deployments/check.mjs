@@ -30,11 +30,16 @@ const built = discoverAdapters(ROOT);
 const problems = [];
 if (raw !== serializeBundle(committed)) problems.push('the file is not exactly what deployments/generate.mjs writes for its content');
 
-// Envelope schema: nothing in the file is decorative. Unknown fields fail,
-// the generator identity is pinned, and the provenance stamp must resolve to
-// a real commit in this repository (CI checks out full history for this).
-const extraTop = Object.keys(committed).filter((key) => !BUNDLE_KEYS.includes(key));
-if (extraTop.length > 0) problems.push(`unexpected top-level fields: ${extraTop.join(', ')}`);
+// Envelope schema: nothing in the file is decorative. Unknown or missing
+// fields fail, the generator identity is pinned, and the provenance stamp must
+// resolve to a real commit in this repository (CI checks out full history for this).
+const keyDiff = (object, expected) => {
+  const keys = Object.keys(object);
+  return { extra: keys.filter((key) => !expected.includes(key)), missing: expected.filter((key) => !keys.includes(key)) };
+};
+const top = keyDiff(committed, BUNDLE_KEYS);
+if (top.extra.length > 0) problems.push(`unexpected top-level fields: ${top.extra.join(', ')}`);
+if (top.missing.length > 0) problems.push(`missing top-level fields: ${top.missing.join(', ')}`);
 if (committed.generatedWith !== 'deployments/generate.mjs') {
   problems.push(`generatedWith is '${committed.generatedWith}', expected 'deployments/generate.mjs'`);
 }
@@ -56,8 +61,9 @@ for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
     continue;
   }
   for (const [variant, entry] of Object.entries(variants)) {
-    const extra = Object.keys(entry).filter((key) => !ENTRY_KEYS.includes(key));
+    const { extra, missing } = keyDiff(entry, ENTRY_KEYS);
     if (extra.length > 0) problems.push(`${name}/${variant}: unexpected fields: ${extra.join(', ')}`);
+    if (missing.length > 0) problems.push(`${name}/${variant}: missing fields: ${missing.join(', ')}`);
   }
 }
 const committedNames = Object.keys(committed.adapters ?? {}).sort();
