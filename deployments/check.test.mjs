@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { promisify } from 'node:util';
-import { ipfsMultihash } from './artifact-utils.mjs';
+import { ipfsMultihash, serializeBundle } from './artifact-utils.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const CHECK = join(ROOT, 'deployments/check.mjs');
@@ -18,15 +18,9 @@ const scratch = mkdtempSync(join(tmpdir(), 'adapters-check-'));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
 const execFileAsync = promisify(execFile);
-async function check(bundle) {
-  const args = [CHECK];
-  if (bundle) {
-    const path = join(scratch, `${randomUUID()}.json`);
-    writeFileSync(path, JSON.stringify(bundle));
-    args.push(path);
-  }
+async function run(args) {
   try {
-    const { stdout } = await execFileAsync(process.execPath, args, { maxBuffer: MAX_OUTPUT_BYTES });
+    const { stdout } = await execFileAsync(process.execPath, [CHECK, ...args], { maxBuffer: MAX_OUTPUT_BYTES });
     return { code: 0, stdout, stale: [] };
   } catch (error) {
     if (typeof error.code !== 'number') throw error;
@@ -34,6 +28,12 @@ async function check(bundle) {
     return { code: error.code, stdout: error.stdout, stale };
   }
 }
+function checkText(text) {
+  const path = join(scratch, `${randomUUID()}.json`);
+  writeFileSync(path, text);
+  return run([path]);
+}
+const check = (bundle) => (bundle ? checkText(serializeBundle(bundle)) : run([]));
 
 const withBuild = (bundle, name, variant, build) => ({
   ...bundle,
@@ -60,6 +60,7 @@ const TARGET = 'ChainlinkOracle';
 const VARIANT = 'cancun';
 const LABEL = `${TARGET}/${VARIANT}`;
 const target = BUNDLE.adapters[TARGET][VARIANT];
+const NOT_AS_GENERATED = ['the file is not exactly what deployments/generate.mjs writes for its content'];
 const NOT_REPRODUCED = [
   `${LABEL}: metadata is not what solc produces from the bundled inputs`,
   `${LABEL}: creation bytecode is not what solc produces from the bundled inputs`,
@@ -107,6 +108,26 @@ describe('deployments/check.mjs', { concurrency: true }, () => {
       const result = await check(withBuild(BUNDLE, TARGET, VARIANT, build));
       assert.equal(result.code, 1);
       assert.deepEqual(result.stale, NOT_REPRODUCED);
+    });
+  });
+
+  describe('the file must be exactly what generate.mjs writes', { concurrency: true }, () => {
+    it('fails on a repeated deployedBytecode key', async () => {
+      const text = serializeBundle(BUNDLE);
+      const line = `    "deployedBytecode": ${JSON.stringify(target.deployedBytecode)},\n`;
+      assert.ok(text.includes(line));
+      const repeated = `    "deployedBytecode": ${JSON.stringify(BUNDLE.adapters[TARGET].paris.deployedBytecode)},\n${line}`;
+      const result = await checkText(text.replace(line, repeated));
+      assert.equal(result.code, 1);
+      assert.deepEqual(result.stale, NOT_AS_GENERATED);
+    });
+
+    it('fails on reordered keys', async () => {
+      const { metadata, ...rest } = target;
+      const reordered = withBuild(BUNDLE, TARGET, VARIANT, { metadata, ...rest });
+      const result = await checkText(`${JSON.stringify(reordered, null, 1)}\n`);
+      assert.equal(result.code, 1);
+      assert.deepEqual(result.stale, NOT_AS_GENERATED);
     });
   });
 

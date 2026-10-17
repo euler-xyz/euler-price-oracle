@@ -8,9 +8,12 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
+  BUNDLE_KEYS,
   discoverAdapters,
+  ENTRY_KEYS,
   ipfsMultihash,
   maskEmbeddedMetadataDigests,
+  serializeBundle,
   strictHexToBytes,
   stripTrailingMetadata,
   trailerIpfsMultihash,
@@ -20,16 +23,17 @@ import { projectSolc, recompile } from './reproduce.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const bundlePath = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, 'deployments/adapters.json');
-const committed = JSON.parse(readFileSync(bundlePath, 'utf8'));
+const raw = readFileSync(bundlePath, 'utf8');
+const committed = JSON.parse(raw);
 const built = discoverAdapters(ROOT);
 
 const problems = [];
+if (raw !== serializeBundle(committed)) problems.push('the file is not exactly what deployments/generate.mjs writes for its content');
 
 // Envelope schema: nothing in the file is decorative. Unknown fields fail,
 // the generator identity is pinned, and the provenance stamp must resolve to
 // a real commit in this repository (CI checks out full history for this).
-const TOP_LEVEL_KEYS = ['adapters', 'commit', 'generatedWith', 'sources'];
-const extraTop = Object.keys(committed).filter((key) => !TOP_LEVEL_KEYS.includes(key));
+const extraTop = Object.keys(committed).filter((key) => !BUNDLE_KEYS.includes(key));
 if (extraTop.length > 0) problems.push(`unexpected top-level fields: ${extraTop.join(', ')}`);
 if (committed.generatedWith !== 'deployments/generate.mjs') {
   problems.push(`generatedWith is '${committed.generatedWith}', expected 'deployments/generate.mjs'`);
@@ -45,7 +49,6 @@ if (typeof committed.commit !== 'string' || !/^[0-9a-f]{7,40}$/.test(committed.c
 }
 
 const VARIANT_KEYS = Object.keys(VARIANTS).sort();
-const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences', 'metadata'];
 for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
   const variantNames = Object.keys(variants).sort();
   if (JSON.stringify(variantNames) !== JSON.stringify(VARIANT_KEYS)) {
