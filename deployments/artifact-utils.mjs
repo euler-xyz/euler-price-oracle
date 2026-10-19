@@ -7,6 +7,25 @@ import { join } from 'node:path';
 
 export const VARIANTS = { cancun: 'out', paris: 'out-paris' };
 
+export const BUNDLE_KEYS = ['commit', 'generatedWith', 'adapters', 'sources'];
+export const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences', 'metadata'];
+
+const pick = (object, keys) => Object.fromEntries(keys.map((key) => [key, object?.[key]]));
+
+export function serializeBundle(bundle) {
+  const adapters = bundle.adapters ?? {};
+  const sources = bundle.sources ?? {};
+  const ordered = {
+    ...pick(bundle, BUNDLE_KEYS),
+    adapters: Object.fromEntries(Object.keys(adapters).sort((a, b) => a.localeCompare(b)).map((name) => [
+      name,
+      Object.fromEntries(Object.keys(VARIANTS).map((variant) => [variant, pick(adapters[name]?.[variant], ENTRY_KEYS)])),
+    ])),
+    sources: Object.fromEntries(Object.keys(sources).sort().map((path) => [path, sources[path]])),
+  };
+  return `${JSON.stringify(ordered, null, 1)}\n`;
+}
+
 export function strictHexToBytes(hex, label) {
   if (typeof hex !== 'string' || !/^0x(?:[0-9a-fA-F]{2})*$/.test(hex)) {
     throw new Error(`${label}: not canonical hex`);

@@ -6,29 +6,40 @@
 // bytecode, immutable ranges, or the adapter inventory fails.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import {
+  BUNDLE_KEYS,
   discoverAdapters,
+  ENTRY_KEYS,
   ipfsMultihash,
   maskEmbeddedMetadataDigests,
+  serializeBundle,
   strictHexToBytes,
   stripTrailingMetadata,
   trailerIpfsMultihash,
   VARIANTS,
 } from './artifact-utils.mjs';
+import { projectSolc, recompile } from './reproduce.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const committed = JSON.parse(readFileSync(join(ROOT, 'deployments/adapters.json'), 'utf8'));
+const bundlePath = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, 'deployments/adapters.json');
+const raw = readFileSync(bundlePath, 'utf8');
+const committed = JSON.parse(raw);
 const built = discoverAdapters(ROOT);
 
 const problems = [];
+if (raw !== serializeBundle(committed)) problems.push('the file is not exactly what deployments/generate.mjs writes for its content');
 
-// Envelope schema: nothing in the file is decorative. Unknown fields fail,
-// the generator identity is pinned, and the provenance stamp must resolve to
-// a real commit in this repository (CI checks out full history for this).
-const TOP_LEVEL_KEYS = ['adapters', 'commit', 'generatedWith', 'sources'];
-const extraTop = Object.keys(committed).filter((key) => !TOP_LEVEL_KEYS.includes(key));
-if (extraTop.length > 0) problems.push(`unexpected top-level fields: ${extraTop.join(', ')}`);
+// Envelope schema: nothing in the file is decorative. Unknown or missing
+// fields fail, the generator identity is pinned, and the provenance stamp must
+// resolve to a real commit in this repository (CI checks out full history for this).
+const keyDiff = (object, expected) => {
+  const keys = Object.keys(object);
+  return { extra: keys.filter((key) => !expected.includes(key)), missing: expected.filter((key) => !keys.includes(key)) };
+};
+const top = keyDiff(committed, BUNDLE_KEYS);
+if (top.extra.length > 0) problems.push(`unexpected top-level fields: ${top.extra.join(', ')}`);
+if (top.missing.length > 0) problems.push(`missing top-level fields: ${top.missing.join(', ')}`);
 if (committed.generatedWith !== 'deployments/generate.mjs') {
   problems.push(`generatedWith is '${committed.generatedWith}', expected 'deployments/generate.mjs'`);
 }
@@ -43,7 +54,6 @@ if (typeof committed.commit !== 'string' || !/^[0-9a-f]{7,40}$/.test(committed.c
 }
 
 const VARIANT_KEYS = Object.keys(VARIANTS).sort();
-const ENTRY_KEYS = ['abi', 'creationBytecode', 'deployedBytecode', 'immutableReferences', 'metadata'];
 for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
   const variantNames = Object.keys(variants).sort();
   if (JSON.stringify(variantNames) !== JSON.stringify(VARIANT_KEYS)) {
@@ -51,8 +61,9 @@ for (const [name, variants] of Object.entries(committed.adapters ?? {})) {
     continue;
   }
   for (const [variant, entry] of Object.entries(variants)) {
-    const extra = Object.keys(entry).filter((key) => !ENTRY_KEYS.includes(key));
+    const { extra, missing } = keyDiff(entry, ENTRY_KEYS);
     if (extra.length > 0) problems.push(`${name}/${variant}: unexpected fields: ${extra.join(', ')}`);
+    if (missing.length > 0) problems.push(`${name}/${variant}: missing fields: ${missing.join(', ')}`);
   }
 }
 const committedNames = Object.keys(committed.adapters ?? {}).sort();
@@ -81,8 +92,9 @@ function normalizedEqual(committedHex, builtHex, label, strip) {
 
 // The metadata is the one the committed bytecode was built with: its IPFS hash
 // is the one in the bytecode's trailer. Remappings carry the build machine's
-// absolute paths, so they are the one setting not compared with this build;
-// every other setting, the compiler and the source hashes must match it.
+// absolute paths, so they are the one setting not compared with this build
+// (checkReproduction proves they resolve); every other setting, the compiler
+// and the source hashes must match it.
 // Forge's parsed metadata and the raw metadata can list the same keys in a different order.
 const canonical = (value) => (Array.isArray(value)
   ? `[${value.map(canonical).join(',')}]`
@@ -133,6 +145,42 @@ function checkMetadata(label, stored, artifact) {
   if (canonical(metadata.sources) !== canonical(built.sources)) {
     problems.push(`${label}: sources or their hashes differ from the current build`);
   }
+  checkReproduction(label, stored, metadata);
+}
+
+function resolveSolc() {
+  try {
+    return projectSolc(ROOT);
+  } catch (error) {
+    problems.push(`cannot run the project's solc to recompile the bundled inputs: ${error.message ?? error}`);
+    return null;
+  }
+}
+const solc = resolveSolc();
+const reproduced = [];
+// The digest only ties the metadata to the trailer; recompiling the bundled
+// inputs proves solc produces exactly this metadata and bytecode from them.
+function checkReproduction(label, stored, metadata) {
+  if (!solc) return;
+  if (metadata.compiler?.version !== solc.version) {
+    problems.push(`${label}: metadata names solc ${metadata.compiler?.version}, the project compiles with ${solc.version}`);
+    return;
+  }
+  let rebuilt;
+  try {
+    rebuilt = recompile(solc.path, metadata, committed.sources ?? {});
+  } catch (error) {
+    problems.push(`${label}: bundled inputs do not compile: ${error.message ?? error}`);
+    return;
+  }
+  if (rebuilt.metadata !== stored.metadata) problems.push(`${label}: metadata is not what solc produces from the bundled inputs`);
+  if (rebuilt.creationBytecode !== stored.creationBytecode) {
+    problems.push(`${label}: creation bytecode is not what solc produces from the bundled inputs`);
+  }
+  if (rebuilt.deployedBytecode !== stored.deployedBytecode) {
+    problems.push(`${label}: deployed bytecode is not what solc produces from the bundled inputs`);
+  }
+  reproduced.push(label);
 }
 
 for (const name of builtNames) {
@@ -180,4 +228,6 @@ if (problems.length > 0) {
   console.error('\nadapters.json does not match the build — regenerate with deployments/generate.mjs and commit.');
   process.exit(1);
 }
-console.log(`adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants, ${namedSourcePaths.length} sources`);
+console.log(
+  `adapters.json verified: ${builtNames.length} adapters x ${Object.keys(VARIANTS).length} variants, ${namedSourcePaths.length} sources, recompiled ${reproduced.length} builds with solc ${solc.version}`,
+);
