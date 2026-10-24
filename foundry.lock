@@ -1,6 +1,6 @@
 {
   "lib/ethereum-vault-connector": {
-    "rev": "084b32284ba643921f8d21bff3ddaf0c4e08d754"
+    "rev": "4e5b8c56a13809165b8b4b3f01ac2f93f7c0ecb5"
   },
   "lib/forge-std": {
     "rev": "bf6606142994b1e47e2882ce0cd477c020d77623"
